@@ -25,9 +25,7 @@ const Login = () => {
                         onError = {() => console.log("login failed")}
                         auto_select = {true}
                         shape="rectangular"
-                        logo_alignment="center"
-
-                        ux_mode="redirect" />
+                        logo_alignment="center" />
                     </div>
                 </div>
             </div>
