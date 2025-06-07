@@ -10,6 +10,18 @@ const Login = () => {
 
     const navigate = useNavigate();
 
+    function loginSuccess(cRes) {
+        try {
+            fetch("http://localhost:5000/api/auth/google", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token: cRes.credential }),
+            });
+        } catch(e) {
+            console.error("Error during login success", e);
+        }
+    }
+
     return (
         <>
             <div className="w-full h-screen flex text-center justify-center items-center">
@@ -20,6 +32,7 @@ const Login = () => {
                         onSuccess = {(credentialResponse) => {
                             console.log(credentialResponse);
                             console.log(jwtDecode(credentialResponse.credential));
+                            loginSuccess(credentialResponse);
                             navigate("home");
                         }}
                         onError = {() => console.log("login failed")}
