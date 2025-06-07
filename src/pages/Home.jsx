@@ -1,9 +1,13 @@
 import Navbar from '../components/NavBar';
+import ProductArea from '../components/ProductArea';
 
 const Home = () => {
     return (
         <>
-            <Navbar />
+            <div className="h-full">
+                <Navbar />
+                <ProductArea />
+            </div>
         </>
     )
 }
