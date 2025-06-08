@@ -12,11 +12,19 @@ const Login = () => {
 
     function loginSuccess(cRes) {
         try {
-            fetch("http://localhost:5000/api/auth/google", {
+            fetch("http://localhost:3000/api/login/google", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ token: cRes.credential }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+            })
+            .catch(error => {
+                console.error('Error trying to fetch login data:', error);
             });
+
         } catch(e) {
             console.error("Error during login success", e);
         }
