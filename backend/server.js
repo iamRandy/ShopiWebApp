@@ -1,16 +1,15 @@
-import path from 'path';
-import cors from 'cors';
-import { fileURLToPath } from 'url';
-import express from 'express';
-import dotenv from 'dotenv';
-import { MongoClient } from 'mongodb';
+const path = require('path');
+const cors = require('cors');
+const express = require('express');
+const dotenv = require('dotenv');
+const { MongoClient } = require('mongodb');
+
 dotenv.config();
 
 const app = express();
-
 const PORT = 3000;
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+
+// const __dirname = __dirname;
 
 const client = new MongoClient(process.env.MONGODB_URI);
 let collection;
@@ -32,7 +31,7 @@ async function init() {
 // API routes
 app.post('/api/login/google', (req, res) => {
   console.log("Login with google success");
-  res.status(200).json({message: "ok!"})
+  res.status(200).json({message: "Login successful"})
 });
 
 // app.get('/api/products', (req, res) => {
