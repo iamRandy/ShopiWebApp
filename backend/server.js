@@ -2,12 +2,18 @@ import path from 'path';
 import cors from 'cors';
 import { fileURLToPath } from 'url';
 import express from 'express';
+import dotenv from 'dotenv';
+import { MongoClient } from 'mongodb';
+dotenv.config();
+
 const app = express();
 
 const PORT = 3000;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const client = new MongoClient(process.env.MONGODB_URI);
+let collection;
 
 app.use(cors({
   origin: "*", // or use "*" during dev only
@@ -15,6 +21,13 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+async function init() {
+  await client.connect();
+  const db = client.db("shopi");
+  collection = db.collection("pages"); // renamed for clarity
+  app.listen(PORT, () => console.log("API ready on", PORT));
+}
 
 // API routes
 app.post('/api/login/google', (req, res) => {
@@ -29,9 +42,4 @@ app.post('/api/login/google', (req, res) => {
 // Serve React build (only if deploying frontend + backend together)
 app.use(express.static(path.join(__dirname, '../dist')));
 
-// Fallback to index.html for React Router
-// app.get('*', (req, res) => {
-//   res.sendFile(path.join(__dirname, '../dist/index.html'));
-// });
-
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+init();
