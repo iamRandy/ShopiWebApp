@@ -18,7 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // API routes
 app.post('/api/login/google', (req, res) => {
-  console.log("Google login endpoint hit!:", req.body);
+  console.log("Login with google success");
   res.status(200).json({message: "ok!"})
 });
 
