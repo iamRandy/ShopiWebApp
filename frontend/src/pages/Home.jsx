@@ -1,3 +1,4 @@
+// ShopiWebApp/frontend/src/pages/Home.jsx
 import Navbar from '../components/NavBar';
 import ProductArea from '../components/ProductArea';
 
