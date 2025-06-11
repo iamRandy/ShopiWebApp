@@ -56,7 +56,8 @@ app.post('/api/login/google', async (req, res) => {
         picture: payload.picture,
         sub: payload.sub,
         lastLogin: new Date(),
-      }
+      },
+      $setOnInsert: { products: [] }
     };
     const options = { upsert: true };
     await usersCollection.updateOne(filter, update, options);
@@ -68,9 +69,19 @@ app.post('/api/login/google', async (req, res) => {
   }
 });
 
-// app.get('/api/products', (req, res) => {
-//   // send product data
-// });
+// fetch the logged-in user’s own products
+app.get('/api/products/:sub', async (req, res) => {
+  try {
+    const doc = await usersCollection.findOne(
+      { sub: req.params.sub },
+      { projection: { _id: 0, products: 1 } }
+    )
+    res.json(doc?.products || [])
+  } catch (e) {
+    console.error(e)
+    res.status(500).json({ error: 'failed' })
+  }
+})
 
 // Serve React build (only if deploying frontend + backend together)
 app.use(express.static(path.join(__dirname, '../dist')));
