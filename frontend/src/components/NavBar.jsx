@@ -6,10 +6,43 @@ const NavBar = () => {
     const userEmail = localStorage.getItem('userEmail') || '';
     const userSub = localStorage.getItem('userSub') || '';
 
+    const clearExtensionStorage = () => {
+        const EXT_ID = import.meta.env.VITE_EXTENSION_ID;
+        console.log("Clearing extension storage");
+        
+        if (window.chrome?.runtime?.sendMessage && EXT_ID) {
+            window.chrome.runtime.sendMessage(
+                EXT_ID,
+                { type: "CLEAR_STORAGE" },
+                (response) => {
+                    console.log("Extension storage clear response:", response);
+                    if (chrome.runtime.lastError) {
+                        console.error("Extension storage clear error:", chrome.runtime.lastError);
+                    } else {
+                        console.log("Extension storage cleared successfully");
+                    }
+                }
+            );
+        } else {
+            console.error("Cannot clear extension storage:", {
+                chrome: !!window.chrome,
+                runtime: !!window.chrome?.runtime,
+                sendMessage: !!window.chrome?.runtime?.sendMessage,
+                EXT_ID: EXT_ID
+            });
+        }
+    };
+
     const handleLogout = () => {
+        // Clear extension storage first
+        clearExtensionStorage();
+        
+        // Clear web app localStorage
         localStorage.removeItem('userSub');
         localStorage.removeItem('userEmail');
         localStorage.removeItem('userName');
+        
+        // Navigate to login page
         navigate('/');
     };
 
