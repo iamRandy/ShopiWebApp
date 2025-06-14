@@ -6,8 +6,6 @@ const dotenv = require('dotenv');
 const { MongoClient } = require('mongodb');
 const jwt = require('jsonwebtoken');
 
-const USERS_COLLECTION = "users";
-
 dotenv.config();
 
 const app = express();
@@ -16,7 +14,6 @@ const PORT = 3000;
 // const __dirname = __dirname;
 
 const client = new MongoClient(process.env.MONGODB_URI);
-let collection;
 let usersCollection;
 
 app.use(cors({
@@ -29,8 +26,7 @@ app.use(express.urlencoded({ extended: true }));
 async function init() {
   await client.connect();
   const db = client.db("shopi");
-  collection = db.collection("pages");
-  usersCollection = db.collection(USERS_COLLECTION);
+  usersCollection = db.collection("users");
   app.listen(PORT, () => console.log("API ready on", PORT));
 }
 
