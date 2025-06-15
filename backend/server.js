@@ -65,7 +65,7 @@ app.post('/api/login/google', async (req, res) => {
   }
 });
 
-// fetch the logged-in user’s own products
+// fetch the logged-in user's own products
 app.get('/api/products/:sub', async (req, res) => {
   try {
     const doc = await usersCollection.findOne(
@@ -76,6 +76,33 @@ app.get('/api/products/:sub', async (req, res) => {
   } catch (e) {
     console.error(e)
     res.status(500).json({ error: 'failed' })
+  }
+})
+
+// delete a specific product for a user
+app.delete('/api/products/:sub', async (req, res) => {
+  try {
+    const { sub } = req.params;
+    const { productId } = req.body;
+
+    if (!productId) {
+      return res.status(400).json({ error: 'Product ID is required' });
+    }
+
+    // Try to remove the product with the matching ID first
+    let result = await usersCollection.updateOne(
+      { sub: sub },
+      { $pull: { products: { id: productId } } }
+    );
+
+    if (result.modifiedCount > 0) {
+      res.json({ success: true, message: 'Product deleted successfully' });
+    } else {
+      res.status(404).json({ error: 'Product not found or already deleted' });
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Failed to delete product' });
   }
 })
 

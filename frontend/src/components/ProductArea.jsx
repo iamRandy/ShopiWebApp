@@ -6,33 +6,39 @@ const ProductArea = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    useEffect(() => {
-        const fetchProducts = async () => {
-            try {
-                const userSub = localStorage.getItem('userSub');
-                if (!userSub) {
-                    setError('No user found. Please log in again.');
-                    setLoading(false);
-                    return;
-                }
-
-                const response = await fetch(`http://localhost:3000/api/products/${userSub}`);
-                if (!response.ok) {
-                    throw new Error('Failed to fetch products');
-                }
-                
-                const data = await response.json();
-                setProducts(data);
+    const fetchProducts = async () => {
+        try {
+            const userSub = localStorage.getItem('userSub');
+            if (!userSub) {
+                setError('No user found. Please log in again.');
                 setLoading(false);
-            } catch (err) {
-                console.error('Error fetching products:', err);
-                setError('Failed to load products');
-                setLoading(false);
+                return;
             }
-        };
 
+            const response = await fetch(`http://localhost:3000/api/products/${userSub}`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch products');
+            }
+            
+            const data = await response.json();
+            setProducts(data);
+            setLoading(false);
+        } catch (err) {
+            console.error('Error fetching products:', err);
+            setError('Failed to load products');
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         fetchProducts();
     }, []);
+
+    const handleProductDelete = () => {
+        // Refresh the products list after deletion
+        setLoading(true);
+        fetchProducts();
+    };
 
     if (loading) {
         return (
@@ -63,10 +69,12 @@ const ProductArea = () => {
             <div className="p-3 grid grid-cols-1 gap-1 sm:grid-cols-2 md:grid-cols-3" id="product-canvas">
                 {products.map((product, index) => (
                     <ProductCard 
-                        key={index}
+                        key={product.id || index} // Use product ID as key for better React performance
                         productName={product.title || 'Unknown Product'}
                         productImg={product.image || 'https://via.placeholder.com/300x300?text=No+Image'}
                         productPrice={product.price ? `${product.currency || '$'}${product.price}` : 'Price not available'}
+                        productId={product.id}
+                        onDelete={handleProductDelete}
                     />
                 ))}
             </div>
