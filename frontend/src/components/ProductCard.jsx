@@ -30,13 +30,13 @@ const ProductCard = ({ productName, productImg, productPrice, productId, onDelet
 
     return (
         <>
-            <div className="w-64 h-80 flex flex-col border rounded-lg overflow-hidden">
-                <div className="relative w-full h-64 flex justify-center items-center bg-white">
+            <div className="w-52 h-64 flex flex-col border rounded-lg overflow-hidden">
+                <div className="relative w-full h-52 flex justify-center items-center bg-white">
                     
                     {/* Delete button in top right */}
                     <button
                         onClick={handleDelete}
-                        className="absolute top-2 right-2 z-10 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg transition-colors duration-200"
+                        className="absolute top-1 right-1 z-10 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-lg transition-colors duration-200 text-xs"
                         title="Delete product"
                     >
                         ×
@@ -46,9 +46,9 @@ const ProductCard = ({ productName, productImg, productPrice, productId, onDelet
                 </div>
 
                 {/* Separate bottom info bar */}
-                <div className="bg-stone-950 w-full h-16 flex gap-2 justify-end items-center p-2">
-                    <span className="font-bold text-white text-sm">{productName}</span>
-                    <span className="text-white text-sm">{productPrice}</span>
+                <div className="bg-stone-950 w-full h-12 flex gap-2 justify-end items-center p-2">
+                    <span className="font-bold text-white text-xs line-clamp-2">{productName}</span>
+                    <span className="text-white text-xs whitespace-nowrap">{productPrice}</span>
                 </div>
             </div>
         </>
