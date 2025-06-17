@@ -108,6 +108,7 @@ const ProductArea = () => {
                                     productImg={product.image || 'https://via.placeholder.com/300x300?text=No+Image'}
                                     productPrice={product.price ? `${product.currency || '$'}${product.price}` : 'Price not available'}
                                     productId={product.id}
+                                    productUrl={product.url}
                                     onDelete={handleProductDelete}
                                 />
                             ))}

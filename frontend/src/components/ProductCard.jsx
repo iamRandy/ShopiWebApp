@@ -1,8 +1,9 @@
 import React from 'react';
 
-const ProductCard = ({ productName, productImg, productPrice, productId, onDelete }) => {
+const ProductCard = ({ productName, productImg, productPrice, productId, productUrl, onDelete }) => {
 
-    const handleDelete = async () => {
+    const handleDelete = async (e) => {
+        e.stopPropagation(); // Prevent triggering the product link
         if (window.confirm('Are you sure you want to delete this product?')) {
             try {
                 const userSub = localStorage.getItem('userSub');
@@ -28,9 +29,18 @@ const ProductCard = ({ productName, productImg, productPrice, productId, onDelet
         }
     };
 
+    const handleCardClick = () => {
+        if (productUrl) {
+            window.open(productUrl, '_blank');
+        }
+    };
+
     return (
         <>
-            <div className="w-52 h-64 flex flex-col border rounded-lg overflow-hidden">
+            <div 
+                className="w-52 h-64 flex flex-col border rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow duration-200"
+                onClick={handleCardClick}
+            >
                 <div className="relative w-full h-52 flex justify-center items-center bg-white">
                     
                     {/* Delete button in top right */}
@@ -46,7 +56,7 @@ const ProductCard = ({ productName, productImg, productPrice, productId, onDelet
                 </div>
 
                 {/* Separate bottom info bar */}
-                <div className="bg-stone-950 w-full h-12 flex gap-2 justify-end items-center p-2">
+                <div className="bg-stone-950 w-full h-12 flex gap-2 justify-between items-center p-2">
                     <span className="font-bold text-white text-xs line-clamp-2">{productName}</span>
                     <span className="text-white text-xs whitespace-nowrap">{productPrice}</span>
                 </div>
