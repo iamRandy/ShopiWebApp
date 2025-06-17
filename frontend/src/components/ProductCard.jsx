@@ -1,4 +1,5 @@
 import React from 'react';
+import { getAffiliateLink } from '../utils/affiliate';
 
 const ProductCard = ({ productName, productImg, productPrice, productId, productUrl, onDelete }) => {
 
@@ -31,7 +32,8 @@ const ProductCard = ({ productName, productImg, productPrice, productId, product
 
     const handleCardClick = () => {
         if (productUrl) {
-            window.open(productUrl, '_blank');
+            const affiliateUrl = getAffiliateLink(productUrl);
+            window.open(affiliateUrl, '_blank');
         }
     };
 
