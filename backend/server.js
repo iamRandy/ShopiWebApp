@@ -5,11 +5,14 @@ const express = require('express');
 const dotenv = require('dotenv');
 const { MongoClient } = require('mongodb');
 const jwt = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
 
 dotenv.config();
 
 const app = express();
 const PORT = 3000;
+const client_id = process.env.VITE_CLIENT_ID;
+const oauth_client = new OAuth2Client(client_id);
 
 // const __dirname = __dirname;
 
@@ -29,6 +32,29 @@ async function init() {
   usersCollection = db.collection("users");
   app.listen(PORT, () => console.log("API ready on", PORT));
 }
+
+// Middleware to verify JWT token
+const verifyToken = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    const token = authHeader.split(' ')[1];
+    const ticket = await oauth_client.verifyIdToken({
+      idToken: token,
+      audience: client_id,
+    });
+    
+    const payload = ticket.getPayload();
+    req.user = payload; // Add user info to request
+    next();
+  } catch (error) {
+    console.error('Token verification failed:', error);
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+};
 
 // API routes
 app.post('/api/login/google', async (req, res) => {
@@ -66,10 +92,10 @@ app.post('/api/login/google', async (req, res) => {
 });
 
 // fetch the logged-in user's own products
-app.get('/api/products/:sub', async (req, res) => {
+app.get('/api/products', verifyToken, async (req, res) => {
   try {
     const doc = await usersCollection.findOne(
-      { sub: req.params.sub },
+      { sub: req.user.sub }, // Use verified user from token
       { projection: { _id: 0, products: 1 } }
     )
     res.json(doc?.products || [])
@@ -80,9 +106,8 @@ app.get('/api/products/:sub', async (req, res) => {
 })
 
 // delete a specific product for a user
-app.delete('/api/products/:sub', async (req, res) => {
+app.delete('/api/products', verifyToken, async (req, res) => {
   try {
-    const { sub } = req.params;
     const { productId } = req.body;
 
     if (!productId) {
@@ -91,7 +116,7 @@ app.delete('/api/products/:sub', async (req, res) => {
 
     // Try to remove the product with the matching ID first
     let result = await usersCollection.updateOne(
-      { sub: sub },
+      { sub: req.user.sub }, // Use verified user from token
       { $pull: { products: { id: productId } } }
     );
 

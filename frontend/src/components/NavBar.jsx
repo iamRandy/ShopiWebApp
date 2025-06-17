@@ -38,6 +38,7 @@ const NavBar = () => {
         clearExtensionStorage();
         
         // Clear web app localStorage
+        localStorage.removeItem('authToken');
         localStorage.removeItem('userSub');
         localStorage.removeItem('userEmail');
         localStorage.removeItem('userName');

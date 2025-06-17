@@ -8,8 +8,8 @@ const Home = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        const userSub = localStorage.getItem('userSub');
-        if (!userSub) {
+        const token = localStorage.getItem('authToken');
+        if (!token) {
             navigate('/');
         }
     }, [navigate]);

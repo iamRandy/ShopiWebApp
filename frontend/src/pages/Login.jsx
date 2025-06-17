@@ -7,16 +7,12 @@ import { useEffect } from "react";
 const EXT_ID = import.meta.env.VITE_EXTENSION_ID;
 
 const Login = () => {
-  // function handleLogout() {
-  //     googleLogout(); << import this with GoogleLogin
-  // }
-
   const navigate = useNavigate();
 
   // Check if user is already authenticated
   useEffect(() => {
-    const userSub = localStorage.getItem('userSub');
-    if (userSub) {
+    const token = localStorage.getItem('authToken');
+    if (token) {
       console.log("User already authenticated, redirecting to home");
       navigate("/home");
     }
@@ -86,7 +82,8 @@ const Login = () => {
                 // Send userSub to extension
                 sendUserSubToExtension(decoded.sub);
                 
-                // Store user sub in localStorage for use in other components
+                // Store JWT token for authentication
+                localStorage.setItem('authToken', credentialResponse.credential);
                 localStorage.setItem('userSub', decoded.sub);
                 localStorage.setItem('userEmail', decoded.email);
                 localStorage.setItem('userName', decoded.name);

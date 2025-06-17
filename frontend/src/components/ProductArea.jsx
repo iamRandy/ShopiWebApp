@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import ProductCard from './ProductCard';
+import { authenticatedFetch } from '../utils/api';
 
 const ProductArea = () => {
     const [products, setProducts] = useState([]);
@@ -9,14 +10,7 @@ const ProductArea = () => {
 
     const fetchProducts = async () => {
         try {
-            const userSub = localStorage.getItem('userSub');
-            if (!userSub) {
-                setError('No user found. Please log in again.');
-                setLoading(false);
-                return;
-            }
-
-            const response = await fetch(`http://localhost:3000/api/products/${userSub}`);
+            const response = await authenticatedFetch('http://localhost:3000/api/products');
             if (!response.ok) {
                 throw new Error('Failed to fetch products');
             }

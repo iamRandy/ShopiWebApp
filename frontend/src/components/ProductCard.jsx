@@ -1,5 +1,6 @@
 import React from 'react';
 import { getAffiliateLink } from '../utils/affiliate';
+import { authenticatedFetch } from '../utils/api';
 
 const ProductCard = ({ productName, productImg, productPrice, productId, productUrl, onDelete }) => {
 
@@ -7,12 +8,8 @@ const ProductCard = ({ productName, productImg, productPrice, productId, product
         e.stopPropagation(); // Prevent triggering the product link
         if (window.confirm('Are you sure you want to delete this product?')) {
             try {
-                const userSub = localStorage.getItem('userSub');
-                const response = await fetch(`http://localhost:3000/api/products/${userSub}`, {
+                const response = await authenticatedFetch('http://localhost:3000/api/products', {
                     method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
                     body: JSON.stringify({ productId }),
                 });
 
