@@ -2,6 +2,7 @@
 import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 const EXT_ID = import.meta.env.VITE_EXTENSION_ID;
 
@@ -11,6 +12,15 @@ const Login = () => {
   // }
 
   const navigate = useNavigate();
+
+  // Check if user is already authenticated
+  useEffect(() => {
+    const userSub = localStorage.getItem('userSub');
+    if (userSub) {
+      console.log("User already authenticated, redirecting to home");
+      navigate("/home");
+    }
+  }, [navigate]);
 
   function loginSuccess(cRes) {
     try {
