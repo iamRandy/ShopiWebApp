@@ -30,8 +30,8 @@ const ProductCard = ({ productName, productImg, productPrice, productId, onDelet
 
     return (
         <>
-            <div className="aspect-square w-full">
-                <div className="relative border w-full h-full flex justify-center items-center">
+            <div className="w-64 h-80 flex flex-col border rounded-lg overflow-hidden">
+                <div className="relative w-full h-64 flex justify-center items-center bg-white">
                     
                     {/* Delete button in top right */}
                     <button
@@ -42,15 +42,13 @@ const ProductCard = ({ productName, productImg, productPrice, productId, onDelet
                         ×
                     </button>
                     
-                    <img alt="product image" src={productImg} className="w-full h-full object-cover" />
+                    <img alt="product image" src={productImg} className="w-full h-full object-contain" />
+                </div>
 
-                    <div className="absolute w-full h-full flex items-end">
-                        <div className="bg-stone-950 w-full h-1/6 flex gap-2 justify-end items-end p-2">
-                            <span className="font-bold text-white">{productName}</span>
-                            <span className="text-white">{productPrice}</span>
-                        </div>
-                    </div>
-
+                {/* Separate bottom info bar */}
+                <div className="bg-stone-950 w-full h-16 flex gap-2 justify-end items-center p-2">
+                    <span className="font-bold text-white text-sm">{productName}</span>
+                    <span className="text-white text-sm">{productPrice}</span>
                 </div>
             </div>
         </>

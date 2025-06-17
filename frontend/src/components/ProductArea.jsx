@@ -100,7 +100,7 @@ const ProductArea = () => {
                     </button>
                     {/* Product grid */}
                     {!collapsed[retailer] && (
-                        <div className="p-3 grid grid-cols-1 gap-1 sm:grid-cols-2 md:grid-cols-3">
+                        <div className="p-3 grid gap-4" style={{gridTemplateColumns: 'repeat(auto-fit, minmax(256px, 256px))'}}>
                             {items.map((product) => (
                                 <ProductCard
                                     key={product.id}
