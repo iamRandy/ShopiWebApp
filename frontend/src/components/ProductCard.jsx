@@ -46,8 +46,8 @@ const ProductCard = ({ productName, productImg, productPrice, productId, onDelet
 
                     <div className="absolute w-full h-full flex items-end">
                         <div className="bg-stone-950 w-full h-1/6 flex gap-2 justify-end items-end p-2">
-                            <span className="font-bold">{productName}</span>
-                            <span>{productPrice}</span>
+                            <span className="font-bold text-white">{productName}</span>
+                            <span className="text-white">{productPrice}</span>
                         </div>
                     </div>
 
