@@ -2,7 +2,7 @@ import { ChromeIcon } from 'lucide-react';
 
 export default function Hero() {
     return (
-        <section className="text-center py-20">
+        <section className="text-center py-32">
             <div className="container mx-auto px-6">
                 <h1 className="text-5xl md:text-6xl font-extrabold leading-tight mb-4">
                     The Ultimate Browser Companion

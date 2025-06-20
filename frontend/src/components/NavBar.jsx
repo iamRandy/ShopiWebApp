@@ -82,15 +82,17 @@ const NavBar = ({ isLanding }) => {
         <>
             <nav className="fixed top-3 left-0 right-0 z-50 h-fit w-[95%] mx-auto">
                 <div className="flex w-full items-center justify-between rounded-full 
-                border border-white/20 bg-white/10 p-4 px-10 text-white backdrop-blur-lg shadow-lg">
+                border border-white/20 bg-white/10 p-4 px-10 text-white backdrop-blur-lg shadow-lg gap-10">
                     
                     {/* Left side */}
-                    <div className="flex items-center gap-3 w-full">
-                        <img src="/images/Avee.png" alt="Shopi" className="w-14 h-14" />
+                    <div className="flex items-center gap-3 w-fit">
+                        <p className="text-2xl font-bold">shopi</p>
+                    </div>
 
-                        <div className="links">
-                            <div className="text-lg">How it works</div>
-                        </div>
+                    <div className="flex w-full justify-center items-center gap-3">
+                        <div className="text-lg">Integrations</div>
+                        <div className="text-lg">How it works</div>
+                        <div className="text-lg">FAQs</div>
                     </div>
 
                     {/* Right side */}
