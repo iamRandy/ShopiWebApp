@@ -20,7 +20,7 @@ export default function Hero() {
                     href="https://chrome.google.com/webstore" //temp link for now
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center px-8 py-4 bg-blue-600 hover:bg-blue-700 hover:text-white text-white font-bold rounded-full text-lg transition-transform transform hover:scale-105 shadow-lg"
+                    className="inline-flex items-center justify-center px-8 py-4 bg-orange-400 hover:text-white text-white font-bold rounded-full text-lg transition-transform transform hover:scale-105 shadow-lg"
                 >
                     <ChromeIcon className="w-6 h-6 mr-3" />
                     Add to Chrome - It's Free!
