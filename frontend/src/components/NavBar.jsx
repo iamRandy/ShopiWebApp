@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 
-const NavBar = () => {
+// Navbar will be different on the landing page
+const NavBar = ({ isLanding }) => {
     const navigate = useNavigate();
     const userName = localStorage.getItem('userName') || 'User';
     const userEmail = localStorage.getItem('userEmail') || '';
@@ -44,7 +45,7 @@ const NavBar = () => {
         localStorage.removeItem('userName');
         
         // Navigate to login page
-        navigate('/');
+        navigate('/login');
     };
 
     const testExtensionCommunication = () => {
@@ -79,37 +80,42 @@ const NavBar = () => {
 
     return (
         <>
-            <nav className="h-fit w-screen">
-                <div className="w-full bg-stone-50 p-4 px-10 flex justify-between items-end text-stone-950">
+            <nav className="fixed top-3 left-0 right-0 z-50 h-fit w-[95%] mx-auto">
+                <div className="flex w-full items-center justify-between rounded-full 
+                border border-white/20 bg-white/10 p-4 px-10 text-white backdrop-blur-lg shadow-lg">
                     
                     {/* Left side */}
-                    <div className="flex gap-3 items-center">
-                        <p className="font-bold text-xl">Shopi</p>
+                    <div className="flex items-center gap-3 w-full">
+                        <img src="/images/Avee.png" alt="Shopi" className="w-14 h-14" />
 
                         <div className="links">
-                            {/* <div className="text-sm">testing</div> */}
+                            <div className="text-lg">How it works</div>
                         </div>
                     </div>
 
                     {/* Right side */}
-                    <div className="w-full flex justify-end">
+                    <div className="w-fit flex justify-end">
                         <div className="flex gap-3 items-center">
                             <div className="text-sm">
                                 <div className="font-medium">{userName}</div>
                                 <div className="text-xs text-gray-500">{userEmail}</div>
                             </div>
-                            <button 
-                                onClick={testExtensionCommunication}
-                                className="text-sm bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
-                            >
-                                Test Extension
-                            </button>
-                            <button 
-                                onClick={handleLogout}
-                                className="text-sm bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
-                            >
-                                Logout
-                            </button>
+                            {!isLanding && (
+                            <>
+                                <button 
+                                    onClick={testExtensionCommunication}
+                                    className="text-sm bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
+                                >
+                                    Test Extension
+                                </button>
+                                <button 
+                                    onClick={handleLogout}
+                                    className="text-sm bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
+                                >
+                                    Logout
+                                </button>
+                            </>
+                            )}
                         </div>
                     </div>
 
