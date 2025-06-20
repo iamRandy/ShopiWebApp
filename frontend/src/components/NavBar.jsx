@@ -1,4 +1,6 @@
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect } from 'react';
 
 // Navbar will be different on the landing page
 const NavBar = ({ isLanding }) => {
@@ -6,6 +8,16 @@ const NavBar = ({ isLanding }) => {
     const userName = localStorage.getItem('userName') || 'User';
     const userEmail = localStorage.getItem('userEmail') || '';
     const userSub = localStorage.getItem('userSub') || '';
+    const [isScrolled, setIsScrolled] = useState(false);
+    const [isInitialLoad, setIsInitialLoad] = useState(true);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            setIsScrolled(window.scrollY > 10);
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
 
     const clearExtensionStorage = () => {
         const EXT_ID = import.meta.env.VITE_EXTENSION_ID;
@@ -80,8 +92,13 @@ const NavBar = ({ isLanding }) => {
 
     return (
         <>
-            <nav className="fixed top-3 left-0 right-0 z-50 h-fit w-[95%] mx-auto">
-                <div className="flex w-full items-center justify-between rounded-full 
+            <motion.nav 
+                className="fixed top-3 left-0 right-0 z-50 h-fit mx-auto"
+                animate={{ width: isScrolled ? '140px' : '95%' }}
+                transition={{ duration: .8, ease: "easeInOut" }}
+            >
+                <div
+                    className="flex w-full items-center justify-between rounded-full 
                 border border-white/20 bg-white/10 p-4 px-10 text-white backdrop-blur-lg shadow-lg gap-10">
                     
                     {/* Left side */}
@@ -89,40 +106,56 @@ const NavBar = ({ isLanding }) => {
                         <p className="text-2xl font-bold">shopi</p>
                     </div>
 
-                    <div className="flex w-full justify-center items-center gap-3">
-                        <div className="text-lg">Integrations</div>
-                        <div className="text-lg">How it works</div>
-                        <div className="text-lg">FAQs</div>
-                    </div>
-
-                    {/* Right side */}
-                    <div className="w-fit flex justify-end">
-                        <div className="flex gap-3 items-center">
-                            <div className="text-sm">
-                                <div className="font-medium">{userName}</div>
-                                <div className="text-xs text-gray-500">{userEmail}</div>
-                            </div>
-                            {!isLanding && (
+                    <AnimatePresence>
+                        {!isScrolled && (
                             <>
-                                <button 
-                                    onClick={testExtensionCommunication}
-                                    className="text-sm bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
+                                <motion.div 
+                                    className="flex flex-1 justify-center items-center gap-6 whitespace-nowrap"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.2, delay: 0.2 }}
                                 >
-                                    Test Extension
-                                </button>
-                                <button 
-                                    onClick={handleLogout}
-                                    className="text-sm bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
-                                >
-                                    Logout
-                                </button>
-                            </>
-                            )}
-                        </div>
-                    </div>
+                                    <div className="text-lg">Integrations</div>
+                                    <div className="text-lg">How it works</div>
+                                    <div className="text-lg">FAQs</div>
+                                </motion.div>
 
+                                <motion.div
+                                    className="w-fit flex justify-end whitespace-nowrap"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.2, delay: 0.2 }}
+                                >
+                                    <div className="flex gap-3 items-center">
+                                        <div className="text-sm">
+                                            <div className="font-medium">{userName}</div>
+                                            <div className="text-xs text-gray-500">{userEmail}</div>
+                                        </div>
+                                        {!isLanding && (
+                                        <>
+                                            <button 
+                                                onClick={testExtensionCommunication}
+                                                className="text-sm bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
+                                            >
+                                                Test Extension
+                                            </button>
+                                            <button 
+                                                onClick={handleLogout}
+                                                className="text-sm bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
+                                            >
+                                                Logout
+                                            </button>
+                                        </>
+                                        )}
+                                    </div>
+                                </motion.div>
+                            </>
+                        )}
+                    </AnimatePresence>
                 </div>
-            </nav>
+            </motion.nav>
         </>
     )
 }
