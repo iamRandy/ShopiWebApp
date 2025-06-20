@@ -18,12 +18,11 @@ export default function HowItWorks() {
             <div className="container mx-auto px-6">
                 <div className="text-center mb-12">
                     <h2 className="text-4xl font-bold">Get Started in Seconds</h2>
-                    <p className="text-gray-400 mt-4">It's as easy as one, two, three.</p>
+                    <p className="text-gray-400 mt-4">The hardest part is choosing your favorite store! We got you covered with the rest.</p>
                 </div>
-                <div className="max-w-4xl mx-auto grid md:grid-cols-3 gap-8">
+                <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8">
                     <Step number="1" title="Install the Extension" description="Click the 'Add to Chrome' button to install from the Chrome Web Store." />
-                    <Step number="2" title="Pin to Toolbar" description="After installing, pin the extension to your toolbar for quick and easy access." />
-                    <Step number="3" title="Start Browsing Smarter" description="Enjoy a seamless and enhanced browsing experience with all features at your fingertips." />
+                    <Step number="2" title="Start Shopping" description="After installing, Avee will pop up on all your favorite retail sites automatically!" />
                 </div>
             </div>
         </section>
