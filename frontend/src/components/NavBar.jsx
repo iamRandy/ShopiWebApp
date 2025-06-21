@@ -117,15 +117,15 @@ const NavBar = ({ isLanding }) => {
                                     exit={{ opacity: 0 }}
                                     transition={{ duration: 0.2, delay: 0.2 }}
                                 >
-                                    <div className="text-lg flex gap-1 items-center">
+                                    <div className="text-lg flex gap-1 items-center special_links">
                                         <Blocks className="w-5 h-5" />
                                         Integrations
                                     </div>
-                                    <div className="text-lg flex gap-1 items-center">
+                                    <div className="text-lg flex gap-1 items-center special_links">
                                         <Cog className="w-5 h-5" />
                                         How it works
                                     </div>
-                                    <div className="text-lg flex gap-1 items-center">
+                                    <div className="text-lg flex gap-1 items-center special_links">
                                         <BadgeQuestionMark className="w-5 h-5" />
                                         FAQs
                                     </div>

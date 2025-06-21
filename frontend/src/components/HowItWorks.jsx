@@ -1,3 +1,6 @@
+import { motion, useInView } from "framer-motion";
+import { useRef } from "react";
+
 export default function HowItWorks() {
     const Step = ({ number, title, description }) => (
         <div className="flex items-start">
@@ -13,18 +16,51 @@ export default function HowItWorks() {
         </div>
     );
 
+    const ref = useRef(null);
+    const isInView = useInView(ref, { once: true, amount: 0.2 });
+
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.3,
+            },
+        },
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: {
+            opacity: 1,
+            y: 0,
+            transition: {
+                duration: 0.5,
+            },
+        },
+    };
+
     return (
-        <section className="py-20">
-            <div className="container mx-auto px-6">
-                <div className="text-center mb-12">
+        <section ref={ref} className="min-h-screen flex items-center justify-center">
+            <motion.div
+                className="container mx-auto px-6"
+                variants={containerVariants}
+                initial="hidden"
+                animate={isInView ? "visible" : "hidden"}
+            >
+                <motion.div variants={itemVariants} className="text-center mb-12">
                     <h2 className="text-4xl font-bold">Get Started in Seconds</h2>
-                    <p className="text-gray-400 mt-4">The hardest part is choosing your favorite store! We got you covered with the rest.</p>
-                </div>
+                    <p className="text-gray-500 mt-4">The hardest part is choosing your favorite store! We got you covered with the rest.</p>
+                </motion.div>
                 <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8">
-                    <Step number="1" title="Install the Extension" description="Click the 'Add to Chrome' button to install from the Chrome Web Store." />
-                    <Step number="2" title="Start Shopping" description="After installing, Avee will pop up on all your favorite retail sites automatically!" />
+                    <motion.div variants={itemVariants}>
+                        <Step number="1" title="Install the Extension" description="Click the 'Add to Chrome' button to install from the Chrome Web Store." />
+                    </motion.div>
+                    <motion.div variants={itemVariants}>
+                        <Step number="2" title="Start Shopping" description="After installing, Avee will pop up on all your favorite retail sites automatically!" />
+                    </motion.div>
                 </div>
-            </div>
+            </motion.div>
         </section>
     );
 } 
