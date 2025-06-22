@@ -71,7 +71,7 @@ export default function Hero() {
                         whileHover={{ scale: 1.05 }}
                         transition={{ duration: 0.4, ease: "easeInOut", delay: 3 }}
                         onClick={() => handleClick('home')}
-                        className="w-2/3 mx-auto inline-flex items-center justify-center px-8 py-4 bg-transparent border-4 border-amber-500 hover:bg-amber-500 text-amber-500 hover:text-white font-bold rounded-3xl text-lg shadow-lg"
+                        className="w-2/3 mx-auto inline-flex items-center justify-center px-8 py-4 bg-transparent border-4 border-amber-500 hover:bg-amber-400 text-amber-500 hover:text-white font-bold rounded-3xl text-lg shadow-lg"
                     >
                         I ALREADY HAVE AN ACCOUNT
                     </motion.button>

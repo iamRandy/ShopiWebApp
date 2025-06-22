@@ -49,8 +49,8 @@ export default function HowItWorks() {
                 animate={isInView ? "visible" : "hidden"}
             >
                 <motion.div variants={itemVariants} className="text-center mb-12">
-                    <h2 className="text-4xl font-bold">Get Started in Seconds</h2>
-                    <p className="text-gray-500 mt-4">The hardest part is choosing your favorite store! We got you covered with the rest.</p>
+                    <h2 className="text-4xl font-bold">How Avee Works</h2>
+                    <p className="text-gray-500 mt-4">Avee can help you make even the most complex shopping decisions, easier.</p>
                 </motion.div>
                 <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8">
                     <motion.div variants={itemVariants}>

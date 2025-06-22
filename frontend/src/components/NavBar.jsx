@@ -1,4 +1,4 @@
-import { User, Blocks, BadgeQuestionMark, Cog } from 'lucide-react';
+import { User, Blocks, BadgeQuestionMark, Cog} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from 'react';
@@ -127,12 +127,12 @@ const NavBar = ({ isLanding }) => {
                                     exit={{ opacity: 0 }}
                                     transition={{ duration: 0.2, delay: 0.2 }}
                                 >
-                                    <a href="#" className="text-lg flex gap-1 items-center special_links">
-                                        <Blocks className="w-5 h-5" />
-                                        Integrations
-                                    </a>
                                     <a href="#features" className="text-lg flex gap-1 items-center special_links">
                                         <Cog className="w-5 h-5" />
+                                        Key Features
+                                    </a>
+                                    <a href="#" className="text-lg flex gap-1 items-center special_links">
+                                        <Blocks className="w-5 h-5" />
                                         How it works
                                     </a>
                                     <a href="#how-it-works" className="text-lg flex gap-1 items-center special_links">
