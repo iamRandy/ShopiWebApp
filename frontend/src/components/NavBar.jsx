@@ -14,7 +14,8 @@ const NavBar = ({ isLanding }) => {
     const userEmail = localStorage.getItem('userEmail') || '';
     const userSub = localStorage.getItem('userSub') || '';
     const [isScrolled, setIsScrolled] = useState(false);
-    const [isInitialLoad, setIsInitialLoad] = useState(true);
+    const [isHovering, setIsHovering] = useState(false);
+    // const [isInitialLoad, setIsInitialLoad] = useState(true);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -102,21 +103,25 @@ const NavBar = ({ isLanding }) => {
     return (
         <>
             <motion.nav 
+                initial={{ width: '95%' }}
                 className="text-black fixed top-3 left-0 right-0 z-50 h-fit mx-auto"
-                animate={{ width: isScrolled ? '140px' : '95%' }}
+                // minimize when scrolling and expand when hovering or at the top
+                animate={{ width: (isScrolled && !isHovering) ? '140px' : '95%' }}
+                onHoverStart={() => setIsHovering(true)}
+                onHoverEnd={() => setIsHovering(false)}
                 transition={{ duration: .8, ease: "easeInOut" }}
             >
                 <div
-                    className="flex w-full items-center justify-between rounded-full 
-                border border-stone-500/20 bg-white/10 p-4 px-10 backdrop-blur-lg shadow-lg gap-10">
+                    className="relative flex w-full items-center justify-between rounded-full 
+                border border-stone-500/20 bg-white/10 p-4 px-10 backdrop-blur-lg shadow-lg gap-10 h-16">
                     
                     {/* Left side */}
-                    <div className="flex items-center gap-3 w-fit">
+                    <div className="absolute flex items-center gap-3 w-fit">
                         <a href="#" className="text-2xl font-bold">shopi</a>
                     </div>
 
                     <AnimatePresence>
-                        {!isScrolled && (
+                        {(!isScrolled || isHovering) && (
                             <>
                                 {/* Navbar for landing page */}
                                 { isLanding &&
@@ -131,7 +136,7 @@ const NavBar = ({ isLanding }) => {
                                         <Cog className="w-5 h-5" />
                                         Key Features
                                     </a>
-                                    <a href="#" className="text-lg flex gap-1 items-center special_links">
+                                    <a href="#how-it-works" className="text-lg flex gap-1 items-center special_links">
                                         <Blocks className="w-5 h-5" />
                                         How it works
                                     </a>
