@@ -38,7 +38,7 @@ const FeatureCard = ({ icon, title, description, delay }) => {
                             {description}
                         </div>
                         {/* Arrow pointing to the card */}
-                        <div className="absolute left-0 top-6 transform -translate-x-1 w-2 h-2 bg-white border-l border-t border-gray-200 rotate-45"></div>
+                        <div className="absolute left-0 top-6 transform -translate-x-1 w-2 h-2 bg-white rotate-45"></div>
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -67,7 +67,7 @@ export default function Features() {
     return (
         <section id="features" className="min-h-screen flex items-center justify-center text-center">
             <div className="container h-full mx-auto px-6 flex items-center">
-                <div className="text-center">
+                <div className="text-center ml-20">
                     <h2 className="text-4xl font-bold">Key Features</h2>
                     <p className="text-gray-500 mt-4 max-w-2xl mx-auto">
                         Avee can help you make even the most complex shopping decisions, easier.
