@@ -118,6 +118,8 @@ const NavBar = ({ isLanding }) => {
                     <AnimatePresence>
                         {!isScrolled && (
                             <>
+                                {/* Navbar for landing page */}
+                                { isLanding &&
                                 <motion.div 
                                     className="flex flex-1 justify-center md:gap-10 sm:gap-5 lg:gap-10 items-center whitespace-nowrap"
                                     initial={{ opacity: 0 }}
@@ -138,7 +140,10 @@ const NavBar = ({ isLanding }) => {
                                         FAQs
                                     </a>
                                 </motion.div>
-
+                                }
+                                
+                                {/* Navbar for non-landing pages */}
+                                { !isLanding &&
                                 <motion.div
                                     className="w-fit flex justify-end whitespace-nowrap"
                                     initial={{ opacity: 0 }}
@@ -163,19 +168,20 @@ const NavBar = ({ isLanding }) => {
                                             </button> */}
                                             {( isAuthenticated ? <button 
                                                 onClick={handleLogout}
-                                                className="text-sm bg-red-500 hover:bg-red-600 px-3 py-1 rounded"
+                                                className="text-sm bg-amber-500 text-white hover:bg-amber-600 px-3 py-1 rounded"
                                             >
                                                 Logout
                                             </button> : <button 
                                                 onClick={handleLogin}
-                                                className="text-sm bg-blue-500 hover:bg-blue-600 px-3 py-1 rounded"
+                                                className="text-sm bg-amber-500 text-white hover:bg-amber-600 px-3 py-1 rounded"
                                             >
                                                 Login
                                             </button>)}
                                         </>
                                         )}
-                                    </div>
-                                </motion.div>
+                                        </div>
+                                    </motion.div>
+                                }
                             </>
                         )}
                     </AnimatePresence>
