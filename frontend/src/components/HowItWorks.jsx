@@ -41,7 +41,7 @@ export default function HowItWorks() {
     };
 
     return (
-        <section ref={ref} className="min-h-screen flex items-center justify-center">
+        <section ref={ref} id="how-it-works" className="min-h-screen flex items-center justify-center">
             <motion.div
                 className="container mx-auto px-6"
                 variants={containerVariants}

@@ -21,7 +21,7 @@ const FeatureCard = ({ icon, title, description, delay }) => (
 
 export default function Features() {
     return (
-        <section className="min-h-screen flex items-center justify-center text-center">
+        <section id="features" className="min-h-screen flex items-center justify-center text-center">
             <div className="container mx-auto px-6">
                 <div className="text-center mb-12">
                     <h2 className="text-4xl font-bold">Why You'll Love It</h2>

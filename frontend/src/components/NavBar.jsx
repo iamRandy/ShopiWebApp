@@ -6,6 +6,9 @@ import { useState, useEffect } from 'react';
 // Navbar will be different on the landing page
 const NavBar = ({ isLanding }) => {
     const navigate = useNavigate();
+    const authToken = localStorage.getItem('authToken');
+    const isAuthenticated = !!authToken;
+
     const userName = localStorage.getItem('userName') || 'User';
     const userEmail = localStorage.getItem('userEmail') || '';
     const userSub = localStorage.getItem('userSub') || '';
@@ -104,7 +107,7 @@ const NavBar = ({ isLanding }) => {
                     
                     {/* Left side */}
                     <div className="flex items-center gap-3 w-fit">
-                        <p className="text-2xl font-bold">shopi</p>
+                        <a href="#" className="text-2xl font-bold">shopi</a>
                     </div>
 
                     <AnimatePresence>
@@ -117,18 +120,18 @@ const NavBar = ({ isLanding }) => {
                                     exit={{ opacity: 0 }}
                                     transition={{ duration: 0.2, delay: 0.2 }}
                                 >
-                                    <div className="text-lg flex gap-1 items-center special_links">
+                                    <a href="#" className="text-lg flex gap-1 items-center special_links">
                                         <Blocks className="w-5 h-5" />
                                         Integrations
-                                    </div>
-                                    <div className="text-lg flex gap-1 items-center special_links">
+                                    </a>
+                                    <a href="#features" className="text-lg flex gap-1 items-center special_links">
                                         <Cog className="w-5 h-5" />
                                         How it works
-                                    </div>
-                                    <div className="text-lg flex gap-1 items-center special_links">
+                                    </a>
+                                    <a href="#how-it-works" className="text-lg flex gap-1 items-center special_links">
                                         <BadgeQuestionMark className="w-5 h-5" />
                                         FAQs
-                                    </div>
+                                    </a>
                                 </motion.div>
 
                                 <motion.div
@@ -140,24 +143,30 @@ const NavBar = ({ isLanding }) => {
                                 >
                                     <div className="flex gap-3 items-center">
                                         <User className="w-5 h-5" />
+                                        {isAuthenticated &&
                                         <div className="text-sm">
                                             <div className="font-medium">{userName}</div>
                                             <div className="text-xs text-gray-500">{userEmail}</div>
-                                        </div>
-                                        {!isLanding && (
+                                        </div>}
+                                        {(
                                         <>
-                                            <button 
+                                            {/* <button 
                                                 onClick={testExtensionCommunication}
                                                 className="text-sm bg-blue-500 hover:bg-blue-600 px-3 py-1 rounded"
                                             >
                                                 Test Extension
-                                            </button>
-                                            <button 
+                                            </button> */}
+                                            {( isAuthenticated ? <button 
                                                 onClick={handleLogout}
                                                 className="text-sm bg-red-500 hover:bg-red-600 px-3 py-1 rounded"
                                             >
                                                 Logout
-                                            </button>
+                                            </button> : <button 
+                                                // onClick={handleLogin}
+                                                className="text-sm bg-blue-500 hover:bg-blue-600 px-3 py-1 rounded"
+                                            >
+                                                Login
+                                            </button>)}
                                         </>
                                         )}
                                     </div>
