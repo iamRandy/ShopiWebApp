@@ -68,8 +68,9 @@ const ProductArea = () => {
 
     if (products.length === 0) {
         return (
-            <div className="p-3 flex justify-center items-center h-64">
+            <div className="relative p-3 flex flex-col justify-center items-center h-full">
                 <div className="text-gray-500">No products saved yet. Use the extension to save some products!</div>
+                <a href="http://localhost:5173/" className="text-sm text-blue-500 hover:text-blue-700 absolute bottom-5">Need help?</a>
             </div>
         );
     }
