@@ -2,8 +2,9 @@ import { User, Blocks, BadgeQuestionMark, Cog } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from 'react';
+import { GoogleLogin } from '@react-oauth/google';
+import { jwtDecode } from 'jwt-decode';
 
-// Navbar will be different on the landing page
 const NavBar = ({ isLanding }) => {
     const navigate = useNavigate();
     const authToken = localStorage.getItem('authToken');
@@ -48,6 +49,10 @@ const NavBar = ({ isLanding }) => {
                 EXT_ID: EXT_ID
             });
         }
+    };
+
+    const handleLogin = () => {
+        navigate('/login');
     };
 
     const handleLogout = () => {
@@ -162,7 +167,7 @@ const NavBar = ({ isLanding }) => {
                                             >
                                                 Logout
                                             </button> : <button 
-                                                // onClick={handleLogin}
+                                                onClick={handleLogin}
                                                 className="text-sm bg-blue-500 hover:bg-blue-600 px-3 py-1 rounded"
                                             >
                                                 Login

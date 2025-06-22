@@ -69,7 +69,7 @@ const Login = () => {
   return (
     <>
       <div className="w-full h-screen flex text-center justify-center items-center">
-        <div className="border w-1/2 h-1/3 rounded-lg p-8 flex flex-col gap-3">
+        <div className="border w-fit h-fit rounded-lg p-8 flex flex-col justify-center items-center gap-3">
           <h3 className="text-2xl font-bold">Sign in</h3>
           <div className="flex justify-center" style={{ colorScheme: "light" }}>
             <GoogleLogin
@@ -89,7 +89,7 @@ const Login = () => {
                 localStorage.setItem('userName', decoded.name);
                 console.log(decoded);
                 loginSuccess(credentialResponse);
-                navigate("home");
+                navigate('/home');
               }}
               onError={() => console.log("login failed")}
               auto_select={true}
