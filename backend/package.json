@@ -5,6 +5,7 @@
     "express": "^5.1.0",
     "google-auth-library": "^10.1.0",
     "jsonwebtoken": "^9.0.2",
+    "jwt-decode": "^4.0.0",
     "mongodb": "^6.17.0"
   }
 }
