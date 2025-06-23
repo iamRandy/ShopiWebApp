@@ -55,7 +55,9 @@ const Login = () => {
       localStorage.setItem('userName', decoded.name);
       
       loginSuccess(credentialResponse);
-      navigate('/home');
+      
+      // TODO: navigate to home page IFF user is not coming from extension
+      navigate('/home'); 
       
     } catch (error) {
       console.error("Error decoding JWT:", error);
