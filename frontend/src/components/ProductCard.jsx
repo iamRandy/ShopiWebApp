@@ -1,8 +1,10 @@
 import React from 'react';
 import { getAffiliateLink } from '../utils/affiliate';
 import { authenticatedFetch } from '../utils/api';
+import { useNavigate } from 'react-router-dom';
 
 const ProductCard = ({ productName, productImg, productPrice, productId, productUrl, onDelete }) => {
+    const navigate = useNavigate();
 
     const handleDelete = async (e) => {
         e.stopPropagation(); // Prevent triggering the product link
@@ -22,6 +24,13 @@ const ProductCard = ({ productName, productImg, productPrice, productId, product
                 }
             } catch (error) {
                 console.error('Error deleting product:', error);
+                
+                // If it's an authentication error, redirect to login instead of showing error
+                if (error.message === 'No authentication token found' || error.message === 'Authentication failed') {
+                    navigate('/login');
+                    return;
+                }
+                
                 alert('Failed to delete product. Please try again.');
             }
         }

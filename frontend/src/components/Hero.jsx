@@ -20,7 +20,37 @@ export default function Hero() {
                 navigate('/login');
                 break;
             case 'home':
-                navigate('/home');
+                // Check if user is authenticated before navigating to home
+                const token = localStorage.getItem('authToken');
+                if (token) {
+                    // Optionally, we could also verify if the token is still valid
+                    try {
+                        const payload = JSON.parse(atob(token.split('.')[1]));
+                        const currentTime = Math.floor(Date.now() / 1000);
+                        
+                        if (payload.exp && payload.exp > currentTime) {
+                            // Token is valid, navigate to home
+                            navigate('/home');
+                        } else {
+                            // Token is expired, clear it and go to login
+                            localStorage.removeItem('authToken');
+                            localStorage.removeItem('userSub');
+                            localStorage.removeItem('userEmail');
+                            localStorage.removeItem('userName');
+                            navigate('/login');
+                        }
+                    } catch (error) {
+                        // Token is invalid, clear it and go to login
+                        localStorage.removeItem('authToken');
+                        localStorage.removeItem('userSub');
+                        localStorage.removeItem('userEmail');
+                        localStorage.removeItem('userName');
+                        navigate('/login');
+                    }
+                } else {
+                    // No token found, redirect to login
+                    navigate('/login');
+                }
                 break;
             default:
                 break;

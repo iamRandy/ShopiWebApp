@@ -2,8 +2,10 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import ProductCard from './ProductCard';
 import { authenticatedFetch } from '../utils/api';
+import { useNavigate } from 'react-router-dom';
 
 const ProductArea = () => {
+    const navigate = useNavigate();
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -21,6 +23,13 @@ const ProductArea = () => {
             setLoading(false);
         } catch (err) {
             console.error('Error fetching products:', err);
+            
+            // If it's an authentication error, redirect to login instead of showing error
+            if (err.message === 'No authentication token found' || err.message === 'Authentication failed') {
+                navigate('/login');
+                return;
+            }
+            
             setError('Failed to load products');
             setLoading(false);
         }
