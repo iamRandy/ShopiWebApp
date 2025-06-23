@@ -1,3 +1,4 @@
+import { AnimatePresence, motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import ProductCard from './ProductCard';
 import { authenticatedFetch } from '../utils/api';
@@ -68,20 +69,21 @@ const ProductArea = () => {
 
     if (products.length === 0) {
         return (
-            <div className="p-3 flex justify-center items-center h-64">
+            <div className="relative p-3 flex flex-col justify-center items-center h-full">
                 <div className="text-gray-500">No products saved yet. Use the extension to save some products!</div>
+                <a href="http://localhost:5173/" className="text-sm text-blue-500 hover:text-blue-700 absolute bottom-5">Need help?</a>
             </div>
         );
     }
 
     return (
-        <div className="p-3 space-y-4">
+        <div className="p-9 mt-12 space-y-4">
             {Object.entries(groupedProducts).map(([retailer, items]) => (
-                <div key={retailer} className="border rounded-lg overflow-hidden bg-stone-50 text-stone-950">
+                <div key={retailer} className="border rounded-lg overflow-hidden text-stone-950 bg-stone-50">
                     {/* Header button */}
                     <button
                         onClick={() => toggleCollapse(retailer)}
-                        className="w-full flex items-center justify-between px-4 py-2 bg-stone-100 hover:bg-stone-200 transition-colors"
+                        className="w-full flex items-center justify-between px-4 py-2 bg-orange-300 hover:bg-orange-400 transition-colors"
                     >
                         <span className="font-semibold text-lg">{retailer} ({items.length})</span>
                         {/* Simple chevron icon */}
@@ -93,21 +95,34 @@ const ProductArea = () => {
                         </svg>
                     </button>
                     {/* Product grid */}
-                    {!collapsed[retailer] && (
-                        <div className="p-3 grid gap-3" style={{gridTemplateColumns: 'repeat(auto-fit, minmax(208px, 208px))'}}>
-                            {items.map((product) => (
-                                <ProductCard
-                                    key={product.id}
-                                    productName={product.title || 'Unknown Product'}
-                                    productImg={product.image || 'https://via.placeholder.com/300x300?text=No+Image'}
-                                    productPrice={product.price ? `${product.currency || '$'}${product.price}` : 'Price not available'}
-                                    productId={product.id}
-                                    productUrl={product.url}
-                                    onDelete={handleProductDelete}
-                                />
-                            ))}
-                        </div>
-                    )}
+                    <AnimatePresence initial={false}>
+                        {!collapsed[retailer] && (
+
+                            <motion.div
+                                key="content"
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1}}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.35, ease: "easeInOut" }}
+                                style={{ overflow: "hidden" }}
+                            >
+                                <div className="p-3 grid gap-3" style={{gridTemplateColumns: 'repeat(auto-fit, minmax(208px, 208px))'}}>
+                                    {items.map((product) => (
+                                        <ProductCard
+                                            key={product.id}
+                                            productName={product.title || 'Unknown Product'}
+                                            productImg={product.image || 'https://via.placeholder.com/300x300?text=No+Image'}
+                                            productPrice={product.price ? `${product.currency || '$'}${product.price}` : 'Price not available'}
+                                            productId={product.id}
+                                            productUrl={product.url}
+                                            onDelete={handleProductDelete}
+                                        />
+                                    ))}
+                                </div>
+                            </motion.div>
+
+                        )}
+                    </AnimatePresence>
                 </div>
             ))}
         </div>

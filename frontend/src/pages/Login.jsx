@@ -3,6 +3,7 @@ import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import { motion } from "framer-motion";
 
 const EXT_ID = import.meta.env.VITE_EXTENSION_ID;
 
@@ -13,10 +14,55 @@ const Login = () => {
   useEffect(() => {
     const token = localStorage.getItem('authToken');
     if (token) {
-      console.log("User already authenticated, redirecting to home");
-      navigate("/home");
+      try {
+        const decoded = jwtDecode(token);
+        const currentTime = Math.floor(Date.now() / 1000);
+        
+        if (decoded.exp < currentTime) {
+          console.log("Found expired token, clearing...");
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('userSub');
+          localStorage.removeItem('userEmail');
+          localStorage.removeItem('userName');
+        } else {
+          console.log("Token is valid, redirecting to home");
+          navigate("/home");
+        }
+      } catch (error) {
+        console.log("Invalid token, clearing...");
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userSub');
+        localStorage.removeItem('userEmail');
+        localStorage.removeItem('userName');
+      }
     }
   }, [navigate]);
+
+  const handleGoogleSuccess = (credentialResponse) => {
+    console.log("JWT credential response:", credentialResponse);
+    
+    try {
+      const decoded = jwtDecode(credentialResponse.credential);
+      console.log("Decoded user data:", decoded);
+      
+      // Send userSub to extension
+      sendUserSubToExtension(decoded.sub);
+      
+      // Store JWT token for authentication
+      localStorage.setItem('authToken', credentialResponse.credential);
+      localStorage.setItem('userSub', decoded.sub);
+      localStorage.setItem('userEmail', decoded.email);
+      localStorage.setItem('userName', decoded.name);
+      
+      loginSuccess(credentialResponse);
+      
+      // TODO: navigate to home page IFF user is not coming from extension
+      navigate('/home'); 
+      
+    } catch (error) {
+      console.error("Error decoding JWT:", error);
+    }
+  };
 
   function loginSuccess(cRes) {
     try {
@@ -67,39 +113,36 @@ const Login = () => {
   };
 
   return (
-    <>
-      <div className="w-full h-screen flex text-center justify-center items-center">
-        <div className="border w-fit h-fit rounded-lg p-8 flex flex-col justify-center items-center gap-3">
-          <h3 className="text-2xl font-bold">Sign in</h3>
-          <div className="flex justify-center" style={{ colorScheme: "light" }}>
-            <GoogleLogin
-              onSuccess={(credentialResponse) => {
-                console.log(credentialResponse);
-                const decoded = jwtDecode(credentialResponse.credential);
-                console.log("Decoded user data:", decoded);
-                console.log("Extension ID:", EXT_ID);
-                
-                // Send userSub to extension
-                sendUserSubToExtension(decoded.sub);
-                
-                // Store JWT token for authentication
-                localStorage.setItem('authToken', credentialResponse.credential);
-                localStorage.setItem('userSub', decoded.sub);
-                localStorage.setItem('userEmail', decoded.email);
-                localStorage.setItem('userName', decoded.name);
-                console.log(decoded);
-                loginSuccess(credentialResponse);
-                navigate('/home');
-              }}
-              onError={() => console.log("login failed")}
-              auto_select={true}
-              shape="rectangular"
-              logo_alignment="center"
-            />
-          </div>
+    <div className="w-full h-screen flex text-center text-black justify-center items-center bg-gray-200">
+      <div className="relative w-full h-full overflow-hidden">
+        <div id="image-container" className="z-[1] w-1/2 h-full absolute rotate-[20deg] translate-x-[5%] -translate-y-1/2 opacity-10">
+          <img src="/images/Avee.png" alt="Avee" className="w-full h-full object-contain" />
+        </div>
+        <div id="image-container" className="z-[1] w-1/2 h-full absolute -rotate-[20deg] translate-x-[98%] translate-y-1/2 opacity-10">
+          <img src="/images/Avee.png" alt="Avee" className="w-full h-full object-contain" />
+        </div>
+        
+        <div className="z-[2] border w-fit h-fit rounded-lg p-8 flex flex-col justify-center items-center gap-6 bg-white shadow-xl absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+          <motion.h3 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-2xl font-bold text-gray-800"
+          >
+            Sign up / Log in
+          </motion.h3>
+          
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => console.log("Login failed")}
+            theme="outline"
+            size="large"
+            text="signin_with"
+            shape="rectangular"
+            logo_alignment="center"
+          />
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
