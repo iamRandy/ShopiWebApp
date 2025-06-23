@@ -16,7 +16,7 @@ const Home = () => {
 
     return (
         <>
-            <div className="h-full bg-gray-100">
+            <div className="h-full">
                 <Navbar />
                 <ProductArea />
             </div>

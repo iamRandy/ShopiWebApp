@@ -76,9 +76,9 @@ const ProductArea = () => {
     }
 
     return (
-        <div className="p-3 space-y-4">
+        <div className="p-9 mt-12 space-y-4">
             {Object.entries(groupedProducts).map(([retailer, items]) => (
-                <div key={retailer} className="border rounded-lg overflow-hidden bg-stone-50 text-stone-950">
+                <div key={retailer} className="border rounded-lg overflow-hidden text-stone-950">
                     {/* Header button */}
                     <button
                         onClick={() => toggleCollapse(retailer)}
