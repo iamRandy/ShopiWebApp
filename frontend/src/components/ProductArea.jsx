@@ -88,13 +88,14 @@ const ProductArea = () => {
     return (
         <div className="p-9 mt-12 space-y-4">
             {Object.entries(groupedProducts).map(([retailer, items]) => (
-                <div key={retailer} className="border rounded-lg overflow-hidden text-stone-950 bg-stone-50">
+                <div key={retailer} style={{ borderColor: '#f4f0e3' }} className="border rounded-lg overflow-hidden text-stone-950 bg-stone-50">
                     {/* Header button */}
                     <button
                         onClick={() => toggleCollapse(retailer)}
-                        className="w-full flex items-center justify-between px-4 py-2 bg-orange-300 hover:bg-orange-400 transition-colors"
+                        className="w-full flex items-center justify-between px-4 py-2"
+                        style={{ backgroundColor: '#ffe8c3' }}
                     >
-                        <span className="font-semibold text-lg">{retailer} ({items.length})</span>
+                        <span style={{ color: '#f48813' }} className="font-semibold text-lg">{retailer} ({items.length})</span>
                         {/* Simple chevron icon */}
                         <svg
                             className={`w-4 h-4 transform transition-transform ${collapsed[retailer] ? 'rotate-90' : 'rotate-0'}`}
@@ -115,7 +116,13 @@ const ProductArea = () => {
                                 transition={{ duration: 0.35, ease: "easeInOut" }}
                                 style={{ overflow: "hidden" }}
                             >
-                                <div className="p-3 grid gap-3" style={{gridTemplateColumns: 'repeat(auto-fit, minmax(208px, 208px))'}}>
+                                <div 
+                                    className="p-3 grid gap-3" 
+                                    style={{
+                                        gridTemplateColumns: 'repeat(auto-fit, minmax(208px, 208px))',
+                                        backgroundColor: '#fefcf8',
+                                    }}
+                                >
                                     {items.map((product) => (
                                         <ProductCard
                                             key={product.id}

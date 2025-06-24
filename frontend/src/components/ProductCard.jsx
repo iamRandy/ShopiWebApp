@@ -48,6 +48,9 @@ const ProductCard = ({ productName, productImg, productPrice, productId, product
             <div 
                 className="w-52 h-64 flex flex-col border rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow duration-200"
                 onClick={handleCardClick}
+                style={{
+                    borderColor: '#f4f0e3'
+                }}
             >
                 <div className="relative w-full h-52 flex justify-center items-center bg-white">
                     
@@ -64,9 +67,9 @@ const ProductCard = ({ productName, productImg, productPrice, productId, product
                 </div>
 
                 {/* Separate bottom info bar */}
-                <div className="bg-stone-950 w-full h-12 flex gap-2 justify-between items-center p-2">
-                    <span className="font-bold text-white text-xs line-clamp-2">{productName}</span>
-                    <span className="text-white text-xs whitespace-nowrap">{productPrice}</span>
+                <div style={{ backgroundColor: '#000000' }} className="text-white text-xs w-full h-12 flex gap-2 justify-between items-center p-2">
+                    <span className="font-bold line-clamp-2">{productName}</span>
+                    <span className="whitespace-nowrap">{productPrice}</span>
                 </div>
             </div>
         </>
