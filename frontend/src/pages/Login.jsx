@@ -45,8 +45,8 @@ const Login = () => {
       const decoded = jwtDecode(credentialResponse.credential);
       console.log("Decoded user data:", decoded);
       
-      // Send userSub to extension
-      sendUserSubToExtension(decoded.sub);
+      // Send user info to extension
+      sendUserInfoToExtension({ sub: decoded.sub, name: decoded.name });
       
       // Store JWT token for authentication
       localStorage.setItem('authToken', credentialResponse.credential);
@@ -57,6 +57,7 @@ const Login = () => {
       loginSuccess(credentialResponse);
       
       // TODO: navigate to home page IFF user is not coming from extension
+      return;
       navigate('/home'); 
       
     } catch (error) {
@@ -83,8 +84,9 @@ const Login = () => {
     }
   }
 
-  const sendUserSubToExtension = (userSub) => {
-    console.log("Sending userSub to extension:", userSub);
+  const sendUserInfoToExtension = ({ sub, name }) => {
+
+    console.log("Sending user info to extension:", sub, name);
     console.log("Extension ID:", EXT_ID);
     
     // Send message to extension using chrome.runtime.sendMessage with extension ID
@@ -92,13 +94,13 @@ const Login = () => {
       console.log("Sending message to extension via chrome.runtime.sendMessage");
       window.chrome.runtime.sendMessage(
         EXT_ID,
-        { type: "SET_SUB", sub: userSub },
+        { type: "SET_USER_INFO", sub, name },
         (response) => {
           console.log("Extension response:", response);
           if (chrome.runtime.lastError) {
             console.error("Extension communication error:", chrome.runtime.lastError);
           } else {
-            console.log("Successfully sent userSub to extension");
+            console.log("Successfully sent user info to extension");
           }
         }
       );
