@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { getAffiliateLink } from "../utils/affiliate";
 import { authenticatedFetch } from "../utils/api";
 import { useNavigate } from "react-router-dom";
@@ -15,6 +15,7 @@ const ProductModal = ({
   onDelete,
 }) => {
   const navigate = useNavigate();
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   if (!isOpen) return null;
 
@@ -71,9 +72,9 @@ const ProductModal = ({
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
       onClick={handleBackdropClick}
     >
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+      <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[70vh] overflow-y-auto shadow-2xl">
         {/* Header */}
-        <div className="relative p-4 border-b border-gray-200">
+        <div className="relative p-4">
           {/* X button in top left */}
           <button
             onClick={onClose}
@@ -86,7 +87,7 @@ const ProductModal = ({
           {/* Edit and Delete buttons in top right */}
           <div className="absolute top-3 right-3 flex gap-2">
             <button
-              className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm transition-colors duration-200"
+              className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-xl text-sm transition-colors duration-200"
               title="Edit product (coming soon)"
               disabled
             >
@@ -94,21 +95,17 @@ const ProductModal = ({
             </button>
             <button
               onClick={handleDelete}
-              className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm transition-colors duration-200"
+              className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-xl text-sm transition-colors duration-200"
               title="Delete product"
             >
               Delete
             </button>
           </div>
-
-          <h2 className="text-xl font-bold text-gray-800 mx-12 text-center">
-            Product Details
-          </h2>
         </div>
 
         {/* Content */}
         <div className="p-6">
-          <div className="flex flex-col md:flex-row gap-6">
+          <div className="flex flex-col md:flex-row gap-4">
             {/* Product Image */}
             <div className="flex-shrink-0">
               <img
@@ -117,7 +114,7 @@ const ProductModal = ({
                   "https://via.placeholder.com/300x300?text=No+Image"
                 }
                 alt={productName}
-                className="w-64 h-64 object-contain border rounded-lg bg-gray-50"
+                className="w-80 h-80 object-contain rounded-xl"
               />
             </div>
 
@@ -137,21 +134,33 @@ const ProductModal = ({
                     Description
                   </h4>
                   <p className="text-gray-600 leading-relaxed">
-                    {productDescription}
+                    {productDescription.length > 270 && !isDescriptionExpanded
+                      ? productDescription.substring(0, 270) + "..."
+                      : productDescription}
+                    {productDescription.length > 270 && (
+                      <span
+                        onClick={() =>
+                          setIsDescriptionExpanded(!isDescriptionExpanded)
+                        }
+                        className="ml-2 text-blue-500 hover:text-blue-600 font-medium cursor-pointer"
+                      >
+                        {isDescriptionExpanded ? "see less" : "see more"}
+                      </span>
+                    )}
                   </p>
                 </div>
               )}
-            </div>
-          </div>
 
-          {/* Visit Product Button */}
-          <div className="mt-6 flex justify-center">
-            <button
-              onClick={handleVisitProduct}
-              className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-200"
-            >
-              Visit Product
-            </button>
+              {/* Visit Product Button */}
+              <div className="mt-6">
+                <button
+                  onClick={handleVisitProduct}
+                  className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-xl font-semibold transition-colors duration-200"
+                >
+                  Visit Product
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
