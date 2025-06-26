@@ -1,12 +1,15 @@
-How to run/test website:
+How to Run
+# Install root dependencies (concurrently)
+npm install
 
-Start up the backend first:
-1. Navigate to backend directory
-2. Run node server.js
+# Install frontend dependencies
+cd frontend
+npm install
 
-Then frontend:
-1. Navigate to frontend directory
-2. Run npm install
-3. Run npm run dev
+# Install backend dependencies  
+cd ../backend
+npm install
 
-Website should be up and ready for testing/viewing.
+# Go back to root and start both servers
+cd ..
+npm run dev
