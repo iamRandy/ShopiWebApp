@@ -22,34 +22,14 @@ export default function Hero() {
       case "home": {
         // Check if user is authenticated before navigating to home
         const token = localStorage.getItem("authToken");
-        if (token) {
-          // Optionally, we could also verify if the token is still valid
-          try {
-            const payload = JSON.parse(atob(token.split(".")[1]));
-            const currentTime = Math.floor(Date.now() / 1000);
+        const refreshToken = localStorage.getItem("refreshToken");
 
-            if (payload.exp && payload.exp > currentTime) {
-              // Token is valid, navigate to home
-              navigate("/home");
-            } else {
-              // Token is expired, clear it and go to login
-              localStorage.removeItem("authToken");
-              localStorage.removeItem("userSub");
-              localStorage.removeItem("userEmail");
-              localStorage.removeItem("userName");
-              navigate("/login");
-            }
-          } catch (error) {
-            // Token is invalid, clear it and go to login
-            console.error("Token is invalid, clearing it and going to login", error);
-            localStorage.removeItem("authToken");
-            localStorage.removeItem("userSub");
-            localStorage.removeItem("userEmail");
-            localStorage.removeItem("userName");
-            navigate("/login");
-          }
+        if (token && refreshToken) {
+          // Both tokens exist, navigate to home
+          // Let the API utility handle token refresh if needed
+          navigate("/home");
         } else {
-          // No token found, redirect to login
+          // No tokens found, redirect to login
           navigate("/login");
         }
         break;
