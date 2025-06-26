@@ -57,7 +57,6 @@ const Login = () => {
       loginSuccess(credentialResponse);
       
       // TODO: navigate to home page IFF user is not coming from extension
-      return;
       navigate('/home'); 
       
     } catch (error) {
