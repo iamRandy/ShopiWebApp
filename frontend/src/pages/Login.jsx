@@ -29,7 +29,7 @@ const Login = () => {
           navigate("/home");
         }
       } catch (error) {
-        console.log("Invalid token, clearing...");
+        console.log("Invalid token, clearing...", error);
         localStorage.removeItem('authToken');
         localStorage.removeItem('userSub');
         localStorage.removeItem('userEmail');

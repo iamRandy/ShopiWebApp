@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
-import { jwtDecode } from 'jwt-decode';
 
 const NavBar = ({ isLanding }) => {
     const navigate = useNavigate();
@@ -12,7 +11,6 @@ const NavBar = ({ isLanding }) => {
 
     const userName = localStorage.getItem('userName') || 'User';
     const userEmail = localStorage.getItem('userEmail') || '';
-    const userSub = localStorage.getItem('userSub') || '';
     const [isScrolled, setIsScrolled] = useState(false);
     const [isHovering, setIsHovering] = useState(false);
     // const [isInitialLoad, setIsInitialLoad] = useState(true);
@@ -70,35 +68,6 @@ const NavBar = ({ isLanding }) => {
         navigate('/login');
     };
 
-    const testExtensionCommunication = () => {
-        const EXT_ID = import.meta.env.VITE_EXTENSION_ID;
-        console.log("Testing extension communication with userSub:", userSub);
-        console.log("Extension ID:", EXT_ID);
-        
-        if (window.chrome?.runtime?.sendMessage && EXT_ID && userSub) {
-            console.log("Sending test message to extension");
-            window.chrome.runtime.sendMessage(
-                EXT_ID,
-                { type: "SET_SUB", sub: userSub },
-                (response) => {
-                    console.log("Extension test response:", response);
-                    if (chrome.runtime.lastError) {
-                        console.error("Extension test error:", chrome.runtime.lastError);
-                    } else {
-                        console.log("Test message sent successfully to extension");
-                    }
-                }
-            );
-        } else {
-            console.error("Cannot test extension communication:", {
-                chrome: !!window.chrome,
-                runtime: !!window.chrome?.runtime,
-                sendMessage: !!window.chrome?.runtime?.sendMessage,
-                EXT_ID: EXT_ID,
-                userSub: userSub
-            });
-        }
-    };
 
     return (
         <>

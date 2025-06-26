@@ -1,5 +1,4 @@
 import React from "react";
-import { getAffiliateLink } from "../utils/affiliate";
 import { authenticatedFetch } from "../utils/api";
 import { useNavigate } from "react-router-dom";
 

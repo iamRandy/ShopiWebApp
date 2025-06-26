@@ -1,5 +1,4 @@
 import React from "react";
-import PropTypes from "prop-types";
 import { getAffiliateLink } from "../utils/affiliate";
 import { authenticatedFetch } from "../utils/api";
 import { useNavigate } from "react-router-dom";
@@ -158,18 +157,6 @@ const ProductModal = ({
       </div>
     </div>
   );
-};
-
-ProductModal.propTypes = {
-  isOpen: PropTypes.bool.isRequired,
-  onClose: PropTypes.func.isRequired,
-  productName: PropTypes.string,
-  productImg: PropTypes.string,
-  productPrice: PropTypes.string,
-  productId: PropTypes.string,
-  productUrl: PropTypes.string,
-  productDescription: PropTypes.string,
-  onDelete: PropTypes.func.isRequired,
 };
 
 export default ProductModal;

@@ -4,24 +4,24 @@ export const AMAZON_ASSOCIATE_TAG = 'yourtag-20'; // Replace with your actual Am
 // retailers, the original URL is returned unchanged.
 export function getAffiliateLink (url) {
   return url; // TODO: Remove this once approved for affiliate links
-  try {
-    const parsed = new URL(url);
+  // try {
+  //   const parsed = new URL(url);
 
-    // Only modify Amazon links
-    if (parsed.hostname.includes('amazon.')) {
-      // Remove any existing tag parameter to avoid duplicates
-      parsed.searchParams.delete('tag');
+  //   // Only modify Amazon links
+  //   if (parsed.hostname.includes('amazon.')) {
+  //     // Remove any existing tag parameter to avoid duplicates
+  //     parsed.searchParams.delete('tag');
 
-      // Append the affiliate tag
-      parsed.searchParams.set('tag', AMAZON_ASSOCIATE_TAG);
+  //     // Append the affiliate tag
+  //     parsed.searchParams.set('tag', AMAZON_ASSOCIATE_TAG);
 
-      return parsed.toString();
-    }
+  //     return parsed.toString();
+  //   }
 
-    // For non-Amazon URLs just forward them as-is for now.
-    return url;
-  } catch (err) {
-    console.error('Unable to build affiliate link for', url, err);
-    return url;
-  }
+  //   // For non-Amazon URLs just forward them as-is for now.
+  //   return url;
+  // } catch (err) {
+  //   console.error('Unable to build affiliate link for', url, err);
+  //   return url;
+  // }
 } 

@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import ProductCard from "./ProductCard";
 import ProductModal from "./ProductModal";
 import { authenticatedFetch } from "../utils/api";
@@ -14,7 +14,7 @@ const ProductArea = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
       const response = await authenticatedFetch(
         "http://localhost:3000/api/products"
@@ -41,11 +41,11 @@ const ProductArea = () => {
       setError("Failed to load products");
       setLoading(false);
     }
-  };
+  }, [navigate]);
 
   useEffect(() => {
     fetchProducts();
-  }, []);
+  }, [fetchProducts]);
 
   const handleProductDelete = () => {
     // Refresh the products list after deletion
