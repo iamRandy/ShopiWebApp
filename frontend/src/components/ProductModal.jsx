@@ -134,10 +134,10 @@ const ProductModal = ({
                     Description
                   </h4>
                   <p className="text-gray-600 leading-relaxed">
-                    {productDescription.length > 270 && !isDescriptionExpanded
-                      ? productDescription.substring(0, 270) + "..."
+                    {productDescription.length > 260 && !isDescriptionExpanded
+                      ? productDescription.substring(0, 260) + "..."
                       : productDescription}
-                    {productDescription.length > 270 && (
+                    {productDescription.length > 260 && (
                       <span
                         onClick={() =>
                           setIsDescriptionExpanded(!isDescriptionExpanded)
