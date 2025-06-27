@@ -1,6 +1,6 @@
 import ProductArea from "./ProductArea";
-import CartTab from "./CartTab";
-import { Globe, ShoppingCart, Plus, SlidersHorizontal, Search } from "lucide-react";
+import CartArea from "./CartArea";
+import { SlidersHorizontal, Search } from "lucide-react";
 import { useState } from "react";
 
 const Dashboard = () => {
@@ -46,40 +46,19 @@ const Dashboard = () => {
                 </div>
 
             </div>
-
-            {/* Navigation between carts */}
             <div className="grid grid-cols-6"> 
+                
                 <div className="flex flex-col col-span-1 gap-2">
-                    <CartTab 
-                        cartId='0' 
-                        title="Everything!" 
-                        icon={<Globe className="w-[28px] h-[28px]" />} 
-                        selected={selectedCart === '0'}
-                        handleCartSelect={handleCartSelect} 
-                        color="bg-blue-500"
-                    />
-                    <CartTab 
-                        cartId='1' 
-                        title="My cart!" 
-                        icon={<ShoppingCart className="w-[28px] h-[28px]" />} 
-                        selected={selectedCart === '1'}
-                        handleCartSelect={handleCartSelect} 
-                        color="bg-green-400"
-                    />
-                    {/* add cart button */}
-                    <CartTab 
-                        cartId='addCart' 
-                        title="add cart" 
-                        icon={<Plus className="w-[28px] h-[28px] text-black" />} 
-                        selected={selectedCart === 'addCart'}
-                        handleCartSelect={handleCartSelect} 
+                    <CartArea 
+                        selectedCart={selectedCart}
+                        setSelectedCart={setSelectedCart}
                     />
                 </div>
-
 
                 <div className="col-span-5">
                     <ProductArea />
                 </div>
+
             </div>
         </div>
     );

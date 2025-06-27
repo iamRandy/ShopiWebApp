@@ -90,9 +90,6 @@ const Login = () => {
   }
 
   const sendUserInfoToExtension = ({ sub, name }) => {
-    console.log("Sending user info to extension:", sub, name);
-    console.log("Extension ID:", EXT_ID);
-
     // Send message to extension using chrome.runtime.sendMessage with extension ID
     if (window.chrome?.runtime?.sendMessage && EXT_ID) {
       console.log(
@@ -102,7 +99,6 @@ const Login = () => {
         EXT_ID,
         { type: "SET_USER_INFO", sub, name },
         (response) => {
-          console.log("Extension response:", response);
           if (chrome.runtime.lastError) {
             console.error(
               "Extension communication error:",

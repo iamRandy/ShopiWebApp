@@ -206,9 +206,22 @@ app.get("/api/products", verifyToken, async (req, res) => {
     res.json(doc?.products || []);
   } catch (e) {
     console.error(e);
-    res.status(500).json({ error: "failed" });
+    res.status(500).json({ error: "failed to fetch products" });
   }
 });
+
+app.get("/api/carts", verifyToken, async (req, res) => {
+  try {
+    const doc = await usersCollection.findOne(
+      { sub: req.user.sub },
+      { projection:  { _id: 0, carts: 1 } }
+    );
+    res.json(doc?.carts || [])
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "failed to fetch carts" })
+  }
+})
 
 // delete a specific product for a user
 app.delete("/api/products", verifyToken, async (req, res) => {
