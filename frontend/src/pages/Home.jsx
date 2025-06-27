@@ -16,7 +16,7 @@ const Home = () => {
 
     return (
         <>
-            <div className="h-full">
+            <div className="h-full overflow-hidden">
                 <Navbar />
                 <ProductArea />
             </div>

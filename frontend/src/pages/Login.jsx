@@ -55,9 +55,6 @@ const Login = () => {
       localStorage.setItem("userName", decoded.name);
 
       loginSuccess(credentialResponse);
-
-      // TODO: navigate to home page IFF user is not coming from extension
-      navigate("/home");
     } catch (error) {
       console.error("Error decoding JWT:", error);
     }
@@ -79,6 +76,9 @@ const Login = () => {
             localStorage.setItem("authToken", data.accessToken);
             localStorage.setItem("refreshToken", data.refreshToken);
             console.log("Stored access and refresh tokens");
+          
+            // TODO: navigate to home page IFF user is not coming from extension
+            navigate("/home");  
           }
         })
         .catch((error) => {

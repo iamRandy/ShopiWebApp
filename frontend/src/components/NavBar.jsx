@@ -78,17 +78,17 @@ const NavBar = ({ isLanding }) => {
   return (
     <>
       <motion.nav
-        initial={{ width: "95%" }}
-        className="text-black fixed top-3 left-0 right-0 z-50 h-fit mx-auto"
+        initial={{ width: isLanding ? "95%" : "100%" }}
+        className={`${isLanding ? "top-3" : "top-0"} text-black fixed left-0 right-0 z-50 h-fit mx-auto`}
         // minimize when scrolling and expand when hovering or at the top
-        animate={{ width: isScrolled && !isHovering ? "140px" : "95%" }}
+        animate={{ width: isScrolled && !isHovering ? "140px" : isLanding ? "95%" : "100%" }}
         onHoverStart={() => setIsHovering(true)}
         onHoverEnd={() => setIsHovering(false)}
         transition={{ duration: 0.8, ease: "easeInOut" }}
       >
         <div
-          className="relative flex w-full items-center justify-between rounded-full 
-                border border-stone-500/20 bg-white/10 p-4 px-10 backdrop-blur-lg shadow-lg gap-10 h-16"
+          className={`${isLanding ? "rounded-full border border-stone-500/20 backdrop-blur-lg" : ""} relative flex w-full items-center justify-between 
+                    bg-white/10 p-4 px-10 shadow-lg gap-10 h-16`}
         >
           {/* Left side */}
           <div
@@ -141,9 +141,9 @@ const NavBar = ({ isLanding }) => {
                 {!isLanding && (
                   <motion.div
                     className="w-fit flex justify-end whitespace-nowrap"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
+                    initial={{ opacity: 0, translateY: -10 }}
+                    animate={{ opacity: 1, translateY: 0 }}
+                    exit={{ opacity: 0, translateY: -10 }}
                     transition={{ duration: 0.2, delay: 0.2 }}
                   >
                     <div className="flex gap-3 items-center">
