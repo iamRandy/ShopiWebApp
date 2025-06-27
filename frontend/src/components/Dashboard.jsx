@@ -1,15 +1,18 @@
 import { motion } from "framer-motion";
 import ProductArea from "./ProductArea";
 import CartTab from "./CartTab";
-import { Globe, ShoppingCart } from "lucide-react";
+import { Globe, ShoppingCart, Plus } from "lucide-react";
 import { useState } from "react";
 
 const Dashboard = () => {
     const [ selectedCart, setSelectedCart ] = useState(0);
 
     const handleCartSelect = (cartId) => {
-        console.log("new cart selected!");
-        setSelectedCart(cartId);
+        if (cartId === 'addCart') {
+            console.log("create cart");
+        } else {
+            setSelectedCart(cartId);
+        }
     }
 
     return (
@@ -32,10 +35,10 @@ const Dashboard = () => {
                         handleCartSelect={handleCartSelect} 
                     />
                     <CartTab 
-                        cartId='2' 
-                        title="My super long cart!" 
-                        icon={<ShoppingCart className="w-[28px] h-[28px]" />} 
-                        selected={selectedCart === '2'}
+                        cartId='addCart' 
+                        title="add cart" 
+                        icon={<Plus className="w-[28px] h-[28px] text-black" />} 
+                        selected={selectedCart === 'addCart'}
                         handleCartSelect={handleCartSelect} 
                     />
                 </div>
