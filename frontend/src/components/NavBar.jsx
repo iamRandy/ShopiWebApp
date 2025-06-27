@@ -15,6 +15,7 @@ const NavBar = ({ isLanding }) => {
   const userEmail = localStorage.getItem("userEmail") || "";
   const [isScrolled, setIsScrolled] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
+  const [isUserHover, setIsUserHover] = useState(false);
 
   // --- Effects ---
   useEffect(() => {
@@ -123,30 +124,42 @@ const NavBar = ({ isLanding }) => {
                   exit={{ opacity: 0, translateY: -10 }}
                   transition={{ duration: 0.2, delay: 0.2 }}
                 >
-                  <div className="flex gap-3 items-center">
+                  <div
+                    className="flex gap-3 items-center"
+                    onMouseEnter={() => setIsUserHover(true)}
+                    onMouseLeave={() => setIsUserHover(false)}
+                  >
                     <User className="w-5 h-5" />
-                    {isAuthenticated && (
-                      <div className="text-sm">
-                        <div className="font-medium">{userName}</div>
-                        <div className="text-xs text-gray-500">{userEmail}</div>
-                      </div>
-                    )}
-                    {isAuthenticated ? (
-                      <button
-                        onClick={handleLogout}
-                        className="text-sm bg-amber-500 text-white hover:bg-amber-600 px-3 py-1 rounded"
-                      >
-                        Logout
-                      </button>
-                    ) : (
-                      <button
-                        onClick={handleLogin}
-                        className="text-sm bg-amber-500 text-white hover:bg-amber-600 px-3 py-1 rounded"
-                      >
-                        Login
-                      </button>
-                    )}
+                    <AnimatePresence>
+                      {isAuthenticated && (
+                        <motion.div
+                          className="text-sm overflow-hidden whitespace-nowrap"
+                          initial={{ width: 0 }}
+                          animate={isUserHover ? { width: "auto" } : { width: 0 }}
+                          exit={{ width: 0 }}
+                          transition={{ duration: 0.3, ease: "easeInOut", delay: 0.2 }}
+                        >
+                          <div className="font-medium">{userName}</div>
+                          <div className="text-xs text-gray-500">{userEmail}</div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
+                  {isAuthenticated ? (
+                    <button
+                      onClick={handleLogout}
+                      className="text-sm bg-amber-500 text-white hover:bg-amber-600 px-3 py-1 rounded"
+                    >
+                      Logout
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleLogin}
+                      className="text-sm bg-amber-500 text-white hover:bg-amber-600 px-3 py-1 rounded"
+                    >
+                      Login
+                    </button>
+                  )}
                 </motion.div>
               )}
             </>
