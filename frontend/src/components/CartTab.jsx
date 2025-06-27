@@ -1,10 +1,7 @@
 import { motion } from "framer-motion";
 
 const CartTab = ({ cartId, title, icon, selected, handleCartSelect, color }) => {
-    const handleClick = () => {
-        handleCartSelect(cartId);
-    }
-    
+
     return (
         <>
             {(cartId === "addCart") ? (
@@ -13,7 +10,7 @@ const CartTab = ({ cartId, title, icon, selected, handleCartSelect, color }) => 
                 whileHover={{ scale: 1.02 }}
                 transition={{ duration: 0.1, ease: "easeInOut" }}
                 id={cartId}
-                onClick={handleClick}
+                onClick={() => handleCartSelect(cartId)}
                 className="w-[150px] flex justify-center items-center gap-2
                 top-0 left-0 h-[60px] bg-transparent rounded-r-lg -ml-9 px-4
                 border-2 border-dotted border-black border-l-0 cursor-pointer">
@@ -25,15 +22,15 @@ const CartTab = ({ cartId, title, icon, selected, handleCartSelect, color }) => 
                         {icon}
                     </motion.div>
                 </motion.div>
-            ) : (
+            ) : (!selected &&
                 <motion.div 
                     id={cartId}
                     initial={{ translateX: 0, border: "0px" }}
                     whileHover= {{ border: !selected ? "1px solid white" : "0px" }}
                     whileTap={{ translateX: !selected ? -10 : 0, border: "0px" }}
                     transition={{ duration: 0.1, ease: "easeInOut" }}
-                    onClick={handleClick}
-                    className={`${color} ${selected ? "w-full justify-end" : "w-[150px] justify-start"} flex items-center 
+                    onClick={() => handleCartSelect(cartId)}
+                    className={`${color} w-[150px] justify-start flex items-center 
                     gap-2 top-0 left-0 h-[60px] rounded-r-lg -ml-9 px-4 cursor-pointer`}>
                     <div className="flex-shrink-0">
                         {icon}

@@ -1,18 +1,8 @@
 import ProductArea from "./ProductArea";
 import CartArea from "./CartArea";
 import { SlidersHorizontal, Search } from "lucide-react";
-import { useState } from "react";
 
 const Dashboard = () => {
-    const [ selectedCart, setSelectedCart ] = useState(0);
-
-    const handleCartSelect = (cartId) => {
-        if (cartId === 'addCart') {
-            console.log("create cart");
-        } else {
-            setSelectedCart(cartId);
-        }
-    }
 
     return (
         <div className="p-9 mt-12 relative">
@@ -49,10 +39,7 @@ const Dashboard = () => {
             <div className="grid grid-cols-6"> 
                 
                 <div className="flex flex-col col-span-1 gap-2">
-                    <CartArea 
-                        selectedCart={selectedCart}
-                        setSelectedCart={setSelectedCart}
-                    />
+                    <CartArea />
                 </div>
 
                 <div className="col-span-5">

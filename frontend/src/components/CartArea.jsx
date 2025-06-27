@@ -4,19 +4,29 @@ import CartTab from "./CartTab";
 import { useState, useEffect } from "react";
 import * as Icons from "lucide-react";
 
-const CartArea = ({ selectedCart, setSelectedCart }) => {
+const CartArea = () => {
     const [ carts, setCarts ] = useState([]);
     const [ error, setError ] = useState(null);
+    const [ selectedCart, setSelectedCart ] = useState(carts?.[0]?.id || null);
+
+    const handleCartSelect = (cartId) => {
+        if (cartId === 'addCart') {
+            console.log("create cart");
+        } else {
+            console.log("cart selected:", cartId);
+            setSelectedCart(cartId);
+        }
+    }
 
     const fetchCarts = async () => {
-        console.log("grabbing cart data");
         try {
             const response = await authenticatedFetch("http://localhost:3000/api/carts");
             if (!response.ok) {
                 throw new Error("Failed to fetch carts");
             }
             const data = await response.json();
-            console.log(data);
+            console.log("grabbed carts", data);
+            setCarts(data);
         } catch (error) {
             console.error("Error fetching carts:", error);
         }
@@ -38,30 +48,32 @@ const CartArea = ({ selectedCart, setSelectedCart }) => {
     
     useEffect(() => {
         fetchCarts();
-    }, [fetchCarts]);
+    }, []);
 
     return (
         <>
+            {/* first cart is selected by default */}
             {carts.map((cart) => (
                 <CartTab 
                     key={cart.id}
                     cartId={cart.id} 
                     title={cart.name || "Unnamed Cart"}
                     icon={getIconByName(cart.icon, { className: "w-[28px] h-[28px]" }) || <ShoppingCart className="w-[28px] h-[28px]" />} 
-                    selected={selectedCart === '0'}
-                    handleCartSelect={setSelectedCart} 
+                    selected={selectedCart === cart.id}
+                    handleCartSelect={handleCartSelect} 
                     color={`bg-${cart.color}`}
                 />
             ))}
 
             <CartTab 
-                    cartId='0' 
+                    cartId="somecartId"
                     title="Everything!" 
                     icon={<Globe className="w-[28px] h-[28px]" />} 
-                    selected={selectedCart === '0'}
-                    handleCartSelect={setSelectedCart} 
+                    selected={selectedCart === "somecartId"}
+                    handleCartSelect={handleCartSelect} 
                     color="bg-blue-500"
             />
+            {/*
             <CartTab 
                 cartId='1' 
                 title="My cart!" 
@@ -69,7 +81,7 @@ const CartArea = ({ selectedCart, setSelectedCart }) => {
                 selected={selectedCart === '1'}
                 handleCartSelect={setSelectedCart} 
                 color="bg-green-400"
-            />
+            /> */}
 
             {/* -- Add Cart Button -- */}
             <CartTab 
@@ -77,7 +89,7 @@ const CartArea = ({ selectedCart, setSelectedCart }) => {
                 title="add cart" 
                 icon={<Plus className="w-[28px] h-[28px] text-black" />} 
                 selected={selectedCart === 'addCart'}
-                handleCartSelect={setSelectedCart} 
+                handleCartSelect={handleCartSelect} 
             />
         </>
     )
