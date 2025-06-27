@@ -1,14 +1,17 @@
 import { Globe, ShoppingCart, Plus } from "lucide-react";
 import CartTab from "./CartTab";
+import CartModal from "./CartModal";
 import { useState } from "react";
 import * as Icons from "lucide-react";
 
 const CartArea = ({ carts, selectedCart, setSelectedCart }) => {
     const [ error, setError ] = useState(null);
-
+    const [ isCartModalOpen, setIsCartModalOpen ] = useState(false);
+    
     const handleCartSelect = (cartId) => {
         if (cartId === 'addCart') {
             console.log("create cart");
+            setIsCartModalOpen(true);
         } else {
             console.log("cart selected:", cartId);
             setSelectedCart(cartId);
@@ -44,15 +47,6 @@ const CartArea = ({ carts, selectedCart, setSelectedCart }) => {
                 />
             ))}
 
-            {/* <CartTab 
-                    cartId="testcart"
-                    title="Everything!" 
-                    icon={<Globe className="w-[28px] h-[28px]" />} 
-                    selected={selectedCart === "testcart"}
-                    handleCartSelect={handleCartSelect} 
-                    color="bg-blue-500"
-            /> */}
-
             {/* -- Add Cart Button -- */}
             <CartTab 
                 cartId='addCart' 
@@ -61,6 +55,8 @@ const CartArea = ({ carts, selectedCart, setSelectedCart }) => {
                 selected={selectedCart === 'addCart'}
                 handleCartSelect={handleCartSelect} 
             />
+
+            {isCartModalOpen && <CartModal getIconByName={getIconByName} isOpen={isCartModalOpen} onClose={() => setIsCartModalOpen(false)} />}
         </>
     )
 }
