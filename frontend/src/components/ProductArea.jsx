@@ -97,7 +97,7 @@ const ProductArea = () => {
   return (
     <>
       <div>
-        <div className="border rounded-lg overflow-hidden bg-white">
+        <div className="border rounded-lg h-[720px] overflow-y-auto bg-white">
           <div className="p-3 grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(208px, 208px))' }}>
             {products.map((product) => (
               <ProductCard

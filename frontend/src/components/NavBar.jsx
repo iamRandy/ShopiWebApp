@@ -67,10 +67,24 @@ const NavBar = ({ isLanding }) => {
       >
         {/* Left side: Logo */}
         <div className={`flex ${isLanding ? "absolute" : "justify-between"} items-center gap-3 w-fit`}>
-          <a href="#" className="text-2xl font-bold">
+          <a href={isLanding ? "#" : ""} className="text-2xl font-bold">
             shopi
           </a>
         </div>
+
+        {!isLanding && (
+          <div className="absolute left-1/2 -translate-x-1/2 flex justify-center items-center gap-10">
+            <a href="/carts" className="text-lg flex gap-1 items-center special_links">
+              Carts
+            </a>
+            <a href="/explore" className="text-lg flex gap-1 items-center special_links">
+              Explore
+            </a>
+            <a href="/pick" className="text-lg flex gap-1 items-center special_links">
+              Pick
+            </a>
+          </div>
+        )}
 
         {/* Center/Right: Navigation links and user actions */}
         <AnimatePresence>
