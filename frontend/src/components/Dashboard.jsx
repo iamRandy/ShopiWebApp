@@ -1,7 +1,6 @@
-import { motion } from "framer-motion";
 import ProductArea from "./ProductArea";
 import CartTab from "./CartTab";
-import { Globe, ShoppingCart, Plus } from "lucide-react";
+import { Globe, ShoppingCart, Plus, SlidersHorizontal, Search } from "lucide-react";
 import { useState } from "react";
 
 const Dashboard = () => {
@@ -17,6 +16,37 @@ const Dashboard = () => {
 
     return (
         <div className="p-9 mt-12 relative">
+            <div className="grid grid-cols-6 text-black">
+                <div className="col-span-1"></div>
+                <div className="col-span-5">
+                    <div className="relative w-full flex items-center">
+                        {/* Left buttons */}
+                        <div className="flex gap-2">
+                            <button className="bg-transparent">
+                                <SlidersHorizontal className="w-[20px] h-[20px]" />
+                            </button>
+                            <button className="bg-transparent">
+                                <Search className="w-[20px] h-[20px]" />
+                            </button>
+                        </div>
+                        {/* Centered title */}
+                        <p className="tracking-wider absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-4xl font-bold whitespace-nowrap">
+                            Your Carts
+                        </p>
+                        {/* Right spacer to balance the left buttons */}
+                        <div className="flex gap-2 opacity-0">
+                            <button className="bg-transparent">
+                                <SlidersHorizontal className="w-[20px] h-[20px]" />
+                            </button>
+                            <button className="bg-transparent">
+                                <Search className="w-[20px] h-[20px]" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
             {/* Navigation between carts */}
             <div className="grid grid-cols-6"> 
                 <div className="flex flex-col col-span-1 gap-2">

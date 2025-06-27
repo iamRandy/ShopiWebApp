@@ -10,7 +10,6 @@ const ProductArea = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [collapsed, setCollapsed] = useState({}); // track collapsed state per retailer
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -63,22 +62,6 @@ const ProductArea = () => {
     setSelectedProduct(null);
   };
 
-  // group products by retailer hostname
-  const groupedProducts = products.reduce((acc, product) => {
-    const retailer =
-      product.hostname || new URL(product.url).hostname || "Unknown Retailer";
-    if (!acc[retailer]) acc[retailer] = [];
-    acc[retailer].push(product);
-    return acc;
-  }, {});
-
-  const toggleCollapse = (retailer) => {
-    setCollapsed((prev) => ({
-      ...prev,
-      [retailer]: !prev[retailer],
-    }));
-  };
-
   if (loading) {
     return (
       <div className="p-3 flex justify-center items-center h-64">
@@ -114,81 +97,23 @@ const ProductArea = () => {
   return (
     <>
       <div>
-        {Object.entries(groupedProducts).map(([retailer, items]) => (
-          <div
-            key={retailer}
-            className="border rounded-lg overflow-hidden text-stone-950 bg-stone-50"
-          >
-            {/* Header button */}
-            <button
-              onClick={() => toggleCollapse(retailer)}
-              className="w-full flex items-center justify-between px-4 py-2 bg-orange-300 hover:bg-orange-400 transition-colors"
-            >
-              <span className="font-semibold text-lg">
-                {retailer} ({items.length})
-              </span>
-              {/* Simple chevron icon */}
-              <svg
-                className={`w-4 h-4 transform transition-transform ${
-                  collapsed[retailer] ? "rotate-90" : "rotate-0"
-                }`}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </button>
-            {/* Product grid */}
-            <AnimatePresence initial={false}>
-              {!collapsed[retailer] && (
-                <motion.div
-                  key="content"
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.35, ease: "easeInOut" }}
-                  style={{ overflow: "hidden" }}
-                >
-                  <div
-                    className="p-3 grid gap-3"
-                    style={{
-                      gridTemplateColumns:
-                        "repeat(auto-fit, minmax(208px, 208px))",
-                    }}
-                  >
-                    {items.map((product) => (
-                      <ProductCard
-                        key={product.id}
-                        productName={product.title || "Unknown Product"}
-                        productImg={
-                          product.image ||
-                          "https://via.placeholder.com/300x300?text=No+Image"
-                        }
-                        productPrice={
-                          product.price
-                            ? `${product.currency || "$"}${product.price}`
-                            : "Price not available"
-                        }
-                        productId={product.id}
-                        productUrl={product.url}
-                        productDescription={product.description}
-                        onDelete={handleProductDelete}
-                        onProductClick={handleProductClick}
-                      />
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+        <div className="border rounded-lg overflow-hidden text-stone-950 bg-stone-50">
+          <div className="p-3 grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(208px, 208px))' }}>
+            {products.map((product) => (
+              <ProductCard
+                key={product.id}
+                productName={product.title || "Unknown Product"}
+                productImg={product.image || "https://via.placeholder.com/300x300?text=No+Image"}
+                productPrice={product.price ? `${product.currency || "$"}${product.price}` : "Price not available"}
+                productId={product.id}
+                productUrl={product.url}
+                productDescription={product.description}
+                onDelete={handleProductDelete}
+                onProductClick={handleProductClick}
+              />
+            ))}
           </div>
-        ))}
+        </div>
       </div>
 
       <ProductModal
