@@ -34,11 +34,13 @@ const Dashboard = () => {
     return (
         <div className="p-9 mt-12 relative">
             <div className="grid grid-cols-6 text-black">
-                <div className="col-span-1">
+                <div className="col-span-1 flex items-end pb-1">
                     <p className="text-2xl font-bold">Your Carts</p>
                 </div>
-                <div className="col-span-5 pb-1">
-                    <div className="relative w-full flex items-center">
+                <div className="col-span-5 pb-1 h-[60px]">
+                    <div
+                        style={{ backgroundColor: `${selectedCartObj?.color}` }}
+                        className="relative h-full w-full flex items-center rounded-lg text-white p-3">
                         {/* Left buttons */}
                         <div className="flex gap-2">
                             <button className="bg-transparent p-1">
@@ -49,7 +51,7 @@ const Dashboard = () => {
                             </button>
                         </div>
                         {/* Centered title */}
-                        <div className="tracking-wider absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-4xl font-bold whitespace-nowrap flex items-center gap-4">
+                        <div className="tracking-wide absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-4xl whitespace-nowrap flex items-center gap-4">
                             {getIconByName(selectedCartObj?.icon, { className: "w-[32px] h-[32px]" }) || <ShoppingCart className="w-[28px] h-[28px]" />}
                             <p>{selectedCartObj?.name || "Unnamed Cart"}</p>
                         </div>

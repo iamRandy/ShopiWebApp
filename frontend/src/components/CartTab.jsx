@@ -6,8 +6,8 @@ const CartTab = ({ cartId, title, icon, selected, handleCartSelect, color }) => 
         <>
             {(cartId === "addCart") ? (
                 <motion.div
-                initial={{ scale: 1 }}
-                whileHover={{ scale: 1.02 }}
+                initial={{ translateX: 0 }}
+                whileHover={{ translateX: -5 }}
                 transition={{ duration: 0.1, ease: "easeInOut" }}
                 id={cartId}
                 onClick={() => handleCartSelect(cartId)}
@@ -30,7 +30,7 @@ const CartTab = ({ cartId, title, icon, selected, handleCartSelect, color }) => 
                     whileTap={{ translateX: !selected ? -10 : 0, border: "0px" }}
                     transition={{ duration: 0.1, ease: "easeInOut" }}
                     onClick={() => handleCartSelect(cartId)}
-                    style={{ backgroundColor: color }}
+                    style={{ backgroundColor: `${color}`, color: "white" }}
                     className={`w-[150px] justify-start flex items-center 
                     gap-2 top-0 left-0 h-[60px] rounded-r-lg -ml-9 px-4 cursor-pointer`}>
                     <div className="flex-shrink-0">
