@@ -75,13 +75,13 @@ const NavBar = ({ isLanding }) => {
 
         {!isLanding && (
           <div className="absolute left-1/2 -translate-x-1/2 flex justify-center items-center gap-10">
-            <a href="/carts" className="text-lg flex gap-1 items-center special_links">
+            <a className="text-lg flex gap-1 items-center special_links cursor-pointer">
               Carts
             </a>
-            <a href="/explore" className="text-lg flex gap-1 items-center special_links">
+            <a className="text-lg flex gap-1 items-center special_links cursor-pointer">
               Explore
             </a>
-            <a href="/pick" className="text-lg flex gap-1 items-center special_links">
+            <a className="text-lg flex gap-1 items-center special_links cursor-pointer">
               Pick
             </a>
           </div>
