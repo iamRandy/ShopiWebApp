@@ -97,7 +97,7 @@ const ProductArea = () => {
   return (
     <>
       <div>
-        <div className="border rounded-lg overflow-hidden text-stone-950 bg-stone-50">
+        <div className="border rounded-lg overflow-hidden bg-white">
           <div className="p-3 grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(208px, 208px))' }}>
             {products.map((product) => (
               <ProductCard
@@ -110,6 +110,7 @@ const ProductArea = () => {
                 productDescription={product.description}
                 onDelete={handleProductDelete}
                 onProductClick={handleProductClick}
+                hostname={product.hostname}
               />
             ))}
           </div>

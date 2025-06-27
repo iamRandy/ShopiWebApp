@@ -11,6 +11,7 @@ const ProductCard = ({
   productDescription,
   onDelete,
   onProductClick,
+  hostname,
 }) => {
   const navigate = useNavigate();
 
@@ -87,11 +88,16 @@ const ProductCard = ({
         </div>
 
         {/* Separate bottom info bar */}
-        <div className="bg-stone-950 w-full h-12 flex gap-2 justify-between items-center p-2">
-          <span className="font-bold text-white text-xs line-clamp-2">
-            {productName}
-          </span>
-          <span className="text-white text-xs whitespace-nowrap">
+        <div className="text-black bg-white w-full h-12 flex gap-2 justify-between items-center p-2">
+          <div className="flex flex-col">
+            <span className="font-bold text-xs line-clamp-1">
+              {productName}
+            </span>
+            <span className="font-bold text-xs line-clamp-1">
+              {hostname}
+            </span>
+          </div>
+          <span className="text-xs whitespace-nowrap">
             {productPrice}
           </span>
         </div>
