@@ -5,191 +5,141 @@ import { useState, useEffect } from "react";
 import { GoogleLogin } from "@react-oauth/google";
 import { logout } from "../utils/api";
 
+// NavBar component
 const NavBar = ({ isLanding }) => {
+  // --- State and hooks ---
   const navigate = useNavigate();
   const authToken = localStorage.getItem("authToken");
   const isAuthenticated = !!authToken;
-
   const userName = localStorage.getItem("userName") || "User";
   const userEmail = localStorage.getItem("userEmail") || "";
   const [isScrolled, setIsScrolled] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
-  // const [isInitialLoad, setIsInitialLoad] = useState(true);
 
+  // --- Effects ---
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
-    };
+    const handleScroll = () => setIsScrolled(window.scrollY > 10);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // --- Handlers ---
   const clearExtensionStorage = () => {
     const EXT_ID = import.meta.env.VITE_EXTENSION_ID;
-    console.log("Clearing extension storage");
-
     if (window.chrome?.runtime?.sendMessage && EXT_ID) {
       window.chrome.runtime.sendMessage(
         EXT_ID,
         { type: "CLEAR_STORAGE" },
         (response) => {
-          console.log("Extension storage clear response:", response);
           if (chrome.runtime.lastError) {
-            console.error(
-              "Extension storage clear error:",
-              chrome.runtime.lastError
-            );
-          } else {
-            console.log("Extension storage cleared successfully");
+            console.error("Extension storage clear error:", chrome.runtime.lastError);
           }
         }
       );
-    } else {
-      console.error("Cannot clear extension storage:", {
-        chrome: !!window.chrome,
-        runtime: !!window.chrome?.runtime,
-        sendMessage: !!window.chrome?.runtime?.sendMessage,
-        EXT_ID: EXT_ID,
-      });
     }
   };
 
-  const handleLogin = () => {
-    navigate("/login");
-  };
+  const handleLogin = () => navigate("/login");
 
   const handleLogout = async () => {
     try {
-      // Clear extension storage first
       clearExtensionStorage();
-
-      // Call logout API to invalidate refresh token
       await logout();
-
-      // Navigate to login page
       navigate("/login");
     } catch (error) {
       console.error("Error during logout:", error);
-      // Navigate to login anyway if logout fails
       navigate("/login");
     }
   };
 
+  // --- Render ---
   return (
-    <>
-      <motion.nav
-        initial={{ width: isLanding ? "95%" : "100%" }}
-        className={`${isLanding ? "top-3" : "top-0"} text-black fixed left-0 right-0 z-50 h-fit mx-auto`}
-        // minimize when scrolling and expand when hovering or at the top
-        animate={{ width: isScrolled && !isHovering ? "140px" : isLanding ? "95%" : "100%" }}
-        onHoverStart={() => setIsHovering(true)}
-        onHoverEnd={() => setIsHovering(false)}
-        transition={{ duration: 0.8, ease: "easeInOut" }}
+    <motion.nav
+      initial={{ width: isLanding ? "95%" : "100%" }}
+      className={`${isLanding ? "top-3" : "top-0"} text-black fixed left-0 right-0 z-50 h-fit mx-auto`}
+      animate={{ width: isScrolled && !isHovering ? "140px" : isLanding ? "95%" : "100%" }}
+      onHoverStart={() => setIsHovering(true)}
+      onHoverEnd={() => setIsHovering(false)}
+      transition={{ duration: 0.8, ease: "easeInOut" }}
+    >
+      <div
+        className={`${isLanding ? "rounded-full border border-stone-500/20 backdrop-blur-lg" : ""} relative flex w-full items-center justify-between bg-white/10 p-4 px-10 shadow-lg gap-10 h-16`}
       >
-        <div
-          className={`${isLanding ? "rounded-full border border-stone-500/20 backdrop-blur-lg" : ""} relative flex w-full items-center justify-between 
-                    bg-white/10 p-4 px-10 shadow-lg gap-10 h-16`}
-        >
-          {/* Left side */}
-          <div
-            className={`flex ${
-              isLanding ? "absolute" : "justify-between"
-            }  items-center gap-3 w-fit`}
-          >
-            <a href="#" className="text-2xl font-bold">
-              shopi
-            </a>
-          </div>
-
-          <AnimatePresence>
-            {(!isScrolled || isHovering) && (
-              <>
-                {/* Navbar for landing page */}
-                {isLanding && (
-                  <motion.div
-                    className="flex flex-1 justify-center md:gap-10 sm:gap-5 lg:gap-10 items-center whitespace-nowrap"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2, delay: 0.2 }}
-                  >
-                    <a
-                      href="#features"
-                      className="text-lg flex gap-1 items-center special_links"
-                    >
-                      <Cog className="w-5 h-5" />
-                      Key Features
-                    </a>
-                    <a
-                      href="#how-it-works"
-                      className="text-lg flex gap-1 items-center special_links"
-                    >
-                      <Blocks className="w-5 h-5" />
-                      How it works
-                    </a>
-                    <a
-                      href="#how-it-works"
-                      className="text-lg flex gap-1 items-center special_links"
-                    >
-                      <BadgeQuestionMark className="w-5 h-5" />
-                      FAQs
-                    </a>
-                  </motion.div>
-                )}
-
-                {/* Navbar for non-landing pages */}
-                {!isLanding && (
-                  <motion.div
-                    className="w-fit flex justify-end whitespace-nowrap"
-                    initial={{ opacity: 0, translateY: -10 }}
-                    animate={{ opacity: 1, translateY: 0 }}
-                    exit={{ opacity: 0, translateY: -10 }}
-                    transition={{ duration: 0.2, delay: 0.2 }}
-                  >
-                    <div className="flex gap-3 items-center">
-                      <User className="w-5 h-5" />
-                      {isAuthenticated && (
-                        <div className="text-sm">
-                          <div className="font-medium">{userName}</div>
-                          <div className="text-xs text-gray-500">
-                            {userEmail}
-                          </div>
-                        </div>
-                      )}
-                      {
-                        <>
-                          {/* <button 
-                                                onClick={testExtensionCommunication}
-                                                className="text-sm bg-blue-500 hover:bg-blue-600 px-3 py-1 rounded"
-                                            >
-                                                Test Extension
-                                            </button> */}
-                          {isAuthenticated ? (
-                            <button
-                              onClick={handleLogout}
-                              className="text-sm bg-amber-500 text-white hover:bg-amber-600 px-3 py-1 rounded"
-                            >
-                              Logout
-                            </button>
-                          ) : (
-                            <button
-                              onClick={handleLogin}
-                              className="text-sm bg-amber-500 text-white hover:bg-amber-600 px-3 py-1 rounded"
-                            >
-                              Login
-                            </button>
-                          )}
-                        </>
-                      }
-                    </div>
-                  </motion.div>
-                )}
-              </>
-            )}
-          </AnimatePresence>
+        {/* Left side: Logo */}
+        <div className={`flex ${isLanding ? "absolute" : "justify-between"} items-center gap-3 w-fit`}>
+          <a href="#" className="text-2xl font-bold">
+            shopi
+          </a>
         </div>
-      </motion.nav>
-    </>
+
+        {/* Center/Right: Navigation links and user actions */}
+        <AnimatePresence>
+          {(!isScrolled || isHovering) && (
+            <>
+              {/* Landing page navigation */}
+              {isLanding && (
+                <motion.div
+                  className="flex flex-1 justify-center md:gap-10 sm:gap-5 lg:gap-10 items-center whitespace-nowrap"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2, delay: 0.2 }}
+                >
+                  <a href="#features" className="text-lg flex gap-1 items-center special_links">
+                    <Cog className="w-5 h-5" />
+                    Key Features
+                  </a>
+                  <a href="#how-it-works" className="text-lg flex gap-1 items-center special_links">
+                    <Blocks className="w-5 h-5" />
+                    How it works
+                  </a>
+                  <a href="#how-it-works" className="text-lg flex gap-1 items-center special_links">
+                    <BadgeQuestionMark className="w-5 h-5" />
+                    FAQs
+                  </a>
+                </motion.div>
+              )}
+
+              {/* Authenticated user navigation */}
+              {!isLanding && (
+                <motion.div
+                  className="w-fit flex justify-end whitespace-nowrap"
+                  initial={{ opacity: 0, translateY: -10 }}
+                  animate={{ opacity: 1, translateY: 0 }}
+                  exit={{ opacity: 0, translateY: -10 }}
+                  transition={{ duration: 0.2, delay: 0.2 }}
+                >
+                  <div className="flex gap-3 items-center">
+                    <User className="w-5 h-5" />
+                    {isAuthenticated && (
+                      <div className="text-sm">
+                        <div className="font-medium">{userName}</div>
+                        <div className="text-xs text-gray-500">{userEmail}</div>
+                      </div>
+                    )}
+                    {isAuthenticated ? (
+                      <button
+                        onClick={handleLogout}
+                        className="text-sm bg-amber-500 text-white hover:bg-amber-600 px-3 py-1 rounded"
+                      >
+                        Logout
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleLogin}
+                        className="text-sm bg-amber-500 text-white hover:bg-amber-600 px-3 py-1 rounded"
+                      >
+                        Login
+                      </button>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.nav>
   );
 };
 

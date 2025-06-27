@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 
-const CartTab = ({ cartId, title, icon, selected, handleCartSelect }) => {
+const CartTab = ({ cartId, title, icon, selected, handleCartSelect, color }) => {
     const handleClick = () => {
         handleCartSelect(cartId);
     }
@@ -14,7 +14,7 @@ const CartTab = ({ cartId, title, icon, selected, handleCartSelect }) => {
                 transition={{ duration: 0.1, ease: "easeInOut" }}
                 id={cartId}
                 onClick={handleClick}
-                className="w-[150px] flex justify-start items-center gap-2
+                className="w-[150px] flex justify-center items-center gap-2
                 top-0 left-0 h-[60px] bg-transparent rounded-r-lg -ml-9 px-4
                 border-2 border-dotted border-black border-l-0 cursor-pointer">
                     <motion.div 
@@ -24,7 +24,6 @@ const CartTab = ({ cartId, title, icon, selected, handleCartSelect }) => {
                     className="flex-shrink-0">
                         {icon}
                     </motion.div>
-                    <span className="text-black text-xl font-bold truncate">{title}</span>
                 </motion.div>
             ) : (
                 <motion.div 
@@ -34,8 +33,8 @@ const CartTab = ({ cartId, title, icon, selected, handleCartSelect }) => {
                     whileTap={{ translateX: !selected ? -10 : 0, border: "0px" }}
                     transition={{ duration: 0.1, ease: "easeInOut" }}
                     onClick={handleClick}
-                    className={`${selected ? "w-full justify-end" : "w-[150px] justify-start"} flex items-center 
-                    gap-2 top-0 left-0 h-[60px] bg-blue-500 rounded-r-lg -ml-9 px-4 cursor-pointer`}>
+                    className={`${color} ${selected ? "w-full justify-end" : "w-[150px] justify-start"} flex items-center 
+                    gap-2 top-0 left-0 h-[60px] rounded-r-lg -ml-9 px-4 cursor-pointer`}>
                     <div className="flex-shrink-0">
                         {icon}
                     </div>
