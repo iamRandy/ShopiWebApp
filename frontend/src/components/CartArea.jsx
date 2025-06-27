@@ -1,13 +1,10 @@
 import { Globe, ShoppingCart, Plus } from "lucide-react";
-import { authenticatedFetch } from "../utils/api";
 import CartTab from "./CartTab";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import * as Icons from "lucide-react";
 
-const CartArea = () => {
-    const [ carts, setCarts ] = useState([]);
+const CartArea = ({ carts, selectedCart, setSelectedCart }) => {
     const [ error, setError ] = useState(null);
-    const [ selectedCart, setSelectedCart ] = useState(carts?.[0]?.id || null);
 
     const handleCartSelect = (cartId) => {
         if (cartId === 'addCart') {
@@ -15,20 +12,6 @@ const CartArea = () => {
         } else {
             console.log("cart selected:", cartId);
             setSelectedCart(cartId);
-        }
-    }
-
-    const fetchCarts = async () => {
-        try {
-            const response = await authenticatedFetch("http://localhost:3000/api/carts");
-            if (!response.ok) {
-                throw new Error("Failed to fetch carts");
-            }
-            const data = await response.json();
-            console.log("grabbed carts", data);
-            setCarts(data);
-        } catch (error) {
-            console.error("Error fetching carts:", error);
         }
     }
 
@@ -46,10 +29,6 @@ const CartArea = () => {
         );
     }
     
-    useEffect(() => {
-        fetchCarts();
-    }, []);
-
     return (
         <>
             {/* first cart is selected by default */}
@@ -65,22 +44,13 @@ const CartArea = () => {
                 />
             ))}
 
-            <CartTab 
-                    cartId="somecartId"
+            {/* <CartTab 
+                    cartId="testcart"
                     title="Everything!" 
                     icon={<Globe className="w-[28px] h-[28px]" />} 
-                    selected={selectedCart === "somecartId"}
+                    selected={selectedCart === "testcart"}
                     handleCartSelect={handleCartSelect} 
                     color="bg-blue-500"
-            />
-            {/*
-            <CartTab 
-                cartId='1' 
-                title="My cart!" 
-                icon={<ShoppingCart className="w-[28px] h-[28px]" />} 
-                selected={selectedCart === '1'}
-                handleCartSelect={setSelectedCart} 
-                color="bg-green-400"
             /> */}
 
             {/* -- Add Cart Button -- */}

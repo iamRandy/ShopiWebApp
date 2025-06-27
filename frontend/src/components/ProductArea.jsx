@@ -5,7 +5,7 @@ import ProductModal from "./ProductModal";
 import { authenticatedFetch } from "../utils/api";
 import { useNavigate } from "react-router-dom";
 
-const ProductArea = () => {
+const ProductArea = ({ productIds }) => {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,15 +14,23 @@ const ProductArea = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const fetchProducts = useCallback(async () => {
+    console.log("fetching products", productIds);
     try {
+      // fetch products by their id from the selected cart
       const response = await authenticatedFetch(
-        "http://localhost:3000/api/products"
+        "http://localhost:3000/api/products/batch",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ productIds }),
+        }
       );
       if (!response.ok) {
         throw new Error("Failed to fetch products");
       }
 
       const data = await response.json();
+      console.log("products", data);
       setProducts(data);
       setLoading(false);
     } catch (err) {
@@ -43,8 +51,13 @@ const ProductArea = () => {
   }, [navigate]);
 
   useEffect(() => {
+    if (!productIds || productIds.length === 0) {
+      setProducts([]);
+      setLoading(false);
+      return;
+    }
     fetchProducts();
-  }, [fetchProducts]);
+  }, [productIds]);
 
   const handleProductDelete = () => {
     // Refresh the products list after deletion
@@ -86,7 +99,7 @@ const ProductArea = () => {
         </div>
         <a
           href="http://localhost:5173/"
-          className="text-sm text-blue-500 hover:text-blue-700 absolute bottom-5"
+          className="text-sm text-blue-500 hover:text-blue-700"
         >
           Need help?
         </a>
@@ -99,6 +112,7 @@ const ProductArea = () => {
       <div>
         <div className="border rounded-lg h-[720px] overflow-y-auto bg-white">
           <div className="p-3 grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(208px, 208px))' }}>
+            {/* fetch products by their id from the selected cart */}
             {products.map((product) => (
               <ProductCard
                 key={product.id}
