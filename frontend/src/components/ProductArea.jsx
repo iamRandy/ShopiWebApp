@@ -113,7 +113,7 @@ const ProductArea = () => {
 
   return (
     <>
-      <div className="p-9 mt-12 space-y-4">
+      <div>
         {Object.entries(groupedProducts).map(([retailer, items]) => (
           <div
             key={retailer}

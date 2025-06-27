@@ -2,7 +2,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/NavBar';
-import ProductArea from '../components/ProductArea';
+import Dashboard from '../components/Dashboard';
 
 const Home = () => {
     const navigate = useNavigate();
@@ -18,7 +18,7 @@ const Home = () => {
         <>
             <div className="h-full overflow-hidden">
                 <Navbar />
-                <ProductArea />
+                <Dashboard />
             </div>
         </>
     )
