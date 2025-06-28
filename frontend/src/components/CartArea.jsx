@@ -4,7 +4,7 @@ import CartModal from "./CartModal";
 import { useState } from "react";
 import * as Icons from "lucide-react";
 
-const CartArea = ({ carts, selectedCart, setSelectedCart }) => {
+const CartArea = ({ carts, selectedCart, cartSelected }) => {
     const [ error, setError ] = useState(null);
     const [ isCartModalOpen, setIsCartModalOpen ] = useState(false);
     
@@ -14,7 +14,7 @@ const CartArea = ({ carts, selectedCart, setSelectedCart }) => {
             setIsCartModalOpen(true);
         } else {
             console.log("cart selected:", cartId);
-            setSelectedCart(cartId);
+            cartSelected(cartId);
         }
     }
 

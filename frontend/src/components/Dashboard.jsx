@@ -8,8 +8,13 @@ import { authenticatedFetch } from "../utils/api";
 const Dashboard = () => {
     const [carts, setCarts] = useState([]);
     const [selectedCart, setSelectedCart] = useState(null);
+    const [selectedCartObj, setSelectedCartObj] = useState(null);
+    const [selectedCartProducts, setSelectedCartProducts] = useState([]);
     const [loading, setLoading] = useState(true);
-
+    
+    // const selectedCartObj = carts.find(cart => cart.id === selectedCart);
+    // const selectedCartProducts = selectedCartObj?.products || [];
+    // console.log("selectedCartProducts", selectedCartProducts);
     useEffect(() => {
         const fetchCarts = async () => {
             setLoading(true);
@@ -17,14 +22,26 @@ const Dashboard = () => {
             const data = await response.json();
             setCarts(data);
             setSelectedCart(data?.[0]?.id || null); // Select first cart by default
+            setSelectedCartObj(data?.[0] || null);
+            setSelectedCartProducts(data?.[0]?.products || []);
             setLoading(false);
         };
         fetchCarts();
     }, []);
 
-    const selectedCartObj = carts.find(cart => cart.id === selectedCart);
-    const selectedCartProducts = selectedCartObj?.products || [];
-    // console.log("selectedCartProducts", selectedCartProducts);
+    // Swap between carts and their products
+    const cartSelected = async (cartId) => {
+        setSelectedCart(cartId);
+        const response = await authenticatedFetch("http://localhost:3000/api/carts/selectCart", {
+            method: "POST",
+            body: JSON.stringify({ cartId })
+        });
+        const data = await response.json();
+        setSelectedCartObj(data);
+        setSelectedCartProducts(data?.products || []);
+        console.log("cartSelected: new products", data?.products);
+    }
+
 
     const getIconByName = (name, props) => {
         const LucideIcon = Icons[name];
@@ -75,7 +92,7 @@ const Dashboard = () => {
                         <CartArea
                             carts={carts}
                             selectedCart={selectedCart}
-                            setSelectedCart={setSelectedCart}
+                            cartSelected={cartSelected}
                         />
                     )}
                 </div>

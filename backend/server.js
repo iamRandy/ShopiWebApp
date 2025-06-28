@@ -216,6 +216,21 @@ app.post("/api/carts", verifyToken, async (req, res) => {
   }
 });
 
+app.post("/api/carts/selectCart", verifyToken, async (req, res) => {
+  try {
+    const { cartId } = req.body;
+    const user = await usersCollection.findOne(
+      { sub: req.user.sub },
+      { projection: { _id: 0, carts: 1 } }
+    );
+    const selectedCart = user.carts.find(cart => cart.id === cartId);
+    res.json(selectedCart);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "failed to select cart" });
+  }
+});
+
 // fetch the logged-in user's own products
 app.get("/api/products", verifyToken, async (req, res) => {
   try {

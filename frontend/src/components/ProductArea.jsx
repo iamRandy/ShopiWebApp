@@ -48,7 +48,7 @@ const ProductArea = ({ productIds }) => {
       setError("Failed to load products");
       setLoading(false);
     }
-  }, [navigate]);
+  }, [navigate, productIds]);
 
   useEffect(() => {
     if (!productIds || productIds.length === 0) {
