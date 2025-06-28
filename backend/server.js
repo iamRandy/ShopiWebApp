@@ -196,6 +196,26 @@ app.post("/api/logout", verifyToken, async (req, res) => {
   }
 });
 
+app.post("/api/carts", verifyToken, async (req, res) => {
+  try {
+    const { name, icon, color } = req.body;
+    const newCart = { 
+      name, icon, color,
+      id: crypto.randomUUID()
+    };
+    if (req.user.sub) {
+      await usersCollection.updateOne(
+        { sub: req.user.sub },
+        { $push: { carts: newCart } }
+      );
+    }
+    res.json(newCart);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "failed to create cart" });
+  }
+});
+
 // fetch the logged-in user's own products
 app.get("/api/products", verifyToken, async (req, res) => {
   try {
@@ -206,9 +226,45 @@ app.get("/api/products", verifyToken, async (req, res) => {
     res.json(doc?.products || []);
   } catch (e) {
     console.error(e);
-    res.status(500).json({ error: "failed" });
+    res.status(500).json({ error: "failed to fetch products" });
   }
 });
+
+app.post("/api/products/batch", verifyToken, async (req, res) => {
+  try {
+    const { productIds } = req.body;
+    if (!Array.isArray(productIds)) {
+      return res.status(400).json({ error: "productIds must be an array" });
+    }
+    // Fetch the user document
+    const user = await usersCollection.findOne(
+      { sub: req.user.sub },
+      { projection: { _id: 0, products: 1 } }
+    );
+    if (!user || !user.products) {
+      return res.json([]);
+    }
+    // Filter products by ID
+    const products = user.products.filter((p) => productIds.includes(p.id));
+    res.json(products);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "failed to fetch products" });
+  }
+});
+
+app.get("/api/carts", verifyToken, async (req, res) => {
+  try {
+    const doc = await usersCollection.findOne(
+      { sub: req.user.sub },
+      { projection:  { _id: 0, carts: 1 } }
+    );
+    res.json(doc?.carts || [])
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "failed to fetch carts" })
+  }
+})
 
 // delete a specific product for a user
 app.delete("/api/products", verifyToken, async (req, res) => {

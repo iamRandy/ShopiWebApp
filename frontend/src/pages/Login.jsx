@@ -55,9 +55,6 @@ const Login = () => {
       localStorage.setItem("userName", decoded.name);
 
       loginSuccess(credentialResponse);
-
-      // TODO: navigate to home page IFF user is not coming from extension
-      navigate("/home");
     } catch (error) {
       console.error("Error decoding JWT:", error);
     }
@@ -79,6 +76,9 @@ const Login = () => {
             localStorage.setItem("authToken", data.accessToken);
             localStorage.setItem("refreshToken", data.refreshToken);
             console.log("Stored access and refresh tokens");
+          
+            // TODO: navigate to home page IFF user is not coming from extension
+            navigate("/home");  
           }
         })
         .catch((error) => {
@@ -90,9 +90,6 @@ const Login = () => {
   }
 
   const sendUserInfoToExtension = ({ sub, name }) => {
-    console.log("Sending user info to extension:", sub, name);
-    console.log("Extension ID:", EXT_ID);
-
     // Send message to extension using chrome.runtime.sendMessage with extension ID
     if (window.chrome?.runtime?.sendMessage && EXT_ID) {
       console.log(
@@ -102,7 +99,6 @@ const Login = () => {
         EXT_ID,
         { type: "SET_USER_INFO", sub, name },
         (response) => {
-          console.log("Extension response:", response);
           if (chrome.runtime.lastError) {
             console.error(
               "Extension communication error:",
