@@ -80,7 +80,20 @@ const CartModal = ({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("submit");
+    authenticatedFetch("http://localhost:3000/api/carts", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ name: cartName, icon: cartIcon, color: cartColor }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("cart created", data);
+      })
+      .catch((error) => {
+        console.error("Error creating cart:", error);
+      });
   }
 
   return (

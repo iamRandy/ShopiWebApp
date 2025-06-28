@@ -196,6 +196,26 @@ app.post("/api/logout", verifyToken, async (req, res) => {
   }
 });
 
+app.post("/api/carts", verifyToken, async (req, res) => {
+  try {
+    const { name, icon, color } = req.body;
+    const newCart = { 
+      name, icon, color,
+      id: crypto.randomUUID()
+    };
+    if (req.user.sub) {
+      await usersCollection.updateOne(
+        { sub: req.user.sub },
+        { $push: { carts: newCart } }
+      );
+    }
+    res.json(newCart);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "failed to create cart" });
+  }
+});
+
 // fetch the logged-in user's own products
 app.get("/api/products", verifyToken, async (req, res) => {
   try {
