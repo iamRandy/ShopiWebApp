@@ -18,16 +18,17 @@ const CartModal = ({
   ];
 
   const COLOR_SWATCHES = [
-    "#2563eb", // blue-600
-    "#22c55e", // green-500
-    "#f59e42", // orange-400
-    "#ef4444", // red-500
-    "#a21caf", // purple-800
-    "#eab308", // yellow-500
-    "#0ea5e9", // sky-500
-    "#f472b6", // pink-400
-    "#64748b", // slate-500
-    "#000000"  // black
+    "#f2002b",
+    "#f64021",
+    "#f98016",
+    "#fcc00b",
+    "#fde00b", 
+    "#00cc66",
+    "#0072bb",
+    "#7209b7",
+    "#a01a7d",
+    "#000000",
+    "#aaaaaa"
   ];
 
   if (!isOpen) return null;
