@@ -9,8 +9,9 @@ const CartModal = ({
   getIconByName,
 }) => {
   const navigate = useNavigate();
+  const [ status, setStatus ] = useState(null);
   const [ cartName, setCartName ] = useState("");
-  const [ cartIcon, setCartIcon ] = useState("");
+  const [ cartIcon, setCartIcon ] = useState("ShoppingCart");
   const [ cartColor, setCartColor ] = useState("#000000");
 
   const ICON_OPTIONS = [
@@ -75,11 +76,15 @@ const CartModal = ({
   };
 
   const handleCreateCart = () => {
-    console.log("create cart");
-    onClose();
+    setStatus("Creating cart...");
   }
 
   const handleSubmit = (e) => {
+    if (cartName.length === 0 || cartIcon === "") {
+      setStatus("Must fill out all fields.");
+      return;
+    }
+
     e.preventDefault();
     authenticatedFetch("http://localhost:3000/api/carts", {
       method: "POST",
@@ -91,6 +96,11 @@ const CartModal = ({
       .then((response) => response.json())
       .then((data) => {
         console.log("cart created", data);
+        setStatus("Cart created!");
+        setTimeout(() => {
+          setStatus(null);
+          window.location.reload();          
+        }, 3000)
       })
       .catch((error) => {
         console.error("Error creating cart:", error);
@@ -131,8 +141,12 @@ const CartModal = ({
 
             {/* Content */}
             <div className="p-6 text-black">
-                <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex flex-col md:flex-row gap-4 relative">
 
+                    {status !== null &&
+                      <div className="absolute w-full flex justify-center">
+                      <p className="text-blue-500 italic">*{status}</p>
+                    </div>}
                     {/* Cart Info */}
                     <form onSubmit={handleSubmit} className="flex-1">
                     <h3 className="text-lg font-semibold">Cart Name</h3>
@@ -195,7 +209,7 @@ const CartModal = ({
                         <span className="text-sm text-gray-600">Custom</span>
                       </div>
                     </div>
-                    <button type="submit" className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md">Create Cart</button>
+                    <button onClick={handleCreateCart} type="submit" className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md">Create Cart</button>
                     </form>
                 </div>
             </div>

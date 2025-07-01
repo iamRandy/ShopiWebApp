@@ -68,13 +68,8 @@ const Dashboard = () => {
                 </div>
             </div>
             <div className="grid grid-cols-6"> 
-                <AnimatePresence>
                 {!hideSidebar &&
-                    <motion.div 
-                    initial={{ x: -20 }}
-                    animate={{ x: 0 }}
-                    exit={{ x: -30 }}
-                    transition={{ duration: 0.1, ease: "easeOut" }}
+                    <div
                     className="flex flex-col col-span-1 gap-2">
                         {!loading && (
                             <CartArea
@@ -83,9 +78,8 @@ const Dashboard = () => {
                             cartSelected={cartSelected}
                             />
                         )}
-                    </motion.div>
+                    </div>
                 }
-                </AnimatePresence>
                 <div className={hideSidebar ? "col-span-6" : "col-span-5"}>
                     {loading ? (
                         <div className="flex justify-center items-center h-64 text-lg text-black">Loading products...</div>
