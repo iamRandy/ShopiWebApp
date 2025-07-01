@@ -1,12 +1,14 @@
 import ProductArea from "./ProductArea";
 import CartArea from "./CartArea";
-import { SlidersHorizontal, Search, ShoppingCart } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import * as Icons from "lucide-react";
 import { useState, useEffect } from "react";
 import { authenticatedFetch } from "../utils/api";
+import { AnimatePresence, motion } from "framer-motion";
 
 const Dashboard = () => {
     const [carts, setCarts] = useState([]);
+    const [hideSidebar, setHideSidebar] = useState(false);
     const [selectedCart, setSelectedCart] = useState(null); // cart id
     const [selectedCartObj, setSelectedCartObj] = useState(null); // cart obj
     const [selectedCartProducts, setSelectedCartProducts] = useState([]); // cart products
@@ -50,34 +52,45 @@ const Dashboard = () => {
 
     return (
         <div className="p-9 mt-16 relative">
-            <div className="grid grid-cols-6 text-black p-4">
-                <div className="col-span-1 flex items-end">
-                </div>
-                <div className="col-span-5 h-[60px]">
-                    <div className="relative h-full w-full flex items-center justify-start rounded-lg">
-                        {/* Centered title */}
-                        <p className="tracking-wide text-4xl whitespace-nowrap flex items-center gap-4 font-bold">Your Carts</p>
-                        {/* <p className="tracking-wide text-4xl whitespace-nowrap flex items-center gap-4 font-bold"> DESCRIPTION </p> */}
-                    </div>
+            <div className="grid grid-cols- pb-4">
+                <div className="col-span-6 flex items-center justify-start h-[60px] text-black">
+                    <motion.button
+                        className="m-0 p-0 bg-transparent"
+                        // initial={{ rotate: 0 }}
+                        // whileHover={{ rotate: 180 }}
+                        onClick={() => setHideSidebar(prev => !prev)}
+                    >
+                        <ChevronRight strokeWidth={3} className={`${hideSidebar ? "rotate-180 hover:rotate-0" : "hover:rotate-180"} transition-all ease-in-out duration-300`} />
+                    </motion.button>
+                    <p className="tracking-wide text-4xl whitespace-nowrap flex items-center gap-4 font-bold ml-2">
+                        Your Carts
+                    </p>
                 </div>
             </div>
             <div className="grid grid-cols-6"> 
-                
-                <div className="flex flex-col col-span-1 gap-2">
-                    {!loading && (
-                        <CartArea
+                <AnimatePresence>
+                {!hideSidebar &&
+                    <motion.div 
+                    initial={{ x: -20 }}
+                    animate={{ x: 0 }}
+                    exit={{ x: -30 }}
+                    transition={{ duration: 0.1, ease: "easeOut" }}
+                    className="flex flex-col col-span-1 gap-2">
+                        {!loading && (
+                            <CartArea
                             carts={carts}
                             selectedCart={selectedCart}
                             cartSelected={cartSelected}
-                        />
-                    )}
-                </div>
-
-                <div className="col-span-5">
+                            />
+                        )}
+                    </motion.div>
+                }
+                </AnimatePresence>
+                <div className={hideSidebar ? "col-span-6" : "col-span-5"}>
                     {loading ? (
                         <div className="flex justify-center items-center h-64 text-lg text-black">Loading products...</div>
                     ) : (
-                        selectedCartProducts && <ProductArea productIds={selectedCartProducts} />
+                        selectedCartProducts && <ProductArea productIds={selectedCartProducts} hideSidebar={hideSidebar} />
                     )}
                 </div>
 

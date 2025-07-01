@@ -5,7 +5,7 @@ import ProductModal from "./ProductModal";
 import { authenticatedFetch } from "../utils/api";
 import { useNavigate } from "react-router-dom";
 
-const ProductArea = ({ productIds }) => {
+const ProductArea = ({ productIds, hideSidebar }) => {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -111,7 +111,7 @@ const ProductArea = ({ productIds }) => {
     <>
       <div>
         <div className="rounded-lg h-[700px] overflow-y-auto">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+          <div className={`grid ${hideSidebar ? "grid-cols-3 md:grid-cols-4 lg:grid-cols-5" : "grid-cols-2 md:grid-cols-3 lg:grid-cols-4"} gap-5`}>
             {/* fetch products by their id from the selected cart */}
             {products.map((product) => (
               <ProductCard

@@ -148,14 +148,16 @@ const NavBar = ({ isLanding }) => {
                   {isAuthenticated ? (
                     <button
                       onClick={handleLogout}
-                      className="text-sm bg-amber-500 text-white hover:bg-amber-600 px-3 py-1 rounded"
+                      style={{ backgroundColor: "#FFBC42", color: "#57382a" }}
+                      className="text-sm px-3 py-1 rounded"
                     >
                       Logout
                     </button>
                   ) : (
                     <button
                       onClick={handleLogin}
-                      className="text-sm bg-amber-500 text-white hover:bg-amber-600 px-3 py-1 rounded"
+                      style={{ backgroundColor: "#FFBC42" }}
+                      className="text-sm px-3 py-1 rounded"
                     >
                       Login
                     </button>

@@ -51,7 +51,7 @@ const CartArea = ({ carts, selectedCart, cartSelected }) => {
             <CartTab 
                 cartId='addCart' 
                 title="add cart" 
-                icon={<Plus className="w-[28px] h-[28px] text-black" />} 
+                icon={<Plus className="w-[28px] h-[28px]" color="#57382a" />} 
                 selected={selectedCart === 'addCart'}
                 handleCartSelect={handleCartSelect} 
             />
