@@ -58,7 +58,7 @@ const NavBar = ({ isLanding }) => {
     <motion.nav
       initial={{ width: isLanding ? "95%" : "100%" }}
       className={`${isLanding ? "top-3" : "top-0"} text-black fixed left-0 right-0 z-50 h-fit mx-auto`}
-      animate={{ width: isScrolled && !isHovering ? "140px" : isLanding ? "95%" : "100%" }}
+      animate={{ width: isScrolled && !isHovering && isLanding ? "140px" : isLanding ? "95%" : "100%" }}
       onHoverStart={() => setIsHovering(true)}
       onHoverEnd={() => setIsHovering(false)}
       transition={{ duration: 0.8, ease: "easeInOut" }}

@@ -67,11 +67,8 @@ const ProductCard = ({
 
   return (
     <>
-      <div
-        className="flex flex-col h-[400px] rounded-lg overflow-hidden cursor-pointer"
-        onClick={handleCardClick}
-      >
-        <div className="relative flex justify-center items-center rounded">
+      <div className="flex flex-col h-full rounded-lg overflow-hidden cursor-pointer" onClick={handleCardClick}>
+        <div className="relative flex justify-center items-center rounded flex-grow">
           {/* Delete button in top right */}
           {/* <button
             onClick={handleDelete}
@@ -81,8 +78,7 @@ const ProductCard = ({
             <X className="w-[28px] h-[28px] text-white" />
           </button> */}
 
-
-          <div className="hover:translate-y-[-2px] transition-transform duration-200">
+          <div className="hover:translate-y-[-2px] transition-transform duration-200 w-full">
             <img
               alt="product image"
               src={productImg}
@@ -90,20 +86,13 @@ const ProductCard = ({
             />
           </div>
         </div>
-
-        {/* Separate bottom info bar */}
+        {/* Info bar as a separate flex item */}
         <div className="text-black w-full h-12 flex gap-2 justify-between items-center p-2">
           <div className="flex flex-col">
-            <span className="text-xs line-clamp-1">
-              {productName}
-            </span>
-            <span className="text-xs text-stone-400 line-clamp-1">
-              {hostname}
-            </span>
+            <span className="text-xs line-clamp-1">{productName}</span>
+            <span className="text-xs text-stone-400 line-clamp-1">{hostname}</span>
           </div>
-          <span className="text-xs whitespace-nowrap">
-            {productPrice}
-          </span>
+          <span className="text-xs whitespace-nowrap">{productPrice}</span>
         </div>
       </div>
     </>
