@@ -1,4 +1,5 @@
 import React from "react";
+import { X } from "lucide-react";
 import { authenticatedFetch } from "../utils/api";
 import { useNavigate } from "react-router-dom";
 
@@ -67,33 +68,36 @@ const ProductCard = ({
   return (
     <>
       <div
-        className="w-52 h-64 flex flex-col border rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow duration-200"
+        className="flex flex-col h-[400px] rounded-lg overflow-hidden cursor-pointer"
         onClick={handleCardClick}
       >
-        <div className="relative w-full h-52 flex justify-center items-center bg-white">
+        <div className="relative flex justify-center items-center rounded">
           {/* Delete button in top right */}
-          <button
+          {/* <button
             onClick={handleDelete}
             className="absolute top-1 right-1 z-10 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-lg transition-colors duration-200 text-xs"
             title="Delete product"
           >
-            ×
-          </button>
+            <X className="w-[28px] h-[28px] text-white" />
+          </button> */}
 
-          <img
-            alt="product image"
-            src={productImg}
-            className="w-full h-full object-contain"
-          />
+
+          <div className="hover:translate-y-[-2px] transition-transform duration-200">
+            <img
+              alt="product image"
+              src={productImg}
+              className="hover:shadow-lg transition-shadow duration-200 w-full h-[300px] object-cover rounded-xl"
+            />
+          </div>
         </div>
 
         {/* Separate bottom info bar */}
-        <div className="text-black bg-white w-full h-12 flex gap-2 justify-between items-center p-2">
+        <div className="text-black w-full h-12 flex gap-2 justify-between items-center p-2">
           <div className="flex flex-col">
-            <span className="font-bold text-xs line-clamp-1">
+            <span className="text-xs line-clamp-1">
               {productName}
             </span>
-            <span className="font-bold text-xs line-clamp-1">
+            <span className="text-xs text-stone-400 line-clamp-1">
               {hostname}
             </span>
           </div>

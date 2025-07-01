@@ -7,8 +7,17 @@ html {
   scroll-behavior: smooth;
 }
 
-:root {
+#logo_text {
   font-family: "Lexend", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 500;
+  font-style: normal;
+  font-variation-settings:
+  "wdth" 100;
+}
+
+:root {
+  font-family: "Plus Jakarta Sans", sans-serif;
   font-optical-sizing: auto;
   font-weight: 500;
   font-style: normal;

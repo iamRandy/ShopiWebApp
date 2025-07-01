@@ -68,7 +68,7 @@ const NavBar = ({ isLanding }) => {
       >
         {/* Left side: Logo */}
         <div className={`flex ${isLanding ? "absolute" : "justify-between"} items-center gap-3 w-fit`}>
-          <a href={isLanding ? "#" : ""} className="text-2xl font-bold">
+          <a id="logo_text" href={isLanding ? "#" : ""} className="text-2xl font-bold">
             shopi
           </a>
         </div>

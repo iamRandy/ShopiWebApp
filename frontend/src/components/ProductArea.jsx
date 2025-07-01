@@ -110,8 +110,8 @@ const ProductArea = ({ productIds }) => {
   return (
     <>
       <div>
-        <div className="border rounded-lg h-[700px] overflow-y-auto bg-white">
-          <div className="p-3 grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(208px, 208px))' }}>
+        <div className="rounded-lg h-[700px] overflow-y-auto">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
             {/* fetch products by their id from the selected cart */}
             {products.map((product) => (
               <ProductCard
