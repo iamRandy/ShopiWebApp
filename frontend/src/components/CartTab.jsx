@@ -27,12 +27,14 @@ const CartTab = ({ cartId, title, icon, handleCartSelect, selected }) => {
             ) : (
                 <motion.div 
                     id={cartId}
-                    initial={{ translateX: 0 }}
-                    whileHover={{ translateX: -5}}
-                    transition={{ duration: 0.1, ease: "easeInOut" }}
+                    initial={false}
+                    animate={{ translateX: selected ? -10 : 0 }}
+                    whileHover={{ translateX: selected ? -15 : -5 }}
+                    transition={{ duration: 0.2, ease: "easeInOut" }}
                     onClick={() => handleCartSelect(cartId)}
-                    className={`w-full justify-end flex items-center gap-2 top-0 
-                    left-0 h-[60px] rounded-r-lg -ml-9 px-4 cursor-pointer text-black ${selected ? "opacity-100" : "opacity-25"}`}>
+                    className={`w-full border-r-4 hover:border-r-8 justify-end flex items-center gap-2 top-0 
+                    left-0 h-[60px] rounded-r-lg -ml-9 px-4 cursor-pointer text-black 
+                    ${selected ? "opacity-100 border-[#FFBC42]" : "opacity-25 border-black"}`}>
                     <div className="flex-shrink-0">
                         {icon}
                     </div>

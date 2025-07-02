@@ -41,7 +41,7 @@ const Dashboard = () => {
         const data = await response.json();
         setSelectedCartObj(data);
         setSelectedCartProducts(data?.products || []);
-        console.log("cartSelected: new products", data?.products);
+        // console.log("cartSelected: new products", data?.products);
     }
 
 

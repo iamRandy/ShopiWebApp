@@ -101,7 +101,7 @@ const CartModal = ({
         <div className="col-span-1 flex flex-col gap-4 items-center justify-center w-[300px] min-h-[100px]">
             <p className="text-2xl font-bold">PREVIEW</p>
             <div 
-            style={{ backgroundColor: cartColor }}
+            style={{ backgroundColor: "#FFBC42" }}
             className="rounded-3xl rounded-l-none w-full max-h-[70vh] overflow-y-auto shadow-2xl p-4 flex flex-row items-center justify-end gap-3">
                 <p className="text-2xl font-bold">{getIconByName(cartIcon, { className: "w-[28px] h-[28px]" })}</p>
                 <p className="text-2xl font-bold text-nowrap">{(cartName || "Unnamed Cart")}</p>
