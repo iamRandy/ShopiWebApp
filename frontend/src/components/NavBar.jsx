@@ -75,7 +75,8 @@ const NavBar = ({ isLanding }) => {
 
         {!isLanding && (
           <div className="absolute left-1/2 -translate-x-1/2 flex justify-center items-center gap-10">
-            <a className="text-lg flex gap-1 items-center special_links cursor-pointer">
+            {/* TODO: Other pages */}
+            {/* <a className="text-lg flex gap-1 items-center special_links cursor-pointer">
               Carts
             </a>
             <a className="text-lg flex gap-1 items-center special_links cursor-pointer">
@@ -83,7 +84,7 @@ const NavBar = ({ isLanding }) => {
             </a>
             <a className="text-lg flex gap-1 items-center special_links cursor-pointer">
               Pick
-            </a>
+            </a> */}
           </div>
         )}
 
