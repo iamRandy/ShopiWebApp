@@ -43,7 +43,6 @@ const CartArea = ({ carts, selectedCart, cartSelected }) => {
                     icon={getIconByName(cart.icon, { className: "w-[28px] h-[28px]" }) || <ShoppingCart className="w-[28px] h-[28px]" />} 
                     selected={selectedCart === cart.id}
                     handleCartSelect={handleCartSelect} 
-                    color={cart.color}
                 />
             ))}
 

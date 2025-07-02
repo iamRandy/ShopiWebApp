@@ -18,20 +18,6 @@ const CartModal = ({
     "ShoppingCart", "Globe", "Heart", "Star", "Gift", "Banana", "Book", "Camera", "Car", "Clock", "Cloud", "Coffee", "DollarSign", "Home", "Key", "Music", "Phone", "Plane", "Smile", "User"
   ];
 
-  const COLOR_SWATCHES = [
-    "#f2002b",
-    "#f64021",
-    "#f98016",
-    "#fcc00b",
-    "#fde00b", 
-    "#00cc66",
-    "#0072bb",
-    "#7209b7",
-    "#a01a7d",
-    "#000000",
-    "#aaaaaa"
-  ];
-
   if (!isOpen) return null;
 
   const handleDelete = async (e) => {
@@ -91,7 +77,7 @@ const CartModal = ({
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ name: cartName, icon: cartIcon, color: cartColor }),
+      body: JSON.stringify({ name: cartName, icon: cartIcon }),
     })
       .then((response) => response.json())
       .then((data) => {
@@ -175,38 +161,6 @@ const CartModal = ({
                             {getIconByName(iconName, { className: "w-6 h-6" })}
                           </button>
                         ))}
-                      </div>
-                    </div>
-                    <div className="mb-4">
-                      <h4 className="text-lg font-semibold mb-2">Choose a Color</h4>
-                      <div className="flex flex-wrap gap-2 mb-2">
-                        {COLOR_SWATCHES.map((color) => (
-                          <button
-                            type="button"
-                            key={color}
-                            className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-150 ${cartColor === color ? 'border-blue-500 scale-110' : 'border-gray-300'}`}
-                            style={{ backgroundColor: color }}
-                            onClick={() => setCartColor(color)}
-                            aria-label={color}
-                          >
-                            {cartColor === color && <span className="block w-3 h-3 rounded-full border-2 border-white bg-white/30" />}
-                          </button>
-                        ))}
-                        {/* Custom color preview */}
-                        {!COLOR_SWATCHES.includes(cartColor) && (
-                          <span className="w-7 h-7 rounded-full border-2 border-blue-500 flex items-center justify-center scale-110" style={{ backgroundColor: cartColor }} />
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="color"
-                          name="cartColor"
-                          className="w-10 h-10 p-0 bg-transparent cursor-pointer"
-                          value={cartColor}
-                          onChange={(e) => setCartColor(e.target.value)}
-                          aria-label="Custom color picker"
-                        />
-                        <span className="text-sm text-gray-600">Custom</span>
                       </div>
                     </div>
                     <button onClick={handleCreateCart} type="submit" className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md">Create Cart</button>

@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 
-const CartTab = ({ cartId, title, icon, handleCartSelect, selected, color }) => {
+const CartTab = ({ cartId, title, icon, handleCartSelect, selected }) => {
 
     return (
         <>
@@ -31,11 +31,6 @@ const CartTab = ({ cartId, title, icon, handleCartSelect, selected, color }) => 
                     whileHover={{ translateX: -5}}
                     transition={{ duration: 0.1, ease: "easeInOut" }}
                     onClick={() => handleCartSelect(cartId)}
-                    // style={{ backgroundColor: `${selected ? "#FFBC42" : "transparent"}`, 
-                    //     color: "#57382a",
-                    //     opacity: `${selected ? "1" : "0.25"}`,
-                    //     border: `${selected ? "0px" : "2px solid #57382a"}`
-                    // }}
                     className={`w-full justify-end flex items-center gap-2 top-0 
                     left-0 h-[60px] rounded-r-lg -ml-9 px-4 cursor-pointer text-black ${selected ? "opacity-100" : "opacity-25"}`}>
                     <div className="flex-shrink-0">
