@@ -110,7 +110,7 @@ const ProductArea = ({ productIds, hideSidebar }) => {
   return (
     <>
       <div>
-        <div className="rounded-lg h-[700px] overflow-y-auto">
+        <div className="rounded-lg h-[630px] overflow-y-auto">
           <div className={`grid ${hideSidebar ? "grid-cols-3 md:grid-cols-4 lg:grid-cols-5" : "grid-cols-2 md:grid-cols-3 lg:grid-cols-4"} gap-5`}>
             {/* fetch products by their id from the selected cart */}
             {products.map((product) => (

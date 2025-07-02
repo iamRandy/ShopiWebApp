@@ -70,7 +70,9 @@ const Dashboard = () => {
                     {!hideSidebar && <div className="col-span-1"></div>}
                     <div className="col-span-5 flex flex-col items-start gap-2">
                         <p className="tracking-wide text-4xl whitespace-nowrap font-bold">Your Carts</p>
-                        <p className="text-stone-400">This is a description of your cart.</p>
+                        {/* TODO: Implement description for each cart */}
+                        <p className="text-stone-400">See everything in one place.</p> 
+                        
                     </div>
 
                 </div>
