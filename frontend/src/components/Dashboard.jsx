@@ -64,11 +64,13 @@ const Dashboard = () => {
                     </motion.button>
                 </div>
 
-                <div className="grid grid-cols-6 pb-4 text-black">
+                <div className="grid grid-cols-6 pb-8 text-black">
                     {!hideSidebar && <div className="col-span-1"></div>}
-                    <p className="col-span-5 tracking-wide text-4xl whitespace-nowrap flex items-center gap-4 font-bold">
-                        Your Carts
-                    </p>
+                    <div className="col-span-5 flex flex-col items-start gap-2">
+                        <p className="tracking-wide text-4xl whitespace-nowrap font-bold">Your Carts</p>
+                        <p className="text-stone-400">This is a description of your cart.</p>
+                    </div>
+
                 </div>
 
             </div>

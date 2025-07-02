@@ -87,7 +87,7 @@ const ProductCard = ({
           </div>
         </div>
         {/* Info bar as a separate flex item */}
-        <div className="text-black w-full h-12 flex gap-2 justify-between items-center p-2">
+        <div className="text-black w-full h-12 flex gap-2 justify-between items-center p-1">
           <div className="flex flex-col">
             <span className="text-xs line-clamp-1">{productName}</span>
             <span className="text-xs text-stone-400 line-clamp-1">{hostname}</span>
