@@ -61,17 +61,13 @@ const CartModal = ({
     }
   };
 
-  const handleCreateCart = () => {
-    setStatus("Creating cart...");
-  }
-
   const handleSubmit = (e) => {
+    e.preventDefault();
     if (cartName.length === 0 || cartIcon === "") {
-      setStatus("Must fill out all fields.");
+      setStatus("Please enter a name for your cart.");
       return;
     }
 
-    e.preventDefault();
     authenticatedFetch("http://localhost:3000/api/carts", {
       method: "POST",
       headers: {
@@ -86,7 +82,7 @@ const CartModal = ({
         setTimeout(() => {
           setStatus(null);
           window.location.reload();          
-        }, 3000)
+        }, 1500)
       })
       .catch((error) => {
         console.error("Error creating cart:", error);
@@ -131,13 +127,13 @@ const CartModal = ({
 
                     {status !== null &&
                       <div className="absolute w-full flex justify-center">
-                      <p className="text-blue-500 italic">*{status}</p>
+                      <p className="text-[#FFBC42] italic">*{status}</p>
                     </div>}
                     {/* Cart Info */}
                     <form onSubmit={handleSubmit} className="flex-1">
                     <h3 className="text-lg font-semibold">Cart Name</h3>
                     <input
-                      required
+                      // required
                       type="text"
                       name="cartName"
                       placeholder="Cart Name"
@@ -163,7 +159,7 @@ const CartModal = ({
                         ))}
                       </div>
                     </div>
-                    <button onClick={handleCreateCart} type="submit" className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md">Create Cart</button>
+                    <button type="submit" className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 mt-2 rounded-md">Create Cart</button>
                     </form>
                 </div>
             </div>
