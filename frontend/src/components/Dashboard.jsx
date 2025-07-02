@@ -60,7 +60,9 @@ const Dashboard = () => {
                         className="m-0 p-0 bg-transparent"
                         onClick={() => setHideSidebar(prev => !prev)}
                     >
+                    {/* Allows user to expand and minimize sidebar
                         <ChevronRight strokeWidth={3} className={`${hideSidebar ? "rotate-180 hover:rotate-0" : "hover:rotate-180"} transition-all ease-in-out duration-300`} />
+                    */}
                     </motion.button>
                 </div>
 
