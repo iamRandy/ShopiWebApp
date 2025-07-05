@@ -200,21 +200,22 @@ app.get("/api/carts", verifyToken, async (req, res) => {
   try {
     const doc = await usersCollection.findOne(
       { sub: req.user.sub },
-      { projection:  { _id: 0, carts: 1 } }
+      { projection: { _id: 0, carts: 1 } }
     );
-    res.json(doc?.carts || [])
+    res.json(doc?.carts || []);
   } catch (e) {
     console.error(e);
-    res.status(500).json({ error: "failed to fetch carts" })
+    res.status(500).json({ error: "failed to fetch carts" });
   }
-})
+});
 
 app.post("/api/carts", verifyToken, async (req, res) => {
   try {
     const { name, icon } = req.body;
-    const newCart = { 
-      name, icon,
-      id: crypto.randomUUID()
+    const newCart = {
+      name,
+      icon,
+      id: crypto.randomUUID(),
     };
     if (req.user.sub) {
       await usersCollection.updateOne(
@@ -236,11 +237,76 @@ app.post("/api/carts/selectCart", verifyToken, async (req, res) => {
       { sub: req.user.sub },
       { projection: { _id: 0, carts: 1 } }
     );
-    const selectedCart = user.carts.find(cart => cart.id === cartId);
+    const selectedCart = user.carts.find((cart) => cart.id === cartId);
     res.json(selectedCart);
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "failed to select cart" });
+  }
+});
+
+// Update a specific cart
+app.put("/api/carts/:cartId", verifyToken, async (req, res) => {
+  try {
+    const { cartId } = req.params;
+    const { name, icon, color } = req.body;
+
+    if (!cartId) {
+      return res.status(400).json({ error: "Cart ID is required" });
+    }
+
+    // Update the cart in the user's carts array
+    const result = await usersCollection.updateOne(
+      { sub: req.user.sub, "carts.id": cartId },
+      {
+        $set: {
+          "carts.$.name": name,
+          "carts.$.icon": icon,
+          ...(color && { "carts.$.color": color }),
+        },
+      }
+    );
+
+    if (result.modifiedCount > 0) {
+      // Fetch the updated cart to return it
+      const user = await usersCollection.findOne(
+        { sub: req.user.sub },
+        { projection: { _id: 0, carts: 1 } }
+      );
+      const updatedCart = user.carts.find((cart) => cart.id === cartId);
+      res.json(updatedCart);
+    } else {
+      res.status(404).json({ error: "Cart not found" });
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Failed to update cart" });
+  }
+});
+
+// Delete a specific cart
+app.delete("/api/carts/:cartId", verifyToken, async (req, res) => {
+  try {
+    const { cartId } = req.params;
+
+    if (!cartId) {
+      return res.status(400).json({ error: "Cart ID is required" });
+    }
+
+    // Remove the cart from the user's carts array
+    const result = await usersCollection.updateOne(
+      { sub: req.user.sub },
+      { $pull: { carts: { id: cartId } } }
+    );
+
+    if (result.modifiedCount > 0) {
+      res.json({ success: true, message: "Cart deleted successfully" });
+    } else {
+      res.status(404).json({ error: "Cart not found or already deleted" });
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Failed to delete cart" });
   }
 });
 
