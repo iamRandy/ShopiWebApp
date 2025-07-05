@@ -91,8 +91,13 @@ const NavBar = ({ isLanding }) => {
           <a
             id="logo_text"
             href={isLanding ? "#" : ""}
-            className="text-2xl font-bold"
+            className="text-2xl font-bold flex items-center gap-2"
           >
+            <img
+              src="/images/Avee.png"
+              alt="Shopi Logo"
+              className="w-8 h-8 object-contain"
+            />
             shopi
           </a>
         </div>
