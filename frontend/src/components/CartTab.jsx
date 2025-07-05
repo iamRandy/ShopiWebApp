@@ -37,8 +37,8 @@ const CartTab = ({
         <motion.div
           id={cartId}
           initial={false}
-          animate={{ translateX: selected ? -10 : 0 }}
-          whileHover={{ translateX: selected ? -15 : -5 }}
+          animate={{ translateX: 0 }}
+          whileHover={{ translateX: -5 }}
           transition={{ duration: 0.2, ease: "easeInOut" }}
           onClick={() => handleCartSelect(cartId)}
           className={`w-full border-r-4 hover:border-r-8 justify-end flex items-center gap-2 top-0 
