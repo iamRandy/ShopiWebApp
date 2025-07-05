@@ -60,8 +60,13 @@ const CartTab = ({
               e.stopPropagation();
               handleCartEdit(cartId);
             }}
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200
-                        bg-gray-100 hover:bg-gray-200 rounded-full p-1 text-gray-600 hover:text-gray-800 flex-shrink-0"
+            className={`absolute right-2 top-1/2 transform -translate-y-1/2 transition-opacity duration-200
+                        bg-gray-100 hover:bg-gray-200 rounded-full p-1 text-gray-600 hover:text-gray-800 flex-shrink-0
+                        ${
+                          selected
+                            ? "opacity-100"
+                            : "opacity-0 group-hover:opacity-100"
+                        }`}
             title="Edit cart"
           >
             <MoreHorizontal className="w-4 h-4" />
