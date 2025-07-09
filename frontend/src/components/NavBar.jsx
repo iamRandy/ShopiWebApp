@@ -57,16 +57,20 @@ const NavBar = ({ isLanding }) => {
   };
 
   // --- Render ---
+  const isCollapsed = isScrolled && !isHovering && isLanding;
+
   return (
     <motion.nav
       initial={{ width: isLanding ? "95%" : "100%" }}
-      className={`${
-        isLanding ? "top-3" : "top-0"
-      } text-black fixed left-0 right-0 z-50 h-fit mx-auto`}
+      className={`
+        ${isLanding ? "top-3" : "top-0"}
+        text-black fixed left-0 right-0 z-50 h-fit mx-auto
+        ${isCollapsed ? "flex justify-center items-center" : ""}
+      `}
       animate={{
         width:
           isScrolled && !isHovering && isLanding
-            ? "140px"
+            ? "10%"
             : isLanding
             ? "95%"
             : "100%",
@@ -80,7 +84,8 @@ const NavBar = ({ isLanding }) => {
           isLanding
             ? "rounded-full border border-stone-500/20 backdrop-blur-lg"
             : ""
-        } relative flex w-full items-center justify-between bg-white/10 p-4 px-10 shadow-lg gap-10 h-16`}
+        } relative flex w-full items-center justify-between bg-white/10 shadow-lg gap-10 p-4 px-10 h-16
+      `}
       >
         {/* Left side: Logo */}
         <div
@@ -93,12 +98,20 @@ const NavBar = ({ isLanding }) => {
             href={isLanding ? "#" : ""}
             className="text-2xl font-bold flex items-center gap-2"
           >
-            <img
-              src="/images/Avee.png"
-              alt="Shopi Logo"
-              className="w-8 h-8 object-contain"
-            />
-            shopi
+            <AnimatePresence>
+              {!isCollapsed &&
+                <motion.img
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2, delay: 0.2 }}
+                src="/images/Avee.png"
+                alt="Shopi Logo"
+                className="w-8 h-8 object-contain"
+                />
+              }
+            </AnimatePresence>
+            chaos
           </a>
         </div>
 

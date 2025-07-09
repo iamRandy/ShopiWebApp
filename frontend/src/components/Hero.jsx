@@ -14,38 +14,13 @@ export default function Hero() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handleClick = (action) => {
-    switch (action) {
-      case "getStarted":
-        navigate("/login");
-        break;
-      case "home": {
-        // Check if user is authenticated before navigating to home
-        const token = localStorage.getItem("authToken");
-        const refreshToken = localStorage.getItem("refreshToken");
-
-        if (token && refreshToken) {
-          // Both tokens exist, navigate to home
-          // Let the API utility handle token refresh if needed
-          navigate("/home");
-        } else {
-          // No tokens found, redirect to login
-          navigate("/login");
-        }
-        break;
-      }
-      default:
-        break;
-    }
-  };
-
   const transition = {
     duration: 1,
     ease: "easeInOut",
   };
 
   return (
-    <section className="min-h-screen flex items-center justify-center text-center">
+    <section className="min-h-screen flex items-center justify-between text-center">
       <motion.div
         animate={{
           translateY: ["20px", "-20px", "20px"],
@@ -56,45 +31,43 @@ export default function Hero() {
           ease: "easeInOut",
           repeat: Infinity,
         }}
-        className="container px-6 ml-20"
+        className="px-6 w-full"
       >
         <img
           src="/images/Avee.png"
           alt="Avee"
-          className="w-1/2 h-1/2 mx-auto"
+          className="w-1/3 mx-auto"
         />
       </motion.div>
 
-      <div className="container px-6 mr-20">
+      <div className="flex flex-col justify-start px-2 w-full">
         <motion.h1
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={transition}
-          className="text-3xl md:text-4xl font-extrabold leading-tight mb-4"
+          className="text-3xl md:text-4xl font-bold mb-4 text-start w-3/4"
         >
-          Meet Avee, your new online shopping assistant.
+          Meet Chaos, your new online shopping assistant.
         </motion.h1>
 
-        <div className="flex flex-col mt-10 gap-2">
+        <motion.h2 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={transition}
+        className="text-start">
+          Making decisions doesn't have to be so hard.
+        </motion.h2>
+
+        <div className="mt-5 flex justify-start">
           <motion.button
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             whileHover={{ scale: 1.05 }}
             transition={{ duration: 0.4, ease: "easeInOut", delay: 2 }}
-            onClick={() => handleClick("getStarted")}
-            className="w-2/3 mx-auto inline-flex items-center justify-center px-8 py-4 bg-amber-500 hover:bg-amber-400 text-white font-bold rounded-3xl text-lg shadow-lg"
+            onClick={() => navigate("/login")}
+            className="px-8 py-4 bg-amber-500 hover:bg-amber-400 text-white font-bold rounded-full text-lg shadow-lg"
           >
             GET STARTED
-          </motion.button>
-          <motion.button
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            whileHover={{ scale: 1.05 }}
-            transition={{ duration: 0.4, ease: "easeInOut", delay: 3 }}
-            onClick={() => handleClick("home")}
-            className="w-2/3 mx-auto inline-flex items-center justify-center px-8 py-4 bg-transparent border-4 border-amber-500 hover:bg-amber-400 text-amber-500 hover:text-white font-bold rounded-3xl text-lg shadow-lg"
-          >
-            I ALREADY HAVE AN ACCOUNT
           </motion.button>
         </div>
         {!isScrolled && (
