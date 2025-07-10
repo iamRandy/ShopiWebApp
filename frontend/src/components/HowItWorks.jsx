@@ -3,13 +3,13 @@ import { useRef } from "react";
 
 export default function HowItWorks() {
     const Piece = ({ videoSrc, title, description, alt }) => (
-        <div className="w-full rounded-xl bg-slate-300 flex justify-center p-8">
+        <div className="w-full rounded-xl bg-stone-200 flex justify-center p-8">
             <div>
                 <video
                 className="rounded-xl mb-2"
                 src={videoSrc} alt={alt || "demo video"} autoPlay loop muted playsInline />
-                <p className="font-bold py-1">{title}</p>
-                <p className="text-sm">{description}</p>
+                <p className="font-bold py-1 text-stone-700">{title}</p>
+                <p className="text-sm text-stone-500">{description}</p>
             </div>
         </div>
     );
@@ -47,7 +47,7 @@ export default function HowItWorks() {
                 animate={isInView ? "visible" : "hidden"}
             >
                 <motion.div variants={itemVariants} className="text-center mb-12">
-                    <h2 className="text-4xl font-bold">How Chaos Works</h2>
+                    <h2 className="text-4xl font-bold">Organize Your Stuff</h2>
                     <p className="text-gray-500 mt-4">Chaos can help you make even the most complex shopping decisions, easier.</p>
                 </motion.div>
                 <div className="w-full grid md:grid-cols-2 gap-10 px-20">
@@ -56,6 +56,10 @@ export default function HowItWorks() {
                     description="Keep track of every item you save—no matter the store. 
                     Seamlessly view and manage products from across the web in one 
                     convenient space." />
+                    <Piece videoSrc="/videos/SaveAndViewCart.mp4" 
+                    title="Create Different Carts for Any Occasion" 
+                    description="Organize your saved products into custom carts—whether 
+                    it's for gifting, wishlists, or future buys. Your shopping, your system." />
                 </div>
             </motion.div>
         </section>

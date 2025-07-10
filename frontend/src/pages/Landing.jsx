@@ -7,7 +7,7 @@ import Footer from '../components/Footer';
 
 export default function Landing() {
     return (
-        <div className="bg-gray-200 min-h-screen text-black">
+        <div className="bg-[#f8f6f0] min-h-screen text-black">
             <NavBar isLanding={true} />
             
             <main>

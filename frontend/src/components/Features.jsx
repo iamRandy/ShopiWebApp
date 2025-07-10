@@ -14,9 +14,9 @@ const FeatureCard = ({ icon, title, description, delay }) => {
                 transition={{ duration: 0.7, delay: delay }}
                 onHoverStart={() => setIsHovered(true)}
                 onHoverEnd={() => setIsHovered(false)}
-                className="flex flex-col items-center p-6 text-center bg-gray-100 rounded-lg shadow-md cursor-pointer transition-all duration-300 hover:shadow-lg"
+                className="flex flex-col items-center p-6 text-center rounded-lg shadow-md cursor-pointer transition-all duration-300 hover:shadow-lg"
             >
-                <div className="p-4 bg-gray-50 rounded-full border border-stone-500/20 mb-4">
+                <div className="p-4 text-stone-400 rounded-full border border-stone-500/20 mb-4">
                     {icon}
                 </div>
                 <h3 className="text-xl font-semibold mb-2">
@@ -65,34 +65,18 @@ export default function Features() {
     };
 
     return (
-        <section id="features" className="min-h-screen flex items-center justify-center text-center">
-            <div className="container h-full mx-auto px-6 flex items-center">
-                <div className="text-center ml-20">
-                    <h2 className="text-4xl font-bold">Key Features</h2>
-                    <p className="text-gray-500 mt-4 max-w-2xl mx-auto">
-                        Avee can help you make even the most complex shopping decisions, easier.
+        <section id="features" className="min-h-screen flex items-center justify-center text-left">
+            <div className="container h-full flex items-center gap-10">
+                <div>
+                    <h2 className="text-4xl font-bold">Just Save It</h2>
+                    <p className="text-gray-500 mt-4 max-w-1xl mx-auto">
+                        Found something you love? Save it now and decide later.
                     </p>
-                    {animationData && <Lottie options={defaultOptions} height={400} width={400} />}
                 </div>
-                <div className="grid gap-8 mx-auto">
-                    <FeatureCard
-                        icon={<Group className="w-8 h-8 text-yellow-400" />}
-                        title="Your carts, in one place"
-                        description="Have multiple carts from different stores in one place. No more switching between tabs to check your cart."
-                        delay={0.2}
-                    />
-                    <FeatureCard
-                        icon={<CheckCircle className="w-8 h-8 text-green-400" />}
-                        title="Easy to Use"
-                        description="Click and go. Avee can help you make decisions later."
-                        delay={0.6}
-                    />
-                    <FeatureCard
-                        icon={<Download className="w-8 h-8 text-blue-400" />}
-                        title="No Setup Required"
-                        description="After the installation, Avee will automatically start popping up on your favorite retail websites. No further setup needed!"
-                        delay={1}
-                    />
+                <div className="w-full">
+                    <video
+                    className="border border-stone-300 w-full rounded-xl"
+                    src="/videos/SaveFromEverywhere.mp4" autoPlay loop muted playsInline />
                 </div>
             </div>
         </section>

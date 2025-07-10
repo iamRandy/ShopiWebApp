@@ -65,7 +65,7 @@ export default function Hero() {
             whileHover={{ scale: 1.05 }}
             transition={{ duration: 0.4, ease: "easeInOut", delay: 2 }}
             onClick={() => navigate("/login")}
-            className="px-8 py-4 bg-amber-500 hover:bg-amber-400 text-white font-bold rounded-full text-lg shadow-lg"
+            className="px-8 py-4 bg-[#FFBC42] hover:bg-[#f7ad3e] text-white font-bold rounded-full text-lg shadow-lg"
           >
             GET STARTED
           </motion.button>
