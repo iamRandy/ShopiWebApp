@@ -57,13 +57,13 @@ export default function Features() {
                     </p>
                 </div>
                 <div className="w-full">
-                    <motion.video
+                    <motion.img
                     initial={{ translateY: 20, opacity: 0 }}
                     whileInView={{ translateY: 0, opacity: 1 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.8, ease: "easeInOut", delay: 0.5 }}
                     className="border border-stone-300 w-full rounded-xl z-10"
-                    src="/videos/SaveFromEverywhere.mp4" autoPlay loop muted playsInline />
+                    src="/videos/SaveFromEverywhere.gif" />
                 </div>
             </div>
         </section>

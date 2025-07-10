@@ -4,19 +4,19 @@ import { useRef, useState } from "react";
 
 export default function HowItWorks() {
     
-    const VideoPiece = ({ videoSrc, title, description, playOnStart }) => {
+    const VideoPiece = ({ videoSrc, title, description }) => {
         const videoRef = useRef(null);
-        const [playing, setPlaying] = useState(playOnStart);
+        // const [playing, setPlaying] = useState(playOnStart);
     
-        const playVideo = () => {
-            setPlaying(true);
-            videoRef.current.play();
-        };
+        // const playVideo = () => {
+        //     setPlaying(true);
+        //     videoRef.current.play();
+        // };
     
-        const pauseVideo = () => {
-            setPlaying(false);
-            videoRef.current.pause();
-        };
+        // const pauseVideo = () => {
+        //     setPlaying(false);
+        //     videoRef.current.pause();
+        // };
         
         return (
             <div className="rounded-xl bg-stone-200 flex justify-center p-8">
@@ -28,18 +28,19 @@ export default function HowItWorks() {
                     transition={{ duration: 0.8, ease: "easeInOut" }}
                     className="relative flex">
 
-                        {!playing && (
+                        {/* {!playing && (
                             <>
                                 <div className="absolute w-full h-full rounded-xl bg-black opacity-50 z-10" />
                                 <button className="flex justify-center items-center absolute w-full h-full rounded-full z-20 text-white" onClick={playVideo}><CirclePlay className="w-[40px] h-[40px]" /></button>
                             </>
-                        )}
-                        <video
-                        autoPlay={playOnStart}
-                        ref={videoRef}
+                        )} */}
+                        <img
+                        // autoPlay={playOnStart}
+                        // ref={videoRef}
                         className="rounded-xl"
                         src={videoSrc} alt="demo video" loop muted playsInline
-                        onClick={pauseVideo} />
+                        // onClick={pauseVideo} 
+                        />
 
                     </motion.div>
                     <p className="font-bold py-2 pt-6 text-stone-700">{title}</p>
@@ -86,17 +87,19 @@ export default function HowItWorks() {
                     <p className="text-stone-400 mt-4">Chaos can help you make even the most complex shopping decisions, easier.</p>
                 </motion.div>
                 <div className="w-full grid md:grid-cols-2 gap-10 px-20">
-                    <VideoPiece videoSrc="/videos/SaveAndViewCart.mp4" 
+                    <VideoPiece videoSrc="/videos/SaveAndViewCart.gif" 
                     title="All Your Carts in One Place" 
                     description="Keep track of every item you save—no matter the store. 
                     Seamlessly view and manage products from across the web in one 
                     convenient space."
-                    playOnStart={true} />
+                    // playOnStart={true} 
+                    />
 
-                    <VideoPiece videoSrc="/videos/CreateAndDeleteCart.mp4" 
+                    <VideoPiece videoSrc="/videos/CreateAndDeleteCart.gif" 
                     title="Create and Delete Carts" 
                     description="Organize your saved products into custom carts—whether 
-                    it's for gifting, wishlists, or future buys. Your shopping, your system." />
+                    it's for gifting, wishlists, or future buys. Your shopping, your system." 
+                    />
                 </div>
             </motion.div>
         </section>
