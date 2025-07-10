@@ -54,7 +54,7 @@ export default function Hero() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={transition}
-        className="text-start">
+        className="text-start text-stone-400">
           Making decisions doesn't have to be so hard.
         </motion.h2>
 
