@@ -62,7 +62,8 @@ const Login = () => {
 
   function loginSuccess(cRes) {
     try {
-      fetch("http://localhost:3000/api/login/google", {
+      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+      fetch(`${API_URL}/api/login/google`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: cRes.credential }),
@@ -76,9 +77,9 @@ const Login = () => {
             localStorage.setItem("authToken", data.accessToken);
             localStorage.setItem("refreshToken", data.refreshToken);
             console.log("Stored access and refresh tokens");
-          
+
             // TODO: navigate to home page IFF user is not coming from extension
-            navigate("/home");  
+            navigate("/home");
           }
         })
         .catch((error) => {

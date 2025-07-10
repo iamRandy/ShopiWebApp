@@ -62,8 +62,9 @@ const CartModal = ({
       )
     ) {
       try {
+        const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
         const response = await authenticatedFetch(
-          `http://localhost:3000/api/carts/${cartData.id}`,
+          `${API_URL}/api/carts/${cartData.id}`,
           {
             method: "DELETE",
           }
@@ -109,9 +110,10 @@ const CartModal = ({
       return;
     }
 
+    const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
     const url = isEditMode
-      ? `http://localhost:3000/api/carts/${cartData.id}`
-      : "http://localhost:3000/api/carts";
+      ? `${API_URL}/api/carts/${cartData.id}`
+      : `${API_URL}/api/carts`;
 
     const method = isEditMode ? "PUT" : "POST";
 

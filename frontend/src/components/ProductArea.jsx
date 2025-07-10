@@ -17,8 +17,9 @@ const ProductArea = ({ productIds, hideSidebar }) => {
     console.log("fetching products", productIds);
     try {
       // fetch products by their id from the selected cart
+      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
       const response = await authenticatedFetch(
-        "http://localhost:3000/api/products/batch",
+        `${API_URL}/api/products/batch`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -111,14 +112,27 @@ const ProductArea = ({ productIds, hideSidebar }) => {
     <>
       <div>
         <div className="rounded-lg h-[630px] overflow-y-auto">
-          <div className={`grid ${hideSidebar ? "grid-cols-3 md:grid-cols-4 lg:grid-cols-5" : "grid-cols-2 md:grid-cols-3 lg:grid-cols-4"} gap-5`}>
+          <div
+            className={`grid ${
+              hideSidebar
+                ? "grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+                : "grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+            } gap-5`}
+          >
             {/* fetch products by their id from the selected cart */}
             {products.map((product) => (
               <ProductCard
                 key={product.id}
                 productName={product.title || "Unknown Product"}
-                productImg={product.image || "https://via.placeholder.com/300x300?text=No+Image"}
-                productPrice={product.price ? `${product.currency || "$"}${product.price}` : "Price not available"}
+                productImg={
+                  product.image ||
+                  "https://via.placeholder.com/300x300?text=No+Image"
+                }
+                productPrice={
+                  product.price
+                    ? `${product.currency || "$"}${product.price}`
+                    : "Price not available"
+                }
                 productId={product.id}
                 productUrl={product.url}
                 productDescription={product.description}

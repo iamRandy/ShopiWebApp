@@ -24,13 +24,11 @@ const ProductModal = ({
     e.stopPropagation();
     if (window.confirm("Are you sure you want to delete this product?")) {
       try {
-        const response = await authenticatedFetch(
-          "http://localhost:3000/api/products",
-          {
-            method: "DELETE",
-            body: JSON.stringify({ productId }),
-          }
-        );
+        const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+        const response = await authenticatedFetch(`${API_URL}/api/products`, {
+          method: "DELETE",
+          body: JSON.stringify({ productId }),
+        });
 
         if (response.ok) {
           onDelete();

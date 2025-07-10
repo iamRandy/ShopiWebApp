@@ -14,6 +14,8 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
 const refreshToken = async () => {
   const refreshTokenValue = localStorage.getItem("refreshToken");
 
@@ -21,7 +23,7 @@ const refreshToken = async () => {
     throw new Error("No refresh token available");
   }
 
-  const response = await fetch("http://localhost:3000/api/refresh-token", {
+  const response = await fetch(`${API_URL}/api/refresh-token`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -132,21 +134,17 @@ export const authenticatedFetch = async (url, options = {}) => {
 
 // Logout function that also calls the backend to invalidate refresh token
 export const logout = async () => {
-  const token = localStorage.getItem("authToken");
-
-  if (token) {
-    try {
-      await fetch("http://localhost:3000/api/logout", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-    } catch (error) {
-      console.error("Error during logout:", error);
-      // Continue with local logout even if server logout fails
-    }
+  try {
+    await fetch(`${API_URL}/api/logout`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+      },
+    });
+  } catch (error) {
+    console.error("Error during logout:", error);
+    // Continue with local logout even if server logout fails
   }
 
   // Clear all tokens

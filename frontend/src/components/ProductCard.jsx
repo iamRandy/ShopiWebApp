@@ -20,13 +20,11 @@ const ProductCard = ({
     e.stopPropagation(); // Prevent triggering the product link
     if (window.confirm("Are you sure you want to delete this product?")) {
       try {
-        const response = await authenticatedFetch(
-          "http://localhost:3000/api/products",
-          {
-            method: "DELETE",
-            body: JSON.stringify({ productId }),
-          }
-        );
+        const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+        const response = await authenticatedFetch(`${API_URL}/api/products`, {
+          method: "DELETE",
+          body: JSON.stringify({ productId }),
+        });
 
         if (response.ok) {
           // Call the parent component's onDelete callback to refresh the list
@@ -67,7 +65,10 @@ const ProductCard = ({
 
   return (
     <>
-      <div className="flex flex-col h-full rounded-lg overflow-hidden cursor-pointer" onClick={handleCardClick}>
+      <div
+        className="flex flex-col h-full rounded-lg overflow-hidden cursor-pointer"
+        onClick={handleCardClick}
+      >
         <div className="relative flex justify-center items-center rounded flex-grow">
           {/* Delete button in top right */}
           {/* <button
@@ -90,7 +91,9 @@ const ProductCard = ({
         <div className="text-black w-full h-12 flex gap-2 justify-between items-center p-1">
           <div className="flex flex-col">
             <span className="text-xs line-clamp-1">{productName}</span>
-            <span className="text-xs text-stone-400 line-clamp-1">{hostname}</span>
+            <span className="text-xs text-stone-400 line-clamp-1">
+              {hostname}
+            </span>
           </div>
           <span className="text-xs whitespace-nowrap">{productPrice}</span>
         </div>
