@@ -33,11 +33,7 @@ export default function Hero() {
         }}
         className="px-6 w-full"
       >
-        <img
-          src="/images/Avee.png"
-          alt="Avee"
-          className="w-1/3 mx-auto"
-        />
+        <img src="/images/Avee.png" alt="Avee" className="w-1/3 mx-auto" />
       </motion.div>
 
       <div className="flex flex-col justify-start px-2 w-full">
@@ -50,11 +46,12 @@ export default function Hero() {
           Meet Chaos, your new online shopping assistant.
         </motion.h1>
 
-        <motion.h2 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={transition}
-        className="text-start text-stone-400">
+        <motion.h2
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={transition}
+          className="text-start text-stone-400"
+        >
           Making decisions doesn't have to be so hard.
         </motion.h2>
 
