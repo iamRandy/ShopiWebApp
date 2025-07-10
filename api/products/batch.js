@@ -1,7 +1,7 @@
 const { connectToDatabase } = require("../_lib/db");
 const { verifyToken } = require("../_lib/auth");
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -52,4 +52,4 @@ export default async function handler(req, res) {
     console.error(e);
     res.status(500).json({ error: "failed to fetch products" });
   }
-}
+};
