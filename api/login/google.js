@@ -2,7 +2,7 @@ const { connectToDatabase } = require("../_lib/db");
 const { oauth_client, client_id, generateTokens } = require("../_lib/auth");
 const crypto = require("crypto");
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -67,4 +67,4 @@ export default async function handler(req, res) {
     console.error("Google login error:", err);
     res.status(500).json({ error: "Login failed" });
   }
-}
+};

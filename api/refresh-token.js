@@ -2,7 +2,7 @@ const { connectToDatabase } = require("./_lib/db");
 const { generateTokens, REFRESH_TOKEN_SECRET } = require("./_lib/auth");
 const jwt = require("jsonwebtoken");
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -59,4 +59,4 @@ export default async function handler(req, res) {
     }
     return res.status(401).json({ error: "Invalid refresh token" });
   }
-}
+};
