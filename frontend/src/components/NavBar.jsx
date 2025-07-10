@@ -33,7 +33,10 @@ const NavBar = ({ isLanding }) => {
         { type: "CLEAR_STORAGE" },
         (response) => {
           if (chrome.runtime.lastError) {
-            console.error("Extension storage clear error:", chrome.runtime.lastError);
+            console.error(
+              "Extension storage clear error:",
+              chrome.runtime.lastError
+            );
           }
         }
       );
@@ -54,28 +57,68 @@ const NavBar = ({ isLanding }) => {
   };
 
   // --- Render ---
+  const isCollapsed = isScrolled && !isHovering && isLanding;
+
   return (
     <motion.nav
       initial={{ width: isLanding ? "95%" : "100%" }}
-      className={`${isLanding ? "top-3" : "top-0"} text-black fixed left-0 right-0 z-50 h-fit mx-auto`}
-      animate={{ width: isScrolled && !isHovering ? "140px" : isLanding ? "95%" : "100%" }}
+      className={`
+        ${isLanding ? "top-3" : "top-0"}
+        text-black fixed left-0 right-0 z-50 h-fit mx-auto
+        ${isCollapsed ? "flex justify-center items-center" : ""}
+      `}
+      animate={{
+        width:
+          isScrolled && !isHovering && isLanding
+            ? "10%"
+            : isLanding
+            ? "95%"
+            : "100%",
+      }}
       onHoverStart={() => setIsHovering(true)}
       onHoverEnd={() => setIsHovering(false)}
       transition={{ duration: 0.8, ease: "easeInOut" }}
     >
       <div
-        className={`${isLanding ? "rounded-full border border-stone-500/20 backdrop-blur-lg" : ""} relative flex w-full items-center justify-between bg-white/10 p-4 px-10 shadow-lg gap-10 h-16`}
+        className={`${
+          isLanding
+            ? "rounded-full border border-stone-500/20 backdrop-blur-lg"
+            : ""
+        } relative flex w-full items-center justify-between bg-white/10 shadow-lg gap-10 p-4 px-10 h-16
+      `}
       >
         {/* Left side: Logo */}
-        <div className={`flex ${isLanding ? "absolute" : "justify-between"} items-center gap-3 w-fit`}>
-          <a href={isLanding ? "#" : ""} className="text-2xl font-bold">
-            shopi
+        <div
+          className={`flex ${
+            isLanding ? "absolute" : "justify-between"
+          } items-center gap-3 w-fit`}
+        >
+          <a
+            id="logo_text"
+            href={isLanding ? "#" : ""}
+            className="text-2xl font-bold flex items-center gap-2"
+          >
+            <AnimatePresence>
+              {!isCollapsed &&
+                <motion.img
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2, delay: 0.2 }}
+                src="/images/Avee.png"
+                alt="Shopi Logo"
+                className="w-8 h-8 object-contain"
+                />
+              }
+            </AnimatePresence>
+            Chaos
           </a>
         </div>
 
         {!isLanding && (
           <div className="absolute left-1/2 -translate-x-1/2 flex justify-center items-center gap-10">
-            <a className="text-lg flex gap-1 items-center special_links cursor-pointer">
+            {/* TODO: Other pages */}
+            {/* <a className="text-lg flex gap-1 items-center special_links cursor-pointer">
               Carts
             </a>
             <a className="text-lg flex gap-1 items-center special_links cursor-pointer">
@@ -83,7 +126,7 @@ const NavBar = ({ isLanding }) => {
             </a>
             <a className="text-lg flex gap-1 items-center special_links cursor-pointer">
               Pick
-            </a>
+            </a> */}
           </div>
         )}
 
@@ -100,15 +143,24 @@ const NavBar = ({ isLanding }) => {
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2, delay: 0.2 }}
                 >
-                  <a href="#features" className="text-lg flex gap-1 items-center special_links">
+                  <a
+                    href="#features"
+                    className="text-lg flex gap-1 items-center special_links"
+                  >
                     <Cog className="w-5 h-5" />
                     Key Features
                   </a>
-                  <a href="#how-it-works" className="text-lg flex gap-1 items-center special_links">
+                  <a
+                    href="#how-it-works"
+                    className="text-lg flex gap-1 items-center special_links"
+                  >
                     <Blocks className="w-5 h-5" />
                     How it works
                   </a>
-                  <a href="#how-it-works" className="text-lg flex gap-1 items-center special_links">
+                  <a
+                    href="#how-it-works"
+                    className="text-lg flex gap-1 items-center special_links"
+                  >
                     <BadgeQuestionMark className="w-5 h-5" />
                     FAQs
                   </a>
@@ -134,13 +186,23 @@ const NavBar = ({ isLanding }) => {
                       {isAuthenticated && (
                         <motion.div
                           className="text-sm overflow-hidden whitespace-nowrap"
-                          initial={{ width: 0 }}
-                          animate={isUserHover ? { width: "auto" } : { width: 0 }}
-                          exit={{ width: 0 }}
-                          transition={{ duration: 0.3, ease: "easeInOut", delay: 0.2 }}
+                          initial={{ width: 0, paddingRight: 0 }}
+                          animate={
+                            isUserHover
+                              ? { width: "auto", paddingRight: 8 }
+                              : { width: 0, paddingRight: 0 }
+                          }
+                          exit={{ width: 0, paddingRight: 0 }}
+                          transition={
+                            isUserHover
+                              ? { duration: 0.3, ease: "easeInOut", delay: 0.2 }
+                              : { duration: 0.3, ease: "easeInOut", delay: 0 }
+                          }
                         >
                           <div className="font-medium">{userName}</div>
-                          <div className="text-xs text-gray-500">{userEmail}</div>
+                          <div className="text-xs text-gray-500">
+                            {userEmail}
+                          </div>
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -148,14 +210,16 @@ const NavBar = ({ isLanding }) => {
                   {isAuthenticated ? (
                     <button
                       onClick={handleLogout}
-                      className="text-sm bg-amber-500 text-white hover:bg-amber-600 px-3 py-1 rounded"
+                      style={{ backgroundColor: "#FFBC42", color: "#57382a" }}
+                      className="text-sm px-3 py-1 rounded"
                     >
                       Logout
                     </button>
                   ) : (
                     <button
                       onClick={handleLogin}
-                      className="text-sm bg-amber-500 text-white hover:bg-amber-600 px-3 py-1 rounded"
+                      style={{ backgroundColor: "#FFBC42" }}
+                      className="text-sm px-3 py-1 rounded"
                     >
                       Login
                     </button>
