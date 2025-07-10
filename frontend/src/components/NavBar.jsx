@@ -111,7 +111,7 @@ const NavBar = ({ isLanding }) => {
                 />
               }
             </AnimatePresence>
-            chaos
+            Chaos
           </a>
         </div>
 
