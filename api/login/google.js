@@ -3,6 +3,7 @@ const { oauth_client, client_id, generateTokens } = require("../_lib/auth");
 const crypto = require("crypto");
 
 module.exports = async function handler(req, res) {
+  console.log("REQ METHOD", req.method);
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
