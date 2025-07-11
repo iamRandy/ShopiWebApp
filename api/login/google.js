@@ -4,6 +4,20 @@ const crypto = require("crypto");
 
 module.exports = async function handler(req, res) {
   console.log("REQ METHOD", req.method);
+  if (req.method === "GET") {
+    res.setHeader("Content-Type", "text/html");
+    res.status(200).send(`
+      <html>
+        <head><title>Login Endpoint</title></head>
+        <body>
+          <h1>This is the Google Login API endpoint.</h1>
+          <p>Please use a POST request to log in via the app.</p>
+        </body>
+      </html>
+    `);
+    return;
+  }
+
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
