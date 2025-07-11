@@ -237,7 +237,7 @@ const CartModal = ({
               <div className="flex gap-2 mt-4">
                 <button
                   type="submit"
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
+                  className="bg-[#FFBC42] hover:bg-[#f7ad3e] text-white px-4 py-2 rounded-md"
                 >
                   {isEditMode ? "Save Changes" : "Create Cart"}
                 </button>
