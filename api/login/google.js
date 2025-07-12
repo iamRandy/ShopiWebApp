@@ -18,9 +18,9 @@ module.exports = async function handler(req, res) {
   //   return;
   // }
 
-  // if (req.method !== "POST") {
-  //   return res.status(405).json({ error: "Method not allowed" });
-  // }
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed 5" });
+  }
 
   // Enable CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
