@@ -55,6 +55,7 @@ const Login = () => {
       localStorage.setItem("userName", decoded.name);
 
       loginSuccess(credentialResponse);
+      console.log("login successful??");
     } catch (error) {
       console.error("Error decoding JWT:", error);
     }
