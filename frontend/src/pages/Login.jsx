@@ -63,8 +63,7 @@ const Login = () => {
 
   function loginSuccess(cRes) {
     try {
-      // const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
-      const API_URL = "http://localhost:3000";
+      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
       fetch(`${API_URL}/api/login/google`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
