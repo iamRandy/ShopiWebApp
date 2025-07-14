@@ -92,34 +92,37 @@ const Login = () => {
     }
   }
 
-  const sendUserInfoToExtension = ({ sub, name }) => {
+  const sendUserInfoToExtension = ({ userSub, userName }) => {
     // Send message to extension using chrome.runtime.sendMessage with extension ID
-    if (chrome && chrome.runtime && EXT_ID) {
-      console.log(
-        "Sending message to extension via chrome.runtime.sendMessage"
-      );
-      window.chrome.runtime.sendMessage(
-        EXT_ID,
-        { type: "SET_USER_INFO", sub, name },
-        (response) => {
-          if (chrome.runtime.lastError) {
-            console.error(
-              "Extension communication error:",
-              chrome.runtime.lastError
-            );
-          } else {
-            console.log("Successfully sent user info to extension");
-          }
-        }
-      );
-    } else {
-      console.error("Cannot send message to extension:", {
-        chrome: !!window.chrome,
-        runtime: !!window.chrome?.runtime,
-        sendMessage: !!window.chrome?.runtime?.sendMessage,
-        EXT_ID: EXT_ID,
-      });
-    }
+    var data = { type: "SET_USER_INFO", sub: userSub, name: userName }
+    window.postMessage(data, "*");
+    
+    // if (chrome && chrome.runtime && EXT_ID) {
+    //   console.log(
+    //     "Sending message to extension via chrome.runtime.sendMessage"
+    //   );
+    // window.chrome.runtime.sendMessage(
+    //   EXT_ID,
+    //   { type: "SET_USER_INFO", sub, name },
+    //   (response) => {
+    //     if (chrome.runtime.lastError) {
+    //       console.error(
+    //         "Extension communication error:",
+    //         chrome.runtime.lastError
+    //       );
+    //     } else {
+    //       console.log("Successfully sent user info to extension");
+    //     }
+    //   }
+    // );
+    // } else {
+    //   console.error("Cannot send message to extension:", {
+    //     chrome: !!window.chrome,
+    //     runtime: !!window.chrome?.runtime,
+    //     sendMessage: !!window.chrome?.runtime?.sendMessage,
+    //     EXT_ID: EXT_ID,
+    //   });
+    // }
   };
 
   return (
