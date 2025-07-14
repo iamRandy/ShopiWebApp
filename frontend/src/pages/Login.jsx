@@ -80,6 +80,7 @@ const Login = () => {
             console.log("Stored access and refresh tokens");
 
             // TODO: navigate to home page IFF user is not coming from extension
+            return; // debug
             navigate("/home");
           }
         })
