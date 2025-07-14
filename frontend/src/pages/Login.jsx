@@ -47,7 +47,7 @@ const Login = () => {
       console.log("Decoded user data:", decoded);
 
       // Send user info to extension
-      // sendUserInfoToExtension({ sub: decoded.sub, name: decoded.name });
+      sendUserInfoToExtension({ sub: decoded.sub, name: decoded.name });
 
       // Store initial user data (will be replaced by server tokens)
       localStorage.setItem("userSub", decoded.sub);
@@ -79,20 +79,8 @@ const Login = () => {
             localStorage.setItem("refreshToken", data.refreshToken);
             console.log("Stored access and refresh tokens");
 
-            // After successful login, send user info to the extension via window.postMessage
-            window.postMessage(
-              {
-                source: "shopiwebapp", // or any unique string
-                type: "SET_USER_INFO",
-                name: data.name,
-                sub: data.sub,
-                // ...any other info
-              },
-              "*"
-            );
-
             // TODO: navigate to home page IFF user is not coming from extension
-            return; // debug
+            return;
             navigate("/home");
           }
         })
@@ -106,25 +94,24 @@ const Login = () => {
 
   const sendUserInfoToExtension = ({ sub, name }) => {
     // Send message to extension using chrome.runtime.sendMessage with extension ID
-    if (window.chrome?.runtime?.sendMessage && EXT_ID) {
+    if (chrome && chrome.runtime && EXT_ID) {
       console.log(
         "Sending message to extension via chrome.runtime.sendMessage"
       );
-
-      // window.chrome.runtime.sendMessage(
-      //   EXT_ID,
-      //   { type: "SET_USER_INFO", sub, name },
-      //   (response) => {
-      //     if (chrome.runtime.lastError) {
-      //       console.error(
-      //         "Extension communication error:",
-      //         chrome.runtime.lastError
-      //       );
-      //     } else {
-      //       console.log("Successfully sent user info to extension");
-      //     }
-      //   }
-      // );
+      window.chrome.runtime.sendMessage(
+        EXT_ID,
+        { type: "SET_USER_INFO", sub, name },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            console.error(
+              "Extension communication error:",
+              chrome.runtime.lastError
+            );
+          } else {
+            console.log("Successfully sent user info to extension");
+          }
+        }
+      );
     } else {
       console.error("Cannot send message to extension:", {
         chrome: !!window.chrome,
