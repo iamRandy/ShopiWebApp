@@ -103,7 +103,7 @@ const Login = () => {
       );
       chrome.runtime.sendMessage(
         EXT_ID,
-        { type: "SET_USER_INFO", userSub, userName },
+        { type: "SET_USER_INFO", name: userName, sub: userSub },
         (response) => {
           console.log("response from setuserinfo:", response);
           if (chrome.runtime.lastError) {
