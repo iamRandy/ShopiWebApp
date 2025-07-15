@@ -94,7 +94,7 @@ const Login = () => {
     }
   }
 
-  const sendUserInfoToExtension = ({ userSub, userName }) => {
+  const sendUserInfoToExtension = (userSub, userName) => {
     // Send message to extension using chrome.runtime.sendMessage with extension ID
     // var data = { type: "SET_USER_INFO", sub: userSub, name: userName }
     // window.postMessage(data, "*");
