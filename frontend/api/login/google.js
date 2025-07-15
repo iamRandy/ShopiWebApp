@@ -18,7 +18,7 @@ module.exports = async function handler(req, res) {
 
   try {
     const { token } = req.body;
-    if (!token) return res.status(400).json({ error: "No token provided" });
+    if (!token) return res.status(400).json({ error: "Google: No token provided" });
 
     // Verify the Google ID token first
     const ticket = await oauth_client.verifyIdToken({
