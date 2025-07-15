@@ -49,7 +49,7 @@ const Login = () => {
       console.log("name:", decoded.name);
 
       // Send user info to extension
-      sendUserInfoToExtension({ sub: decoded.sub, name: decoded.name });
+      sendUserInfoToExtension(decoded.sub, decoded.name);
 
       // Store initial user data (will be replaced by server tokens)
       localStorage.setItem("userSub", decoded.sub);
