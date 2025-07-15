@@ -45,6 +45,8 @@ const Login = () => {
     try {
       const decoded = jwtDecode(credentialResponse.credential);
       console.log("Decoded user data:", decoded);
+      console.log("sub:", decoded.sub);
+      console.log("name:", decoded.name);
 
       // Send user info to extension
       sendUserInfoToExtension({ sub: decoded.sub, name: decoded.name });
