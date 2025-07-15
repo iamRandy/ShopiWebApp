@@ -101,20 +101,21 @@ const Login = () => {
       console.log(
         "Sending message to extension via chrome.runtime.sendMessage"
       );
-    window.chrome.runtime.sendMessage(
-      EXT_ID,
-      { type: "SET_USER_INFO", userSub, userName },
-      (response) => {
-        if (chrome.runtime.lastError) {
-          console.error(
-            "Extension communication error:",
-            chrome.runtime.lastError
-          );
-        } else {
-          console.log("Successfully sent user info to extension");
+      window.chrome.runtime.sendMessage(
+        EXT_ID,
+        { type: "SET_USER_INFO", userSub, userName },
+        (response) => {
+          console.log("response from setuserinfo:", response);
+          if (chrome.runtime.lastError) {
+            console.error(
+              "Extension communication error:",
+              chrome.runtime.lastError
+            );
+          } else {
+            console.log("Successfully sent user info to extension");
+          }
         }
-      }
-    );
+      );
     } else {
       console.error("Cannot send message to extension:", {
         chrome: !!window.chrome,
