@@ -101,7 +101,7 @@ const Login = () => {
       console.log(
         "Sending message to extension via chrome.runtime.sendMessage"
       );
-      window.chrome.runtime.sendMessage(
+      chrome.runtime.sendMessage(
         EXT_ID,
         { type: "SET_USER_INFO", userSub, userName },
         (response) => {
