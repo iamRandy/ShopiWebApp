@@ -53,7 +53,7 @@ module.exports = async function handler(req, res) {
           { $push: { carts: newCart } }
         );
       }
-      res.json(newCart);
+      res.json({ cart: newCart });
     } catch (e) {
       console.error(e);
       res.status(500).json({ error: "failed to create cart" });
