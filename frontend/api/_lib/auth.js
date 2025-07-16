@@ -50,7 +50,7 @@ const verifyToken = (req, res, next) => {
         .json({ error: "Token expired", code: "TOKEN_EXPIRED" });
     }
     console.error("Token verification failed:", error);
-    return res.status(401).json({ error: "Invalid token" });
+    return res.status(401).json({ error: "JWT: Invalid token" });
   }
 };
 

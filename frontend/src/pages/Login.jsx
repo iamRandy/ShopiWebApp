@@ -98,7 +98,7 @@ const Login = () => {
 
     if (chrome && chrome.runtime && EXT_ID) {
       console.log(
-        "Sending message to extension id:", EXT_ID, userName, userSub
+        "Sending message to extension id:", EXT_ID, userName, userSub, accessToken
       );
       chrome.runtime.sendMessage(
         EXT_ID,

@@ -80,7 +80,7 @@ const verifyToken = async (req, res, next) => {
         .json({ error: "Token expired", code: "TOKEN_EXPIRED" });
     }
     console.error("Token verification failed:", error);
-    return res.status(401).json({ error: "Invalid token" });
+    return res.status(401).json({ error: "Verify token: Invalid token" });
   }
 };
 
@@ -99,7 +99,7 @@ app.post("/api/login/google", async (req, res) => {
     const payload = ticket.getPayload();
 
     if (!payload) {
-      return res.status(400).json({ error: "Invalid token" });
+      return res.status(400).json({ error: "Google API: Invalid token" });
     }
 
     // Generate refresh token for this user

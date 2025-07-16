@@ -29,7 +29,7 @@ module.exports = async function handler(req, res) {
     const payload = ticket.getPayload();
 
     if (!payload) {
-      return res.status(400).json({ error: "Invalid token" });
+      return res.status(400).json({ error: "Google: Invalid token" });
     }
 
     // Connect to database
