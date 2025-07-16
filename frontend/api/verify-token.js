@@ -24,7 +24,6 @@ module.exports = async function handler(req, res) {
     // If successful, return user info
     res.status(200).json({ valid: true, user: req.user });
   } catch (error) {
-    // verifyToken already sent the error response
-    // Optionally, you can log or handle here
+    console.error("Error trying to verify token", error);
   }
 };
