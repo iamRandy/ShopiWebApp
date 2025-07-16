@@ -47,7 +47,7 @@ module.exports = async function handler(req, res) {
     }
     // Filter products by ID
     const products = user.products.filter((p) => productIds.includes(p.id));
-    res.json(products);
+    res.json({ products: products });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "failed to fetch products" });
