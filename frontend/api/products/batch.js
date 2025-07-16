@@ -43,7 +43,7 @@ module.exports = async function handler(req, res) {
       { projection: { _id: 0, products: 1 } }
     );
     if (!user || !user.products) {
-      return res.json([]);
+      return res.status(400).json({ error: "no products found" }); // TODO: remove the error message for prod
     }
     // Filter products by ID
     const products = user.products.filter((p) => productIds.includes(p.id));
