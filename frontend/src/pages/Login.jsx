@@ -44,26 +44,20 @@ const Login = () => {
 
     try {
       const decoded = jwtDecode(credentialResponse.credential);
-      console.log("Decoded user data:", decoded);
-      console.log("sub:", decoded.sub);
-      console.log("name:", decoded.name);
-
-      // Send user info to extension
-      sendUserInfoToExtension(decoded.sub, decoded.name);
 
       // Store initial user data (will be replaced by server tokens)
       localStorage.setItem("userSub", decoded.sub);
       localStorage.setItem("userEmail", decoded.email);
       localStorage.setItem("userName", decoded.name);
 
-      loginSuccess(credentialResponse);
+      loginSuccess(credentialResponse, decoded.sub, decoded.name);
       console.log("login successful??");
     } catch (error) {
       console.error("Error decoding JWT:", error);
     }
   };
 
-  function loginSuccess(cRes) {
+  function loginSuccess(cRes, sub, name) {
     try {
       const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
       fetch(`${API_URL}/api/login/google`, {
@@ -73,12 +67,15 @@ const Login = () => {
       })
         .then((response) => response.json())
         .then((data) => {
-          console.log("Login response:", data);
 
           // Store the new JWT tokens
           if (data.accessToken && data.refreshToken) {
             localStorage.setItem("authToken", data.accessToken);
             localStorage.setItem("refreshToken", data.refreshToken);
+            
+            // Send user info to extension
+            sendUserInfoToExtension(sub, name, data.accessToken, data.refreshToken);
+            
             console.log("Stored access and refresh tokens");
 
             // TODO: navigate to home page IFF user is not coming from extension
@@ -94,7 +91,7 @@ const Login = () => {
     }
   }
 
-  const sendUserInfoToExtension = (userSub, userName) => {
+  const sendUserInfoToExtension = (userSub, userName, accessToken, refreshToken) => {
     // Send message to extension using chrome.runtime.sendMessage with extension ID
     // var data = { type: "SET_USER_INFO", sub: userSub, name: userName }
     // window.postMessage(data, "*");
@@ -105,7 +102,10 @@ const Login = () => {
       );
       chrome.runtime.sendMessage(
         EXT_ID,
-        { type: "SET_USER_INFO", name: userName, sub: userSub },
+        { 
+          type: "SET_USER_INFO", name: userName, sub: userSub, 
+          accessToken: accessToken, refreshToken: refreshToken 
+        },
         (response) => {
           console.log("response from setuserinfo:", response);
           if (chrome.runtime.lastError) {
