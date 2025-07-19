@@ -78,8 +78,13 @@ const CartModal = ({
             window.location.reload();
           }, 1500);
         } else {
-          const errorData = await response.json();
-          setStatus("Failed to delete cart: " + errorData.error);
+          try {
+            const errorData = await response.json();
+            setStatus("Failed to delete cart: " + (errorData.error || errorData.message || "Unknown error"));
+          } catch (jsonError) {
+            // If response is not JSON, use status text
+            setStatus(`Failed to delete cart: ${response.status} ${response.statusText}`);
+          }
         }
       } catch (error) {
         console.error("Error deleting cart:", error);
