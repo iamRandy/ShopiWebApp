@@ -80,12 +80,12 @@ const CartModal = ({
         } else {
           console.log("response was not okay");
           try {
-            console.log("json response");
             const errorData = await response.json();
+            console.log("json response");
             setStatus("Failed to delete cart: " + (errorData.error || errorData.message || "Unknown error"));
           } catch (jsonError) {
             // If response is not JSON, use status text
-            console.log("non json response");
+            console.log("non json response:", response);
             setStatus(`Failed to delete cart: ${response.status} ${response.statusText}`);
           }
         }
