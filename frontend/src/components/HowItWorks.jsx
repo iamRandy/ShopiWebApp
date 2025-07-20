@@ -87,13 +87,16 @@ export default function HowItWorks() {
                     <p className="text-stone-400 mt-4">Chaos can help you make even the most complex shopping decisions, easier.</p>
                 </motion.div>
                 <div className="w-full grid md:grid-cols-2 gap-10 px-20">
-                    <VideoPiece videoSrc="/videos/SaveAndViewCart.gif" 
-                    title="All Your Carts in One Place" 
-                    description="Keep track of every item you save—no matter the store. 
-                    Seamlessly view and manage products from across the web in one 
-                    convenient space."
-                    // playOnStart={true} 
-                    />
+                    {/* Demo Video - Save and view carts from the extension */}
+                    <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+                        <iframe 
+                        className="absolute top-0 left-0 w-full h-full border border-stone-300 rounded-xl z-10"
+                        src="https://www.youtube-nocookie.com/embed/YqYcIHZ3Egs?controls=0&rel=0&loop=1&playlist=YqYcIHZ3Egs"
+                        title="YouTube video player" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                        referrerPolicy="strict-origin-when-cross-origin" 
+                        ></iframe>
+                    </div>
 
                     <VideoPiece videoSrc="/videos/CreateAndDeleteCart.gif" 
                     title="Create and Delete Carts" 
