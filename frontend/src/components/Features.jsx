@@ -60,12 +60,12 @@ export default function Features() {
                     
                     {/* Demo Video - Save links form anywhere */}
                     <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
-                        <iframe
-                            className="absolute top-0 left-0 w-full h-full border border-stone-300 rounded-xl z-10"
-                            src="https://www.youtube-nocookie.com/embed/GpW5h5iehao?si=N18T0rCX6YhwqfHB"
-                            title="YouTube video player"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                            referrerPolicy="strict-origin-when-cross-origin"
+                        <iframe 
+                        className="absolute top-0 left-0 w-full h-full border border-stone-300 rounded-xl z-10"
+                        src="https://www.youtube-nocookie.com/embed/C1BLPX_kJOk?si=N1OVC9KjXQxJgait&amp;controls=0" 
+                        title="YouTube video player" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                        referrerPolicy="strict-origin-when-cross-origin" 
                         ></iframe>
                     </div>
                     
