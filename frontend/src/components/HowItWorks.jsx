@@ -16,13 +16,15 @@ export default function HowItWorks() {
                     viewport={{ once: true }}
                     transition={{ duration: 0.8, ease: "easeInOut" }}
                     className="relative flex">
-                        <iframe 
-                        className="absolute top-0 left-0 w-full h-full border border-stone-300 rounded-xl z-10"
-                        src={videoSrc}
-                        title="YouTube video player" 
-                        allow="autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                        referrerPolicy="strict-origin-when-cross-origin" 
-                        ></iframe>
+                        <div className="relative w-full h-[400px]">
+                            <iframe
+                                className="absolute top-0 left-0 w-full h-full border border-stone-300 rounded-xl z-10"
+                                src={videoSrc}
+                                title="YouTube video player"
+                                allow="autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                referrerPolicy="strict-origin-when-cross-origin"
+                            ></iframe>
+                        </div>
 
                     </motion.div>
                     <p className="font-bold py-2 pt-6 text-stone-700">{title}</p>
