@@ -57,13 +57,17 @@ export default function Features() {
                     </p>
                 </div>
                 <div className="w-full">
-                    <motion.img
+                    
+                    {/* Demo Video - Save links form anywhere */}
+                    <iframe className="border border-stone-300 w-full rounded-xl z-10" src="https://www.youtube-nocookie.com/embed/GpW5h5iehao?si=N18T0rCX6YhwqfHB" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin"></iframe>
+                    
+                    {/* <motion.img
                     initial={{ translateY: 20, opacity: 0 }}
                     whileInView={{ translateY: 0, opacity: 1 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.8, ease: "easeInOut", delay: 0.5 }}
                     className="border border-stone-300 w-full rounded-xl z-10"
-                    src="/videos/SaveFromEverywhere.gif" />
+                    src="/videos/SaveFromEverywhere.gif" /> */}
                 </div>
             </div>
         </section>
