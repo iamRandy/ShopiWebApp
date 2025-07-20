@@ -62,7 +62,7 @@ export default function Features() {
                     <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
                         <iframe 
                         className="absolute top-0 left-0 w-full h-full border border-stone-300 rounded-xl z-10"
-                        src="https://www.youtube-nocookie.com/embed/C1BLPX_kJOk?si=N1OVC9KjXQxJgait&controls=0&rel=0&loop=1&playlist=C1BLPX_kJOk"
+                        src="https://www.youtube-nocookie.com/embed/C1BLPX_kJOk?si=N1OVC9KjXQxJgait&controls=0&autoplay=1&mute=1&rel=0&loop=1&playlist=C1BLPX_kJOk"
                         title="YouTube video player" 
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
                         referrerPolicy="strict-origin-when-cross-origin" 
