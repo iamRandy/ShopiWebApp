@@ -16,7 +16,7 @@ export default function HowItWorks() {
                     viewport={{ once: true }}
                     transition={{ duration: 0.8, ease: "easeInOut" }}
                     className="relative flex">
-                        <div className="relative w-[400px] h-[400px]">
+                        <div className="relative w-full" style={{ paddingBottom: "100%" }}>
                             <iframe
                                 className="absolute top-0 left-0 w-full h-full border border-stone-300 rounded-xl z-10"
                                 src={videoSrc}
