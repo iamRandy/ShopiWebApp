@@ -31,7 +31,7 @@ export default function Features() {
     };
 
     return (
-        <section id="features" className="relative min-h-screen flex items-center justify-center text-left z-0">
+        <section id="features" className="relative h-screen flex items-center justify-center text-left z-0">
             
             <div>
                 <motion.div 
@@ -56,10 +56,18 @@ export default function Features() {
                         Found something you love? Save it now and decide later.
                     </p>
                 </div>
-                <div className="w-full">
+                <div className="w-full h-full flex items-center">
                     
                     {/* Demo Video - Save links form anywhere */}
-                    <iframe className="border border-stone-300 w-full rounded-xl z-10" src="https://www.youtube-nocookie.com/embed/GpW5h5iehao?si=N18T0rCX6YhwqfHB" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin"></iframe>
+                    <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+                        <iframe
+                            className="absolute top-0 left-0 w-full h-full border border-stone-300 rounded-xl z-10"
+                            src="https://www.youtube-nocookie.com/embed/GpW5h5iehao?si=N18T0rCX6YhwqfHB"
+                            title="YouTube video player"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            referrerPolicy="strict-origin-when-cross-origin"
+                        ></iframe>
+                    </div>
                     
                     {/* <motion.img
                     initial={{ translateY: 20, opacity: 0 }}
