@@ -88,12 +88,12 @@ export default function HowItWorks() {
                 </motion.div>
                 <div className="w-full grid md:grid-cols-2 gap-10 px-20">
                     {/* Demo Video - Save and view carts from the extension */}
-                    <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+                    <div className="relative w-full" style={{ paddingBottom: "100%" }}>
                         <iframe 
                         className="absolute top-0 left-0 w-full h-full border border-stone-300 rounded-xl z-10"
-                        src="https://www.youtube-nocookie.com/embed/YqYcIHZ3Egs?controls=0&rel=0&loop=1&playlist=YqYcIHZ3Egs"
+                        src="https://www.youtube-nocookie.com/embed/YqYcIHZ3Egs?autoplay=1&mute=1&controls=0&rel=0&loop=1&playlist=YqYcIHZ3Egs"
                         title="YouTube video player" 
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                        allow="autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                         referrerPolicy="strict-origin-when-cross-origin" 
                         ></iframe>
                     </div>
