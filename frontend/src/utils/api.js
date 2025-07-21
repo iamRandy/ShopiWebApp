@@ -70,6 +70,7 @@ export const authenticatedFetch = async (url, options = {}) => {
       ...options.headers,
     },
   };
+  console.log("fetchoptions:", fetchOptions);
 
   const response = await fetch(url, fetchOptions);
 
