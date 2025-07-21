@@ -74,6 +74,7 @@ export const authenticatedFetch = async (url, options = {}) => {
   const response = await fetch(url, fetchOptions);
 
   if (response.status === 401) {
+    console.log("EREROEOROREOR");
     const errorData = await response.json().catch(() => ({}));
 
     // Check if token is expired
