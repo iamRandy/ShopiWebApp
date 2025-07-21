@@ -63,6 +63,7 @@ const CartModal = ({
     ) {
       try {
         const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+        console.log(`attempting to hit: ${API_URL}/api/carts/${cartData.id}`)
         const response = await authenticatedFetch(
           `${API_URL}/api/carts/${cartData.id}`,
           {

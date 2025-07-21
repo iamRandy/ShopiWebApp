@@ -8,7 +8,7 @@ export default function HowItWorks() {
         const videoRef = useRef(null);
         
         return (
-            <div className="rounded-xl bg-stone-200 flex justify-center p-8">
+            <div className="rounded-[40px] bg-stone-200 flex justify-center p-[25px]">
                 <div>
                     <motion.div 
                     initial={{ translateY: 20, opacity: 0 }}
@@ -18,7 +18,7 @@ export default function HowItWorks() {
                     className="relative flex">
                         <div className="relative w-full" style={{ paddingBottom: "100%" }}>
                             <iframe
-                                className="absolute top-0 left-0 w-full h-full border border-stone-300 rounded-xl z-10"
+                                className="absolute top-0 left-0 w-full h-full border border-stone-300 rounded-[15px] z-10"
                                 src={videoSrc}
                                 title="YouTube video player"
                                 allow="autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
