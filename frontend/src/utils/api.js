@@ -130,8 +130,8 @@ export const authenticatedFetch = async (url, options = {}) => {
       window.location.href = "/";
       throw new Error("Authentication failed");
     }
-  } else if(response.status === 500) {
-    console.error("500 error in authFetch");
+  } else if(response.status === 405) {
+    console.error("405 error in authFetch");
   }
 
   return response;
