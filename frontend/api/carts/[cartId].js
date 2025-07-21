@@ -1,7 +1,7 @@
 const { connectToDatabase } = require("../_lib/db");
 const { verifyToken } = require("../_lib/auth");
 
-console.log("cart id");
+console.log("[cartId] hit");
 module.exports = async function handler(req, res) {
   console.log(`[cartId] API called with method: ${req.method}, cartId: ${req.query.cartId}`);
   

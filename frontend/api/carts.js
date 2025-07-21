@@ -2,6 +2,7 @@ const { connectToDatabase } = require("./_lib/db");
 const { verifyToken } = require("./_lib/auth");
 const crypto = require("crypto");
 
+console.log("carts.js hit");
 module.exports = async function handler(req, res) {
   // Enable CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
