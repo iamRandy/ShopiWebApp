@@ -131,7 +131,7 @@ export const authenticatedFetch = async (url, options = {}) => {
       throw new Error("Authentication failed");
     }
   } else if(response.status === 405) {
-    console.error("405 error in authFetch");
+    console.error("405 error in authFetch", response);
   }
 
   return response;
