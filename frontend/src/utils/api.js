@@ -80,6 +80,7 @@ export const authenticatedFetch = async (url, options = {}) => {
 
     // Check if token is expired
     if (errorData.code === "TOKEN_EXPIRED") {
+      console.log("token expired... refreshing");
       if (isRefreshing) {
         // If refresh is already in progress, queue this request
         return new Promise((resolve, reject) => {
@@ -129,6 +130,8 @@ export const authenticatedFetch = async (url, options = {}) => {
       window.location.href = "/";
       throw new Error("Authentication failed");
     }
+  } else if(response.status === 500) {
+    console.error("500 error in authFetch");
   }
 
   return response;
