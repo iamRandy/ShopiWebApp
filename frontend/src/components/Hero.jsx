@@ -20,7 +20,8 @@ export default function Hero() {
   };
 
   return (
-    <section className="min-h-screen flex items-center justify-between text-center">
+    <section className="md:flex items-center justify-between text-center">
+      {/* Logo */}
       <motion.div
         animate={{
           translateY: ["20px", "-20px", "20px"],
@@ -31,19 +32,20 @@ export default function Hero() {
           ease: "easeInOut",
           repeat: Infinity,
         }}
-        className="px-6 w-full"
+        className="px-6 w-full mb-11 md:mb-0"
       >
-        <img src="/images/Avee.png" alt="Avee" className="w-1/3 mx-auto" />
+        <img src="/images/Avee.png" alt="Avee" className="w-40 md:w-1/3 mx-auto" />
       </motion.div>
 
+      {/* Catch phrase */}
       <div className="flex flex-col justify-start px-2 w-full">
         <motion.h1
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={transition}
-          className="text-3xl md:text-4xl font-bold mb-4 text-start w-3/4"
+          className="text-3xl font-bold mb-4 text-start"
         >
-          Meet Chaos, your new online shopping assistant.
+          Meet Chaos,<br />The Online Shopping Assistant
         </motion.h1>
 
         <motion.h2
@@ -55,14 +57,14 @@ export default function Hero() {
           Making decisions doesn't have to be so hard.
         </motion.h2>
 
-        <div className="mt-5 flex justify-start">
+        <div className="mt-5 flex justify-center md:justify-start">
           <motion.button
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             whileHover={{ scale: 1.05 }}
             transition={{ duration: 0.4, ease: "easeInOut", delay: 2 }}
             onClick={() => navigate("/login")}
-            className="px-8 py-4 bg-[#FFBC42] hover:bg-[#f7ad3e] text-white font-bold rounded-full text-lg shadow-lg"
+            className="px-16 py-4 bg-[#FFBC42] hover:bg-[#f7ad3e] text-white font-bold rounded-full text-lg shadow-lg"
           >
             GET STARTED
           </motion.button>

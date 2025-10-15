@@ -6,12 +6,13 @@ import HowItWorks from '../components/HowItWorks';
 import Footer from '../components/Footer';
 
 export default function Landing() {
+
     return (
-        <div className="bg-[#f8f6f0] min-h-screen text-black">
+        <div className="bg-[#f8f6f0] text-black">
             <NavBar isLanding={true} />
             
-            <main>
-                <Hero />
+            <main class="mt-80 px-4 md:px-0 md:mt-0">
+                <Hero className="mb-20" />
                 <Features />
                 <HowItWorks />
             </main>

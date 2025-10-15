@@ -33,6 +33,7 @@ export default function Features() {
     return (
         <section id="features" className="relative h-screen flex items-center justify-center text-left z-0">
             
+            {/* Animated cubes */}
             <div>
                 <motion.div 
                 initial={{ translateX: 200, rotate: 120 }}
@@ -49,16 +50,17 @@ export default function Features() {
                 />
             </div>
 
-            <div className="container h-full flex items-center gap-10">
-                <div>
-                    <h2 className="text-4xl font-bold">Just Save It</h2>
-                    <p className="text-stone-400 mt-4 max-w-1xl mx-auto">
-                        Found something you love? Save it now and decide later.
-                    </p>
-                </div>
-                <div className="w-full h-full flex items-center">
+            {/* Content */}
+            <div className="container h-full items-center gap-10">
+                <div className="w-full h-full md:flex items-center">
+                    <div>
+                        <h2 className="text-4xl font-bold">Just Save It</h2>
+                        <p className="text-stone-400 mt-4 max-w-1xl mx-auto">
+                            Found something you love? Save it now and decide later.
+                        </p>
+                    </div>
                     
-                    {/* Demo Video - Save links form anywhere */}
+                    {/* Demo Video - Save links from anywhere */}
                     <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
                         <iframe 
                         className="absolute top-0 left-0 w-full h-full border border-stone-300 rounded-xl z-10"
