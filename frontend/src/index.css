@@ -1,6 +1,6 @@
- /* ShopiWebApp/frontend/src/index.css */
-@config "../tailwind.config.js";
 @import "tailwindcss";
+@config "../tailwind.config.js";
+ /* ShopiWebApp/frontend/src/index.css */
 
 html {
   scroll-behavior: smooth;

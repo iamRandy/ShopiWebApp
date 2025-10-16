@@ -43,9 +43,9 @@ export default function Hero() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={transition}
-          className="text-3xl font-bold mb-4 text-start"
+          className="font-extrabold mb-4 text-start !text-2xl md:!text-4xl"
         >
-          Meet Chaos,<br />The Online Shopping Assistant
+          Meet Chaos,<br />Your New Shopping Buddy
         </motion.h1>
 
         <motion.h2
@@ -54,7 +54,7 @@ export default function Hero() {
           transition={transition}
           className="text-start text-stone-400"
         >
-          Making decisions doesn't have to be so hard.
+          Making decisions has never been more fun and easy!
         </motion.h2>
 
         <div className="mt-5 flex justify-center md:justify-start">
