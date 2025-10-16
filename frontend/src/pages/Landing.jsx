@@ -11,7 +11,7 @@ export default function Landing() {
         <div className="bg-[#f8f6f0] text-black">
             <NavBar isLanding={true} />
             
-            <main class="pt-80 px-4 md:px-0 md:mt-0">
+            <main class="px-4 md:px-0 md:mt-0">
                 <Hero />
                 <Features />
                 <HowItWorks />

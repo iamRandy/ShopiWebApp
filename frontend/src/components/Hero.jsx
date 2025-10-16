@@ -20,7 +20,7 @@ export default function Hero() {
   };
 
   return (
-    <section className="md:flex items-center justify-between text-center">
+    <section className="md:flex-row md:justify-between flex h-screen flex-col items-center justify-end text-center pb-20">
       {/* Logo */}
       <motion.div
         animate={{
