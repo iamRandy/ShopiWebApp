@@ -31,7 +31,7 @@ export default function Features() {
     };
 
     return (
-        <section id="features" className="relative h-screen flex items-center justify-center text-left z-0">
+        <section id="features" className="relative h-screen flex items-center justify-center text-left z-0 bg-[#ffeacf] p-5 md:p-0">
             
             {/* Animated cubes */}
             <div>
@@ -52,15 +52,25 @@ export default function Features() {
 
             {/* Content */}
             <div className="h-full md:flex-row md:justify-between flex flex-col justify-center items-center gap-5 md:gap-10">
-                {/* <div className=""> */}
-                    <div>
-                        <h2 className="text-4xl font-bold">Just Save It</h2>
-                        <p className="text-stone-400 mt-4 max-w-1xl mx-auto">
-                            Found something you love? Save it now and decide later.
-                        </p>
-                    </div>
-                    
-                    {/* Demo Video - Save links from anywhere */}
+                <motion.div
+                initial={{ translateY: 20, opacity: 0 }}
+                whileInView={{ translateY: 0, opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8, ease: "easeInOut", delay: 0.2 }}
+                >
+                    <h2 className="text-4xl font-bold">Just save it!</h2>
+                    <p className="text-[#b98626] mt-4 max-w-1xl mx-auto">
+                        Found something you love? Save it now and decide later.
+                    </p>
+                </motion.div>
+                
+                {/* Demo Video - Save links from anywhere */}
+                <motion.div
+                initial={{ translateY: -20, opacity: 0, rotateZ: 10 }}
+                whileInView={{ translateY: 0, opacity: 1, rotateZ: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8, ease: "easeInOut", delay: 0.2 }}
+                >
                     <div className="flex justify-center">
                         <div className="relative rounded-lg border-2 border-[#FFBC42] inline-block
                                         before:content-[''] before:absolute before:inset-0
@@ -74,24 +84,7 @@ export default function Features() {
                             />
                         </div>
                     </div>
-                    {/* <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
-                        <iframe 
-                        className="absolute top-0 left-0 w-full h-full border border-stone-300 rounded-xl z-10"
-                        src="https://www.youtube-nocookie.com/embed/C1BLPX_kJOk?si=N1OVC9KjXQxJgait&controls=0&autoplay=1&mute=1&rel=0&loop=1&playlist=C1BLPX_kJOk"
-                        title="YouTube video player" 
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                        referrerPolicy="strict-origin-when-cross-origin" 
-                        ></iframe>
-                    </div> */}
-                    
-                    {/* <motion.img
-                    initial={{ translateY: 20, opacity: 0 }}
-                    whileInView={{ translateY: 0, opacity: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.8, ease: "easeInOut", delay: 0.5 }}
-                    className="border border-stone-300 w-full rounded-xl z-10"
-                    src="/videos/SaveFromEverywhere.gif" /> */}
-                {/* </div> */}
+                </motion.div>
             </div>
         </section>
     );

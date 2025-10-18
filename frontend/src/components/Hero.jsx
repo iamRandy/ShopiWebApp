@@ -45,7 +45,7 @@ export default function Hero() {
           transition={transition}
           className="font-extrabold mb-4 text-start !text-2xl md:!text-4xl"
         >
-          Meet Chaos,<br />Your New Shopping Buddy
+          Meet Chaos,<br />your new shopping buddy!
         </motion.h1>
 
         <motion.h2
