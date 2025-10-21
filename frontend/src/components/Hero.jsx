@@ -38,37 +38,43 @@ export default function Hero() {
       </motion.div>
 
       {/* Catch phrase */}
-      <div className="flex flex-col justify-start px-2 w-full">
-        <motion.h1
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={transition}
-          className="font-extrabold mb-4 text-start !text-2xl md:!text-4xl"
-        >
-          Meet Chaos,<br />your new shopping buddy!
-        </motion.h1>
+      <div className="flex flex-col justify-start text-start px-2 w-full">
+        <div className="text-2xl font-bold md:text-4xl">
+          Meet{" "}
+          <span className="font-extrabold underline decoration-[#FFBC42]">
+            Chaos
+          </span>
+          ,
+          <br />
+          your new shopping buddy!
+        </div>
 
         <motion.h2
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={transition}
-          className="text-start text-stone-400"
+          className="text-start text-stone-400 mt-2"
         >
           Making decisions has never been more fun and easy!
         </motion.h2>
 
-        <div className="mt-5 flex justify-center md:justify-start">
+        <motion.div 
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4, ease: "easeInOut", delay: 2 }}
+        className="mt-5 flex justify-center md:justify-start"
+        >
           <motion.button
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            whileHover={{ scale: 1.05 }}
-            transition={{ duration: 0.4, ease: "easeInOut", delay: 2 }}
+            whileHover={{ rotate: 4, scale: 1.1,
+              transition: 0.1
+            }}
+            transition={{ duration: 0.35 }}
             onClick={() => navigate("/login")}
-            className="px-16 py-4 bg-[#FFBC42] hover:bg-[#f7ad3e] text-white font-bold rounded-full text-lg shadow-lg"
+            className="px-16 py-4 bg-[#FFBC42] text-white font-bold rounded-full text-lg shadow-lg"
           >
             GET STARTED
           </motion.button>
-        </div>
+        </motion.div>
         {!isScrolled && (
           <motion.div
             initial={{ opacity: 0, translateY: 20 }}

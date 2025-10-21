@@ -72,17 +72,19 @@ export default function Features() {
                 transition={{ duration: 0.8, ease: "easeInOut", delay: 0.2 }}
                 >
                     <div className="flex justify-center">
-                        <div className="relative rounded-lg border-2 border-[#FFBC42] inline-block
+                        <motion.div 
+                        whileHover={{ scale: 1.25, transition: 0.3 }}
+                        className="relative rounded-lg border-2 border-[#FFBC42] inline-block
                                         before:content-[''] before:absolute before:inset-0
                                         before:border-8 before:border-[#FFBC42]
                                         before:blur-[10px] before:-z-10                
                         ">
                             <img
-                                class="rounded-lg h-100 w-100 mx-auto shadow-lg object-cover"
-                                src="/videos/SaveAndViewCart.gif"
-                                alt="Chaos in action!"
+                            className="rounded-lg h-100 w-100 mx-auto shadow-lg object-cover"
+                            src="/videos/SaveAndViewCart.gif"
+                            alt="Chaos in action!"
                             />
-                        </div>
+                        </motion.div>
                     </div>
                 </motion.div>
             </div>
