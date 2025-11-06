@@ -59,7 +59,7 @@ export default function Features() {
                 transition={{ duration: 0.8, ease: "easeInOut", delay: 0.2 }}
                 >
                     <h2 className="text-4xl font-bold">Just save it!</h2>
-                    <p className="text-[#6D5E4C] mt-4 max-w-1xl mx-auto">
+                    <p className="text-primary-dark mt-4 max-w-1xl mx-auto">
                         Found something you love? Save it now and decide later.
                     </p>
                 </motion.div>

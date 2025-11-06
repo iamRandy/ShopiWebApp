@@ -12,8 +12,8 @@ export default function HowItWorks() {
         show: {
             opacity: 1,
             transition: {
-                staggerChildren: .5,
-                delayChildren: 2,
+                staggerChildren: .8,
+                delayChildren: 2.5,
             }
         }
     };
@@ -35,7 +35,7 @@ export default function HowItWorks() {
                     transition={{ duration: 0.8, ease: "easeInOut", delay: 1.2}}
                     className="mb-5"
                     >
-                        <h2 className="text-4xl font-bold">Why choose Chaos?</h2>
+                        <h2 className="text-4xl font-bold">Why should I use Chaos?</h2>
                         <p className="text-primary-dark mt-2">Chaos is built to make even the most complex shopping decisions, easier.</p>
                     </motion.div>
                     
@@ -77,7 +77,7 @@ export default function HowItWorks() {
                             <div id={2} className="rounded-md bg-primary flex justify-center h-100 w-100 mb-3 border-2 border-black">
                                 <div>
                                     <p className="font-bold py-2 pt-6">One Place</p>
-                                    <p className="text-sm text-primary-dark">The internet is your oyster!</p>
+                                    <p className="text-sm text-primary-dark">Guranteed lost proof!</p>
                                 </div>
                             </div>
                         </motion.div>
