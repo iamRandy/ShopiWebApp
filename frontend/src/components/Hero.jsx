@@ -1,5 +1,6 @@
+import { ChevronsDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 
 export default function Hero() {
@@ -20,7 +21,7 @@ export default function Hero() {
   };
 
   return (
-    <section className="md:flex-row md:justify-between flex h-screen flex-col items-center justify-end text-center pb-20">
+    <section className="relative md:flex-row md:justify-between flex h-screen flex-col items-center justify-end text-center pb-20 px-5">
       {/* Logo */}
       <motion.div
         animate={{
@@ -38,7 +39,7 @@ export default function Hero() {
       </motion.div>
 
       {/* Catch phrase */}
-      <div className="flex flex-col justify-start text-start px-2 w-full">
+      <div className="flex flex-col justify-start text-start w-full">
         <div className="text-2xl font-bold md:text-4xl">
           Meet{" "}
           <span className="font-extrabold underline decoration-[#FFBC42]">
@@ -53,7 +54,7 @@ export default function Hero() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={transition}
-          className="text-start text-stone-400 mt-2"
+          className="text-start text-primary-dark mt-2"
         >
           Making decisions has never been more fun and easy!
         </motion.h2>
@@ -61,7 +62,7 @@ export default function Hero() {
         <motion.div 
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.4, ease: "easeInOut", delay: 2 }}
+        transition={{ duration: 0.4, ease: "easeInOut", delay: 1.5 }}
         className="mt-5 flex justify-center md:justify-start"
         >
           <motion.button
@@ -75,17 +76,35 @@ export default function Hero() {
             GET STARTED
           </motion.button>
         </motion.div>
+      </div>
+      <AnimatePresence>
         {!isScrolled && (
           <motion.div
+            key="scroll-entice"
             initial={{ opacity: 0, translateY: 20 }}
-            animate={{ opacity: 1, translateY: 0 }}
-            transition={{ duration: 0.4, ease: "easeInOut", delay: 10 }}
-            className="absolute bottom-10 left-0 w-full text-center mt-12"
+            animate={{ opacity: 1, translateY: [0, -5, 0] }}
+            exit={{ opacity: 0, scale: 0.9, rotate: 7, ease: "circOut", transition: { duration: 1 } }}
+            transition={{ 
+              default: {
+                duration: 0.4,
+                ease: "easeInOut",
+                delay: 3.5,
+              },
+              translateY: {
+                duration: 2, 
+                ease: "easeInOut", 
+                delay: 1,
+                repeat: Infinity,
+                repeatType: "loop"
+              }
+            }}
+            className="absolute text-center h-[100vh] w-[100vw] mt-12 text-primary-dark flex flex-col justify-end items-center pointer-events-none"
           >
-            <p className="text-gray-500 font-bold">Wanna closer look?</p>
+            <p className="font-bold">Cool stuff below!!</p>
+            <ChevronsDown className="w-[28px] h-[28px]" />
           </motion.div>
         )}
-      </div>
+      </AnimatePresence>
     </section>
   );
 }

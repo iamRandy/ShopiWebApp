@@ -31,7 +31,7 @@ export default function Features() {
     };
 
     return (
-        <section id="features" className="relative h-screen flex items-center justify-center text-left z-0 bg-[#ffeacf] p-5 md:p-0">
+        <section id="features" className="relative h-screen flex items-center justify-center text-left z-0 bg-gradient-to-t to-[rgba(255,234,207,0)] from-[rgba(255,234,207,1)] p-5 md:p-0">
             
             {/* Animated cubes */}
             <div>
@@ -59,7 +59,7 @@ export default function Features() {
                 transition={{ duration: 0.8, ease: "easeInOut", delay: 0.2 }}
                 >
                     <h2 className="text-4xl font-bold">Just save it!</h2>
-                    <p className="text-[#b98626] mt-4 max-w-1xl mx-auto">
+                    <p className="text-[#6D5E4C] mt-4 max-w-1xl mx-auto">
                         Found something you love? Save it now and decide later.
                     </p>
                 </motion.div>
