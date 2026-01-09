@@ -67,19 +67,22 @@ const Login = () => {
       })
         .then((response) => response.json())
         .then((data) => {
-
           // Store the new JWT tokens
           if (data.accessToken && data.refreshToken) {
             localStorage.setItem("authToken", data.accessToken);
             localStorage.setItem("refreshToken", data.refreshToken);
-            
+
             // Send user info to extension
-            sendUserInfoToExtension(sub, name, data.accessToken, data.refreshToken);
-            
+            sendUserInfoToExtension(
+              sub,
+              name,
+              data.accessToken,
+              data.refreshToken
+            );
+
             console.log("Stored access and refresh tokens");
 
-            // TODO: navigate to home page IFF user is not coming from extension
-            return;
+            // Navigate to home page after successful login
             navigate("/home");
           }
         })
@@ -91,20 +94,32 @@ const Login = () => {
     }
   }
 
-  const sendUserInfoToExtension = (userSub, userName, accessToken, refreshToken) => {
+  const sendUserInfoToExtension = (
+    userSub,
+    userName,
+    accessToken,
+    refreshToken
+  ) => {
     // Send message to extension using chrome.runtime.sendMessage with extension ID
     // var data = { type: "SET_USER_INFO", sub: userSub, name: userName }
     // window.postMessage(data, "*");
 
     if (chrome && chrome.runtime && EXT_ID) {
       console.log(
-        "Sending message to extension id:", EXT_ID, userName, userSub, accessToken
+        "Sending message to extension id:",
+        EXT_ID,
+        userName,
+        userSub,
+        accessToken
       );
       chrome.runtime.sendMessage(
         EXT_ID,
-        { 
-          type: "SET_USER_INFO", name: userName, sub: userSub, 
-          accessToken: accessToken, refreshToken: refreshToken 
+        {
+          type: "SET_USER_INFO",
+          name: userName,
+          sub: userSub,
+          accessToken: accessToken,
+          refreshToken: refreshToken,
         },
         (response) => {
           console.log("response from setuserinfo:", response);
