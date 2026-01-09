@@ -4,7 +4,7 @@ const crypto = require("crypto");
 
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return res.status(405).json({ error: "Method not allowed 5" });
   }
 
   // Enable CORS
@@ -18,7 +18,7 @@ module.exports = async function handler(req, res) {
 
   try {
     const { token } = req.body;
-    if (!token) return res.status(400).json({ error: "No token provided" });
+    if (!token) return res.status(400).json({ error: "Google: No token provided" });
 
     // Verify the Google ID token first
     const ticket = await oauth_client.verifyIdToken({
@@ -29,7 +29,7 @@ module.exports = async function handler(req, res) {
     const payload = ticket.getPayload();
 
     if (!payload) {
-      return res.status(400).json({ error: "Invalid token" });
+      return res.status(400).json({ error: "Google: Invalid token" });
     }
 
     // Connect to database

@@ -3,7 +3,7 @@ const { verifyToken } = require("../_lib/auth");
 
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return res.status(405).json({ error: "Method not allowed 6" });
   }
 
   // Enable CORS
@@ -43,11 +43,11 @@ module.exports = async function handler(req, res) {
       { projection: { _id: 0, products: 1 } }
     );
     if (!user || !user.products) {
-      return res.json([]);
+      return res.status(400).json({ error: "no products found" }); // TODO: remove the error message for prod
     }
     // Filter products by ID
     const products = user.products.filter((p) => productIds.includes(p.id));
-    res.json(products);
+    res.json({ products: products });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "failed to fetch products" });

@@ -31,8 +31,8 @@ const ProductArea = ({ productIds, hideSidebar }) => {
       }
 
       const data = await response.json();
-      console.log("products", data);
-      setProducts(data);
+      console.log("products", data.products);
+      setProducts(data.products);
       setLoading(false);
     } catch (err) {
       console.error("Error fetching products:", err);

@@ -66,7 +66,7 @@ const verifyToken = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ error: "No token provided" });
+      return res.status(401).json({ error: "Verify Token: No token provided" });
     }
 
     const token = authHeader.split(" ")[1];
@@ -80,7 +80,7 @@ const verifyToken = async (req, res, next) => {
         .json({ error: "Token expired", code: "TOKEN_EXPIRED" });
     }
     console.error("Token verification failed:", error);
-    return res.status(401).json({ error: "Invalid token" });
+    return res.status(401).json({ error: "Verify token: Invalid token" });
   }
 };
 
@@ -88,7 +88,7 @@ const verifyToken = async (req, res, next) => {
 app.post("/api/login/google", async (req, res) => {
   try {
     const { token } = req.body;
-    if (!token) return res.status(400).json({ error: "No token provided" });
+    if (!token) return res.status(400).json({ error: "Login: No token provided" });
 
     // Verify the Google ID token first
     const ticket = await oauth_client.verifyIdToken({
@@ -99,7 +99,7 @@ app.post("/api/login/google", async (req, res) => {
     const payload = ticket.getPayload();
 
     if (!payload) {
-      return res.status(400).json({ error: "Invalid token" });
+      return res.status(400).json({ error: "Google API: Invalid token" });
     }
 
     // Generate refresh token for this user

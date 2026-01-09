@@ -31,7 +31,7 @@ export default function Features() {
     };
 
     return (
-        <section id="features" className="relative min-h-screen flex items-center justify-center text-left z-0">
+        <section id="features" className="relative h-screen flex items-center justify-center text-left z-0">
             
             <div>
                 <motion.div 
@@ -56,14 +56,26 @@ export default function Features() {
                         Found something you love? Save it now and decide later.
                     </p>
                 </div>
-                <div className="w-full">
-                    <motion.img
+                <div className="w-full h-full flex items-center">
+                    
+                    {/* Demo Video - Save links form anywhere */}
+                    <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+                        <iframe 
+                        className="absolute top-0 left-0 w-full h-full border border-stone-300 rounded-xl z-10"
+                        src="https://www.youtube-nocookie.com/embed/C1BLPX_kJOk?si=N1OVC9KjXQxJgait&controls=0&autoplay=1&mute=1&rel=0&loop=1&playlist=C1BLPX_kJOk"
+                        title="YouTube video player" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                        referrerPolicy="strict-origin-when-cross-origin" 
+                        ></iframe>
+                    </div>
+                    
+                    {/* <motion.img
                     initial={{ translateY: 20, opacity: 0 }}
                     whileInView={{ translateY: 0, opacity: 1 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.8, ease: "easeInOut", delay: 0.5 }}
                     className="border border-stone-300 w-full rounded-xl z-10"
-                    src="/videos/SaveFromEverywhere.gif" />
+                    src="/videos/SaveFromEverywhere.gif" /> */}
                 </div>
             </div>
         </section>

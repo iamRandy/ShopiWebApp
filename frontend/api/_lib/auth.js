@@ -36,7 +36,8 @@ const verifyToken = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ error: "No token provided" });
+      return res.status(401).json({ error: `JWT: No token provided..AUTH ${authHeader}` }); 
+      // return res.status(401).json({ error: "JWT: No token provided" }); 
     }
 
     const token = authHeader.split(" ")[1];
@@ -50,7 +51,7 @@ const verifyToken = (req, res, next) => {
         .json({ error: "Token expired", code: "TOKEN_EXPIRED" });
     }
     console.error("Token verification failed:", error);
-    return res.status(401).json({ error: "Invalid token" });
+    return res.status(401).json({ error: "JWT: Invalid token" });
   }
 };
 

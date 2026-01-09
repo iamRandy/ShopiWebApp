@@ -44,23 +44,20 @@ const Login = () => {
 
     try {
       const decoded = jwtDecode(credentialResponse.credential);
-      console.log("Decoded user data:", decoded);
-
-      // Send user info to extension
-      sendUserInfoToExtension({ sub: decoded.sub, name: decoded.name });
 
       // Store initial user data (will be replaced by server tokens)
       localStorage.setItem("userSub", decoded.sub);
       localStorage.setItem("userEmail", decoded.email);
       localStorage.setItem("userName", decoded.name);
 
-      loginSuccess(credentialResponse);
+      loginSuccess(credentialResponse, decoded.sub, decoded.name);
+      console.log("login successful??");
     } catch (error) {
       console.error("Error decoding JWT:", error);
     }
   };
 
-  function loginSuccess(cRes) {
+  function loginSuccess(cRes, sub, name) {
     try {
       const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
       fetch(`${API_URL}/api/login/google`, {
@@ -70,15 +67,19 @@ const Login = () => {
       })
         .then((response) => response.json())
         .then((data) => {
-          console.log("Login response:", data);
 
           // Store the new JWT tokens
           if (data.accessToken && data.refreshToken) {
             localStorage.setItem("authToken", data.accessToken);
             localStorage.setItem("refreshToken", data.refreshToken);
+            
+            // Send user info to extension
+            sendUserInfoToExtension(sub, name, data.accessToken, data.refreshToken);
+            
             console.log("Stored access and refresh tokens");
 
             // TODO: navigate to home page IFF user is not coming from extension
+            return;
             navigate("/home");
           }
         })
@@ -90,16 +91,23 @@ const Login = () => {
     }
   }
 
-  const sendUserInfoToExtension = ({ sub, name }) => {
+  const sendUserInfoToExtension = (userSub, userName, accessToken, refreshToken) => {
     // Send message to extension using chrome.runtime.sendMessage with extension ID
-    if (window.chrome?.runtime?.sendMessage && EXT_ID) {
+    // var data = { type: "SET_USER_INFO", sub: userSub, name: userName }
+    // window.postMessage(data, "*");
+
+    if (chrome && chrome.runtime && EXT_ID) {
       console.log(
-        "Sending message to extension via chrome.runtime.sendMessage"
+        "Sending message to extension id:", EXT_ID, userName, userSub, accessToken
       );
-      window.chrome.runtime.sendMessage(
+      chrome.runtime.sendMessage(
         EXT_ID,
-        { type: "SET_USER_INFO", sub, name },
+        { 
+          type: "SET_USER_INFO", name: userName, sub: userSub, 
+          accessToken: accessToken, refreshToken: refreshToken 
+        },
         (response) => {
+          console.log("response from setuserinfo:", response);
           if (chrome.runtime.lastError) {
             console.error(
               "Extension communication error:",

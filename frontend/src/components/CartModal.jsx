@@ -63,6 +63,7 @@ const CartModal = ({
     ) {
       try {
         const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+        console.log(`attempting to hit: ${API_URL}/api/carts/${cartData.id}`)
         const response = await authenticatedFetch(
           `${API_URL}/api/carts/${cartData.id}`,
           {
@@ -78,8 +79,17 @@ const CartModal = ({
             window.location.reload();
           }, 1500);
         } else {
-          const errorData = await response.json();
-          setStatus("Failed to delete cart: " + errorData.error);
+          console.log("response was not okay");
+          try {
+            const errorData = await response.json();
+            console.log("json response");
+            setStatus("Failed to delete cart: " + (errorData.error || errorData.message || "Unknown error"));
+          } catch (jsonError) {
+            // If response is not JSON, use status text
+            console.log("non json response:", response);
+            console.log("jsonError:", jsonError);
+            setStatus(`Failed to delete cart: ${response.status} ${response.statusText}`);
+          }
         }
       } catch (error) {
         console.error("Error deleting cart:", error);
@@ -237,7 +247,7 @@ const CartModal = ({
               <div className="flex gap-2 mt-4">
                 <button
                   type="submit"
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
+                  className="bg-[#FFBC42] hover:bg-[#f7ad3e] text-white px-4 py-2 rounded-md"
                 >
                   {isEditMode ? "Save Changes" : "Create Cart"}
                 </button>
