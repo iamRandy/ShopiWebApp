@@ -15,7 +15,13 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    strictPort: false, // Allow fallback to another port if 5173 is busy
+    strictPort: true, // Fail if port is already in use instead of switching
     historyApiFallback: true,
+    proxy: {
+      "/api": {
+        target: "http://localhost:3000",
+        changeOrigin: true,
+      },
+    },
   },
 });

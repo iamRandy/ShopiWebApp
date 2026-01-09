@@ -327,22 +327,32 @@ app.get("/api/products", verifyToken, async (req, res) => {
 app.post("/api/products/batch", verifyToken, async (req, res) => {
   try {
     const { productIds } = req.body;
+    console.log("=== /api/products/batch called ===");
+    console.log("Product IDs requested:", productIds);
+    
     if (!Array.isArray(productIds)) {
       return res.status(400).json({ error: "productIds must be an array" });
     }
+    
     // Fetch the user document
     const user = await usersCollection.findOne(
       { sub: req.user.sub },
       { projection: { _id: 0, products: 1 } }
     );
+    
     if (!user || !user.products) {
-      return res.json([]);
+      console.log("No user or products found, returning empty array");
+      return res.json({ products: [] });
     }
+    
     // Filter products by ID
     const products = user.products.filter((p) => productIds.includes(p.id));
-    res.json(products);
+    console.log("Found products:", products.length);
+    console.log("Returning response:", { products });
+    
+    res.json({ products: products });
   } catch (e) {
-    console.error(e);
+    console.error("Error in /api/products/batch:", e);
     res.status(500).json({ error: "failed to fetch products" });
   }
 });
