@@ -72,7 +72,9 @@ const Login = () => {
             localStorage.setItem("authToken", data.accessToken);
             localStorage.setItem("refreshToken", data.refreshToken);
 
-            // Send user info to extension
+            console.log("Stored access and refresh tokens");
+
+            // Send user info to extension (non-blocking)
             sendUserInfoToExtension(
               sub,
               name,
@@ -80,10 +82,9 @@ const Login = () => {
               data.refreshToken
             );
 
-            console.log("Stored access and refresh tokens");
-
-            // Navigate to home page after successful login
-            navigate("/home");
+            // Navigate immediately after storing tokens
+            console.log("Navigating to /home...");
+            window.location.href = "/home";
           }
         })
         .catch((error) => {
@@ -101,45 +102,42 @@ const Login = () => {
     refreshToken
   ) => {
     // Send message to extension using chrome.runtime.sendMessage with extension ID
-    // var data = { type: "SET_USER_INFO", sub: userSub, name: userName }
-    // window.postMessage(data, "*");
-
-    if (chrome && chrome.runtime && EXT_ID) {
-      console.log(
-        "Sending message to extension id:",
-        EXT_ID,
-        userName,
-        userSub,
-        accessToken
-      );
-      chrome.runtime.sendMessage(
-        EXT_ID,
-        {
-          type: "SET_USER_INFO",
-          name: userName,
-          sub: userSub,
-          accessToken: accessToken,
-          refreshToken: refreshToken,
-        },
-        (response) => {
-          console.log("response from setuserinfo:", response);
-          if (chrome.runtime.lastError) {
-            console.error(
-              "Extension communication error:",
-              chrome.runtime.lastError
-            );
-          } else {
-            console.log("Successfully sent user info to extension");
+    // Wrapped in try-catch to prevent errors from breaking the login flow
+    try {
+      if (typeof chrome !== "undefined" && chrome.runtime && EXT_ID) {
+        console.log(
+          "Sending message to extension id:",
+          EXT_ID,
+          userName,
+          userSub,
+          accessToken
+        );
+        chrome.runtime.sendMessage(
+          EXT_ID,
+          {
+            type: "SET_USER_INFO",
+            name: userName,
+            sub: userSub,
+            accessToken: accessToken,
+            refreshToken: refreshToken,
+          },
+          (response) => {
+            console.log("response from setuserinfo:", response);
+            if (chrome.runtime.lastError) {
+              console.error(
+                "Extension communication error:",
+                chrome.runtime.lastError
+              );
+            } else {
+              console.log("Successfully sent user info to extension");
+            }
           }
-        }
-      );
-    } else {
-      console.error("Cannot send message to extension:", {
-        chrome: !!window.chrome,
-        runtime: !!window.chrome?.runtime,
-        sendMessage: !!window.chrome?.runtime?.sendMessage,
-        EXT_ID: EXT_ID,
-      });
+        );
+      } else {
+        console.log("Chrome extension not available - skipping extension sync");
+      }
+    } catch (error) {
+      console.log("Extension communication not available:", error.message);
     }
   };
 
