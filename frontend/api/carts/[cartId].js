@@ -3,8 +3,10 @@ const { verifyToken } = require("../_lib/auth");
 
 console.log("[cartId] hit");
 module.exports = async function handler(req, res) {
-  console.log(`[cartId] API called with method: ${req.method}, cartId: ${req.query.cartId}`);
-  
+  console.log(
+    `[cartId] API called with method: ${req.method}, cartId: ${req.query.cartId}`
+  );
+
   // Enable CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "PUT, DELETE, OPTIONS");
