@@ -47,6 +47,7 @@ module.exports = async function handler(req, res) {
         name,
         icon,
         id: crypto.randomUUID(),
+        products: [], // Initialize empty products array
       };
       if (req.user.sub) {
         await usersCollection.updateOne(

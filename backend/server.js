@@ -116,7 +116,7 @@ app.post("/api/login/google", async (req, res) => {
         lastLogin: new Date(),
         refreshToken: refreshTokenValue,
       },
-      $setOnInsert: { products: [] },
+      $setOnInsert: { carts: [] }, // Initialize with empty carts array, no products array
     };
     const options = { upsert: true };
     await usersCollection.updateOne(filter, update, options);
@@ -216,6 +216,7 @@ app.post("/api/carts", verifyToken, async (req, res) => {
       name,
       icon,
       id: crypto.randomUUID(),
+      products: [], // Initialize empty products array
     };
     if (req.user.sub) {
       await usersCollection.updateOne(
@@ -310,72 +311,29 @@ app.delete("/api/carts/:cartId", verifyToken, async (req, res) => {
   }
 });
 
-// fetch the logged-in user's own products
-app.get("/api/products", verifyToken, async (req, res) => {
-  try {
-    const doc = await usersCollection.findOne(
-      { sub: req.user.sub }, // Use verified user from token
-      { projection: { _id: 0, products: 1 } }
-    );
-    res.json(doc?.products || []);
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "failed to fetch products" });
-  }
-});
+// NOTE: Products API endpoints removed - products are now stored directly in carts
+// No longer need separate products array or batch fetching
+// Products are automatically deleted when their cart is deleted
 
-app.post("/api/products/batch", verifyToken, async (req, res) => {
+// Delete a product from a specific cart
+app.delete("/api/carts/:cartId/products/:productId", verifyToken, async (req, res) => {
   try {
-    const { productIds } = req.body;
-    console.log("=== /api/products/batch called ===");
-    console.log("Product IDs requested:", productIds);
-    
-    if (!Array.isArray(productIds)) {
-      return res.status(400).json({ error: "productIds must be an array" });
-    }
-    
-    // Fetch the user document
-    const user = await usersCollection.findOne(
-      { sub: req.user.sub },
-      { projection: { _id: 0, products: 1 } }
-    );
-    
-    if (!user || !user.products) {
-      console.log("No user or products found, returning empty array");
-      return res.json({ products: [] });
-    }
-    
-    // Filter products by ID
-    const products = user.products.filter((p) => productIds.includes(p.id));
-    console.log("Found products:", products.length);
-    console.log("Returning response:", { products });
-    
-    res.json({ products: products });
-  } catch (e) {
-    console.error("Error in /api/products/batch:", e);
-    res.status(500).json({ error: "failed to fetch products" });
-  }
-});
+    const { cartId, productId } = req.params;
 
-// delete a specific product for a user
-app.delete("/api/products", verifyToken, async (req, res) => {
-  try {
-    const { productId } = req.body;
-
-    if (!productId) {
-      return res.status(400).json({ error: "Product ID is required" });
+    if (!cartId || !productId) {
+      return res.status(400).json({ error: "Cart ID and Product ID are required" });
     }
 
-    // Try to remove the product with the matching ID first
-    let result = await usersCollection.updateOne(
-      { sub: req.user.sub }, // Use verified user from token
-      { $pull: { products: { id: productId } } }
+    // Remove the product from the cart's products array
+    const result = await usersCollection.updateOne(
+      { sub: req.user.sub, "carts.id": cartId },
+      { $pull: { "carts.$.products": { id: productId } } }
     );
 
     if (result.modifiedCount > 0) {
       res.json({ success: true, message: "Product deleted successfully" });
     } else {
-      res.status(404).json({ error: "Product not found or already deleted" });
+      res.status(404).json({ error: "Product not found in cart or cart not found" });
     }
   } catch (e) {
     console.error(e);

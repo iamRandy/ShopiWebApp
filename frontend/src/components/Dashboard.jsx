@@ -113,7 +113,8 @@ const Dashboard = () => {
           ) : (
             selectedCartProducts && (
               <ProductArea
-                productIds={selectedCartProducts}
+                products={selectedCartProducts}
+                cartId={selectedCart}
                 hideSidebar={hideSidebar}
               />
             )
