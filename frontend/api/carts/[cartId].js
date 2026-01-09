@@ -91,6 +91,7 @@ module.exports = async function handler(req, res) {
     }
   } else {
     console.log(`[cartId] Method not allowed: ${req.method}`);
-    res.status(405).json({ error: "Method not allowed 3" });
+    res.setHeader("Allow", "PUT, DELETE, OPTIONS");
+    res.status(405).json({ error: "Method not allowed" });
   }
 };
