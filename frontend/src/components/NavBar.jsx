@@ -226,12 +226,12 @@ const NavBar = ({ isLanding }) => {
                         How it works
                       </a>
                       <a
-                        href="#how-it-works"
+                        href=""
                         className="text-base lg:text-lg flex gap-1 items-center special_links"
-                        onClick={handleLinkClick}
+                        onClick={handleLogin}
                       >
                         <BadgeQuestionMark className="w-4 h-4 lg:w-5 lg:h-5" />
-                        FAQs
+                        Login
                       </a>
                     </motion.div>
                   )}
@@ -427,7 +427,7 @@ const NavBar = ({ isLanding }) => {
                     <button
                       onClick={handleLogin}
                       style={{ backgroundColor: "#FFBC42" }}
-                      className="w-full text-lg px-4 py-3 rounded-lg font-medium"
+                      className="w-full text-lg px-4 py-3 rounded-lg font-medium cursor-pointer"
                     >
                       Login
                     </button>

@@ -91,7 +91,7 @@ const Login = () => {
 
             // Navigate after extension message is sent
             console.log("Navigating to /home...");
-            // window.location.href = "/home"; debugging
+            window.location.href = "/home";
           }
         })
         .catch((error) => {

@@ -13,7 +13,7 @@ export default function HowItWorks() {
             opacity: 1,
             transition: {
                 staggerChildren: .8,
-                delayChildren: 2.5,
+                delayChildren: 1.5,
             }
         }
     };
@@ -24,7 +24,7 @@ export default function HowItWorks() {
     };
 
     return (
-        <section id="how-it-works" className="h-[200vh] md:h-screen flex items-center justify-center bg-secondary">
+        <section id="how-it-works" className="h-[200vh] md:h-screen flex items-center justify-center bg-gradient-to-b to-[rgba(255,234,207,0)] from-[rgba(255,234,207,1)]">
             <div className="w-full flex justify-center flex-col">
                 <div className="text-center">
                     {/* Sentence */}
@@ -32,7 +32,7 @@ export default function HowItWorks() {
                     initial={{ translateY: 80 }}
                     whileInView={{ translateY: 0 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 0.8, ease: "easeInOut", delay: 1.2}}
+                    transition={{ duration: 0.8, ease: "easeInOut", delay: .5}}
                     className="mb-5"
                     >
                         <h2 className="text-4xl font-bold">Why should I use Chaos?</h2>
@@ -59,10 +59,15 @@ export default function HowItWorks() {
                             } : {}}
                         >
                             <div id={1} className="rounded-md bg-primary flex justify-center h-100 w-100 mb-3 border-2 border-black">
-                                <div>
+                                <motion.div
+                                    variants={ item }
+                                    initial="hidden"
+                                    whileHover="show"
+                                    className="w-full h-full"
+                                >
                                     <p className="font-bold py-2 pt-6">Any Store</p>
                                     <p className="text-sm text-primary-dark">Go to any website and save!</p>
-                                </div>
+                                </motion.div>
                             </div>
                         </motion.div>
                         <motion.div
@@ -75,10 +80,15 @@ export default function HowItWorks() {
                             } : {}}
                         >
                             <div id={2} className="rounded-md bg-primary flex justify-center h-100 w-100 mb-3 border-2 border-black">
-                                <div>
+                                <motion.div
+                                    variants={ item }
+                                    initial="hidden"
+                                    whileHover="show"
+                                    className="w-full h-full"
+                                >
                                     <p className="font-bold py-2 pt-6">One Place</p>
                                     <p className="text-sm text-primary-dark">Guranteed lost proof!</p>
-                                </div>
+                                </motion.div>
                             </div>
                         </motion.div>
                         <motion.div
@@ -91,10 +101,15 @@ export default function HowItWorks() {
                             } : {}}
                         >
                             <div id={3} className="rounded-md bg-primary flex justify-center h-100 w-100 mb-3 border-2 border-black">
-                                <div>
+                                <motion.div
+                                    variants={ item }
+                                    initial="hidden"
+                                    whileHover="show"
+                                    className="w-full h-full"
+                                >
                                     <p className="font-bold py-2 pt-6">Super Easy</p>
                                     <p className="text-sm text-primary-dark">Skill requirement: NONE!</p>
-                                </div>
+                                </motion.div>
                             </div>
                         </motion.div>
                     </motion.div>
