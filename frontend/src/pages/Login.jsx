@@ -54,7 +54,7 @@ const Login = () => {
       localStorage.setItem("userName", decoded.name);
 
       loginSuccess(credentialResponse, decoded.sub, decoded.name);
-      console.log("login successful??");
+      console.log("JWT decoded successfully.");
     } catch (error) {
       console.error("Error decoding JWT:", error);
     }
@@ -75,10 +75,10 @@ const Login = () => {
             localStorage.setItem("authToken", data.accessToken);
             localStorage.setItem("refreshToken", data.refreshToken);
 
-            console.log("✅ Stored access and refresh tokens");
+            console.log("Stored access and refresh tokens");
 
             // Send user info to extension and wait for it to complete
-            console.log("📤 About to send user info to extension...");
+            console.log("About to send user info to extension...");
             await sendUserInfoToExtension(
               sub,
               name,
@@ -90,8 +90,8 @@ const Login = () => {
             await new Promise((resolve) => setTimeout(resolve, 500));
 
             // Navigate after extension message is sent
-            console.log("🏠 Navigating to /home...");
-            window.location.href = "/home";
+            console.log("Navigating to /home...");
+            // window.location.href = "/home"; debugging
           }
         })
         .catch((error) => {
@@ -108,10 +108,12 @@ const Login = () => {
     accessToken,
     refreshToken
   ) => {
-    console.log("🚀 sendUserInfoToExtension called with:", {
+    console.log("sendUserInfoToExtension called with:", {
       userSub,
       userName,
     });
+
+    console.log(`Called with extension ID: ${CHROME_EXT_ID || FIREFOX_EXT_ID}}`)
 
     const message = {
       type: "SET_USER_INFO",
@@ -128,21 +130,21 @@ const Login = () => {
         chrome.runtime &&
         chrome.runtime.sendMessage
       ) {
-        console.log("🔍 Using Chrome API for extension communication");
+        console.log("Using Chrome API for extension communication");
 
-        const sendToExtension = (extId, label) => {
+        const sendToExtension = async (extId, label) => {
           return new Promise((resolve) => {
-            console.log(`📨 Trying to send to ${label} extension:`, extId);
+            console.log(`Trying to send to ${label} extension:`, extId);
             chrome.runtime.sendMessage(extId, message, (response) => {
               if (chrome.runtime.lastError) {
                 console.log(
-                  `❌ ${label} extension not found:`,
+                  `${label} extension with id ${extId} not found:`,
                   chrome.runtime.lastError.message
                 );
                 resolve(false);
               } else {
                 console.log(
-                  `✅ Successfully sent user info to ${label} extension`,
+                  `Successfully sent user info to ${label} extension`,
                   response
                 );
                 resolve(true);
@@ -152,8 +154,10 @@ const Login = () => {
         };
 
         // Try Firefox first, then Chrome
-        const firefoxSuccess = await sendToExtension(FIREFOX_EXT_ID, "Firefox");
-        if (!firefoxSuccess) {
+        try {
+          await sendToExtension(FIREFOX_EXT_ID, "Firefox");
+        } catch (error) {
+          // User is most likely not using FireFox, try Chrome
           await sendToExtension(CHROME_EXT_ID, "Chrome");
         }
       }
