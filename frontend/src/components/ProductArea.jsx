@@ -5,65 +5,14 @@ import ProductModal from "./ProductModal";
 import { authenticatedFetch } from "../utils/api";
 import { useNavigate } from "react-router-dom";
 
-const ProductArea = ({ productIds, hideSidebar }) => {
+const ProductArea = ({ products = [], cartId, hideSidebar }) => {
   const navigate = useNavigate();
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const fetchProducts = useCallback(async () => {
-    console.log("fetching products", productIds);
-    try {
-      // fetch products by their id from the selected cart
-      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
-      const response = await authenticatedFetch(
-        `${API_URL}/api/products/batch`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ productIds }),
-        }
-      );
-      if (!response.ok) {
-        throw new Error("Failed to fetch products");
-      }
-
-      const data = await response.json();
-      console.log("products", data.products);
-      setProducts(data.products);
-      setLoading(false);
-    } catch (err) {
-      console.error("Error fetching products:", err);
-
-      // If it's an authentication error, redirect to login instead of showing error
-      if (
-        err.message === "No authentication token found" ||
-        err.message === "Authentication failed"
-      ) {
-        navigate("/login");
-        return;
-      }
-
-      setError("Failed to load products");
-      setLoading(false);
-    }
-  }, [navigate, productIds]);
-
-  useEffect(() => {
-    if (!productIds || productIds.length === 0) {
-      setProducts([]);
-      setLoading(false);
-      return;
-    }
-    fetchProducts();
-  }, [productIds]);
-
   const handleProductDelete = () => {
-    // Refresh the products list after deletion
-    setLoading(true);
-    fetchProducts();
+    // Reload the page to refresh the cart and products
+    window.location.reload();
   };
 
   const handleProductClick = (productData) => {
@@ -75,22 +24,6 @@ const ProductArea = ({ productIds, hideSidebar }) => {
     setIsModalOpen(false);
     setSelectedProduct(null);
   };
-
-  if (loading) {
-    return (
-      <div className="p-3 flex justify-center items-center h-64">
-        <div className="text-lg">Loading products...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-3 flex justify-center items-center h-64">
-        <div className="text-red-500">{error}</div>
-      </div>
-    );
-  }
 
   if (products.length === 0) {
     return (
@@ -119,7 +52,7 @@ const ProductArea = ({ productIds, hideSidebar }) => {
                 : "grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
             } gap-5`}
           >
-            {/* fetch products by their id from the selected cart */}
+            {/* Products are now stored directly in carts */}
             {products.map((product) => (
               <ProductCard
                 key={product.id}
@@ -136,6 +69,7 @@ const ProductArea = ({ productIds, hideSidebar }) => {
                 productId={product.id}
                 productUrl={product.url}
                 productDescription={product.description}
+                cartId={cartId}
                 onDelete={handleProductDelete}
                 onProductClick={handleProductClick}
                 hostname={product.hostname}
@@ -154,6 +88,7 @@ const ProductArea = ({ productIds, hideSidebar }) => {
         productId={selectedProduct?.productId}
         productUrl={selectedProduct?.productUrl}
         productDescription={selectedProduct?.productDescription}
+        cartId={cartId}
         onDelete={handleProductDelete}
       />
     </>

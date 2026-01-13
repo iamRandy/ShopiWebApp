@@ -5,7 +5,10 @@ import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { motion } from "framer-motion";
 
-const EXT_ID = import.meta.env.VITE_EXTENSION_ID;
+// Support both Firefox and Chrome extension IDs
+const FIREFOX_EXT_ID = "{a8f4c9e2-7b3d-4e1a-9c5f-2d8b6e4a1c7f}";
+const CHROME_EXT_ID =
+  import.meta.env.VITE_EXTENSION_ID || "kihghmelfnfgbkbeiebkgconkmgboilg";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -66,21 +69,29 @@ const Login = () => {
         body: JSON.stringify({ token: cRes.credential }),
       })
         .then((response) => response.json())
-        .then((data) => {
-
+        .then(async (data) => {
           // Store the new JWT tokens
           if (data.accessToken && data.refreshToken) {
             localStorage.setItem("authToken", data.accessToken);
             localStorage.setItem("refreshToken", data.refreshToken);
-            
-            // Send user info to extension
-            sendUserInfoToExtension(sub, name, data.accessToken, data.refreshToken);
-            
-            console.log("Stored access and refresh tokens");
 
-            // TODO: navigate to home page IFF user is not coming from extension
-            return;
-            navigate("/home");
+            console.log("✅ Stored access and refresh tokens");
+
+            // Send user info to extension and wait for it to complete
+            console.log("📤 About to send user info to extension...");
+            await sendUserInfoToExtension(
+              sub,
+              name,
+              data.accessToken,
+              data.refreshToken
+            );
+
+            // Wait a moment to ensure message is sent
+            await new Promise((resolve) => setTimeout(resolve, 500));
+
+            // Navigate after extension message is sent
+            console.log("🏠 Navigating to /home...");
+            window.location.href = "/home";
           }
         })
         .catch((error) => {
@@ -91,40 +102,100 @@ const Login = () => {
     }
   }
 
-  const sendUserInfoToExtension = (userSub, userName, accessToken, refreshToken) => {
-    // Send message to extension using chrome.runtime.sendMessage with extension ID
-    // var data = { type: "SET_USER_INFO", sub: userSub, name: userName }
-    // window.postMessage(data, "*");
+  const sendUserInfoToExtension = async (
+    userSub,
+    userName,
+    accessToken,
+    refreshToken
+  ) => {
+    console.log("🚀 sendUserInfoToExtension called with:", {
+      userSub,
+      userName,
+    });
 
-    if (chrome && chrome.runtime && EXT_ID) {
-      console.log(
-        "Sending message to extension id:", EXT_ID, userName, userSub, accessToken
-      );
-      chrome.runtime.sendMessage(
-        EXT_ID,
-        { 
-          type: "SET_USER_INFO", name: userName, sub: userSub, 
-          accessToken: accessToken, refreshToken: refreshToken 
-        },
-        (response) => {
-          console.log("response from setuserinfo:", response);
-          if (chrome.runtime.lastError) {
-            console.error(
-              "Extension communication error:",
-              chrome.runtime.lastError
-            );
-          } else {
-            console.log("Successfully sent user info to extension");
-          }
+    const message = {
+      type: "SET_USER_INFO",
+      name: userName,
+      sub: userSub,
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+    };
+
+    try {
+      // Chrome approach: Use chrome.runtime.sendMessage with extension ID
+      if (
+        typeof chrome !== "undefined" &&
+        chrome.runtime &&
+        chrome.runtime.sendMessage
+      ) {
+        console.log("🔍 Using Chrome API for extension communication");
+
+        const sendToExtension = (extId, label) => {
+          return new Promise((resolve) => {
+            console.log(`📨 Trying to send to ${label} extension:`, extId);
+            chrome.runtime.sendMessage(extId, message, (response) => {
+              if (chrome.runtime.lastError) {
+                console.log(
+                  `❌ ${label} extension not found:`,
+                  chrome.runtime.lastError.message
+                );
+                resolve(false);
+              } else {
+                console.log(
+                  `✅ Successfully sent user info to ${label} extension`,
+                  response
+                );
+                resolve(true);
+              }
+            });
+          });
+        };
+
+        // Try Firefox first, then Chrome
+        const firefoxSuccess = await sendToExtension(FIREFOX_EXT_ID, "Firefox");
+        if (!firefoxSuccess) {
+          await sendToExtension(CHROME_EXT_ID, "Chrome");
         }
-      );
-    } else {
-      console.error("Cannot send message to extension:", {
-        chrome: !!window.chrome,
-        runtime: !!window.chrome?.runtime,
-        sendMessage: !!window.chrome?.runtime?.sendMessage,
-        EXT_ID: EXT_ID,
-      });
+      }
+      // Firefox/Safari approach: Use window.postMessage to communicate with content script
+      else {
+        console.log(
+          "🔍 Using postMessage API for extension communication (Firefox/Safari)"
+        );
+
+        return new Promise((resolve) => {
+          // Listen for response from content script
+          const handleResponse = (event) => {
+            if (event.data && event.data.type === "SHOPI_EXT_RESPONSE") {
+              console.log("✅ Received response from extension:", event.data);
+              window.removeEventListener("message", handleResponse);
+              resolve();
+            }
+          };
+
+          window.addEventListener("message", handleResponse);
+
+          // Send message to content script via window.postMessage
+          window.postMessage(
+            {
+              type: "SHOPI_SET_USER_INFO",
+              payload: message,
+            },
+            "*"
+          );
+
+          console.log("📨 Sent postMessage to content script");
+
+          // Timeout after 2 seconds
+          setTimeout(() => {
+            window.removeEventListener("message", handleResponse);
+            console.log("⏱️ Extension message timeout");
+            resolve();
+          }, 2000);
+        });
+      }
+    } catch (error) {
+      console.log("❌ Extension communication error:", error.message);
     }
   };
 

@@ -46,20 +46,45 @@ const NavBar = ({ isLanding }) => {
 
   // --- Handlers ---
   const clearExtensionStorage = () => {
-    const EXT_ID = import.meta.env.VITE_EXTENSION_ID;
-    if (window.chrome?.runtime?.sendMessage && EXT_ID) {
-      window.chrome.runtime.sendMessage(
-        EXT_ID,
-        { type: "CLEAR_STORAGE" },
-        (response) => {
-          if (chrome.runtime.lastError) {
-            console.error(
-              "Extension storage clear error:",
-              chrome.runtime.lastError
-            );
-          }
+    // Support both Firefox and Chrome extension IDs
+    const FIREFOX_EXT_ID = "{a8f4c9e2-7b3d-4e1a-9c5f-2d8b6e4a1c7f}";
+    const CHROME_EXT_ID =
+      import.meta.env.VITE_EXTENSION_ID || "kihghmelfnfgbkbeiebkgconkmgboilg";
+
+    const message = { type: "CLEAR_STORAGE" };
+
+    // Chrome approach
+    if (window.chrome?.runtime?.sendMessage) {
+      // Try Firefox extension first
+      window.chrome.runtime.sendMessage(FIREFOX_EXT_ID, message, () => {
+        if (chrome.runtime.lastError) {
+          console.log("Firefox extension not found, trying Chrome...");
+          // Try Chrome extension
+          window.chrome.runtime.sendMessage(CHROME_EXT_ID, message, () => {
+            if (chrome.runtime.lastError) {
+              console.log(
+                "Chrome extension not found:",
+                chrome.runtime.lastError.message
+              );
+            } else {
+              console.log("Chrome extension storage cleared");
+            }
+          });
+        } else {
+          console.log("Firefox extension storage cleared");
         }
+      });
+    }
+    // Firefox approach: use postMessage
+    else {
+      window.postMessage(
+        {
+          type: "SHOPI_CLEAR_STORAGE",
+          payload: message,
+        },
+        "*"
       );
+      console.log("Sent clear storage message via postMessage");
     }
   };
 

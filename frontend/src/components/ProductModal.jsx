@@ -12,6 +12,7 @@ const ProductModal = ({
   productId,
   productUrl,
   productDescription,
+  cartId,
   onDelete,
 }) => {
   const navigate = useNavigate();
@@ -25,10 +26,12 @@ const ProductModal = ({
     if (window.confirm("Are you sure you want to delete this product?")) {
       try {
         const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
-        const response = await authenticatedFetch(`${API_URL}/api/products`, {
-          method: "DELETE",
-          body: JSON.stringify({ productId }),
-        });
+        const response = await authenticatedFetch(
+          `${API_URL}/api/carts/${cartId}/products/${productId}`,
+          {
+            method: "DELETE",
+          }
+        );
 
         if (response.ok) {
           onDelete();
