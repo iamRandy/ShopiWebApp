@@ -7,8 +7,13 @@ import { motion } from "framer-motion";
 
 // Support both Firefox and Chrome extension IDs
 const FIREFOX_EXT_ID = "{a8f4c9e2-7b3d-4e1a-9c5f-2d8b6e4a1c7f}";
-const CHROME_EXT_ID =
-  import.meta.env.VITE_EXTENSION_ID || "kihghmelfnfgbkbeiebkgconkmgboilg";
+const CHROME_EXT_ID = "kihghmelfnfgbkbeiebkgconkmgboilg";
+
+console.log("Extension IDs configured:", {
+  firefox: FIREFOX_EXT_ID,
+  chrome: CHROME_EXT_ID,
+  fromEnv: import.meta.env.VITE_EXTENSION_ID,
+});
 
 const Login = () => {
   const navigate = useNavigate();
@@ -111,9 +116,20 @@ const Login = () => {
     console.log("sendUserInfoToExtension called with:", {
       userSub,
       userName,
+      hasAccessToken: !!accessToken,
+      hasRefreshToken: !!refreshToken,
     });
 
-    console.log(`Called with extension ID: ${CHROME_EXT_ID || FIREFOX_EXT_ID}}`)
+    console.log("Browser APIs available:", {
+      hasChrome: typeof chrome !== "undefined",
+      hasChromeRuntime: typeof chrome !== "undefined" && !!chrome.runtime,
+      hasChromeSendMessage:
+        typeof chrome !== "undefined" && !!chrome.runtime?.sendMessage,
+    });
+
+    console.log(
+      `Extension IDs: Firefox=${FIREFOX_EXT_ID}, Chrome=${CHROME_EXT_ID}`
+    );
 
     const message = {
       type: "SET_USER_INFO",
@@ -122,6 +138,8 @@ const Login = () => {
       accessToken: accessToken,
       refreshToken: refreshToken,
     };
+
+    console.log("Message to send:", message);
 
     try {
       // Chrome approach: Use chrome.runtime.sendMessage with extension ID
