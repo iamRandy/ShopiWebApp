@@ -24,9 +24,9 @@ export default function HowItWorks() {
     };
 
     return (
-        <section id="how-it-works" className="h-[200vh] md:h-screen flex items-center justify-center bg-gradient-to-b to-[rgba(255,234,207,0)] from-[rgba(255,234,207,1)]">
-            <div className="w-full flex justify-center flex-col">
-                <div className="text-center">
+        <section id="how-it-works" className="h-[200vh] p-5 md:h-screen flex items-center justify-center bg-gradient-to-b to-[rgba(255,234,207,0)] from-[rgba(255,234,207,1)]">
+            <div className="w-full">
+                <div className="md:text-center">
                     {/* Sentence */}
                     <motion.div
                     initial={{ translateY: 80 }}
@@ -40,20 +40,20 @@ export default function HowItWorks() {
                     </motion.div>
 
                     {/* Selling points */}
-                    {/* Side note: I tried to make each point here into a component but the staggering effect didn't work. Maybe investigate another time. */}
+                    {/* TODO: Get better images/gifs/videos for showcasing Shopi */}
                     <motion.div
                         variants={ container }
                         initial="hidden"
                         whileInView="show"
                         viewport={{ once: true }}
                         onAnimationComplete={() => setCanHover(true)}
-                        className="flex md:flex-row flex-col justify-center items-center gap-5"
+                        className="grid place-items-center justify-center items-center max-[1210px]:grid-cols-2 min-[1210px]:grid-cols-3 max-[768px]:grid-cols-1"
                     >
                         <motion.div
                             variants={ item }
                             whileHover={ canHover ? {
-                                scale: 1.5,
-                                translateY: 80,
+                                scale: 1.2,
+                                translateY: 30,
                                 zIndex: 100,
                                 transition: { delay: 0.3, duration: 0.1 }
                             } : {}}
@@ -75,8 +75,8 @@ export default function HowItWorks() {
                         <motion.div
                             variants={ item }
                             whileHover={ canHover ? {
-                                scale: 1.5,
-                                translateY: 80,
+                                scale: 1.2,
+                                translateY: 30,
                                 zIndex: 100,
                                 transition: { delay: 0.3, duration: 0.1 }
                             } : {}}
@@ -98,8 +98,8 @@ export default function HowItWorks() {
                         <motion.div
                             variants={ item }
                             whileHover={ canHover ? {
-                                scale: 1.5,
-                                translateY: 80,
+                                scale: 1.2,
+                                translateY: 30,
                                 zIndex: 100,
                                 transition: { delay: 0.3, duration: 0.1 }
                             } : {}}

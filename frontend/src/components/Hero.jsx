@@ -21,7 +21,7 @@ export default function Hero() {
   };
 
   return (
-    <section className="relative md:flex-row md:justify-between flex h-screen flex-col items-center justify-end text-center pb-20 px-5">
+    <section className="relative flex h-screen flex-col items-center justify-end text-center pb-20 px-5 md:flex-row md:justify-between">
       {/* Logo */}
       <motion.div
         animate={{
@@ -38,8 +38,8 @@ export default function Hero() {
         <img src="/images/Avee.png" alt="Avee" className="w-40 md:w-1/3 mx-auto" />
       </motion.div>
 
-      {/* Catch phrase */}
-      <div className="flex flex-col justify-start text-start w-full">
+      {/* Phrase */}
+      <div className="flex flex-col justify-start text-start w-full mb-20 md:m-0">
         <div className="text-2xl font-bold md:text-4xl">
           Meet{" "}
           <span className="font-extrabold underline decoration-[#FFBC42]">

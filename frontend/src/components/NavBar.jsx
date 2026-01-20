@@ -1,4 +1,4 @@
-import { User, Blocks, BadgeQuestionMark, Cog, Menu, X } from "lucide-react";
+import { User, Blocks, BadgeQuestionMark, HeartPlus, Menu, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
@@ -214,8 +214,8 @@ const NavBar = ({ isLanding }) => {
                         className="text-base lg:text-lg flex gap-1 items-center special_links"
                         onClick={handleLinkClick}
                       >
-                        <Cog className="w-4 h-4 lg:w-5 lg:h-5" />
-                        Key Features
+                        <HeartPlus className="w-4 h-4 lg:w-5 lg:h-5" />
+                        Save
                       </a>
                       <a
                         href="#how-it-works"
@@ -223,7 +223,7 @@ const NavBar = ({ isLanding }) => {
                         onClick={handleLinkClick}
                       >
                         <Blocks className="w-4 h-4 lg:w-5 lg:h-5" />
-                        How it works
+                        Organize
                       </a>
                       <a
                         href=""
@@ -231,7 +231,7 @@ const NavBar = ({ isLanding }) => {
                         onClick={handleLogin}
                       >
                         <BadgeQuestionMark className="w-4 h-4 lg:w-5 lg:h-5" />
-                        Login
+                        Get started
                       </a>
                     </motion.div>
                   )}
