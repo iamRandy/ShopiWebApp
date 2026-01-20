@@ -4,6 +4,7 @@ import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { motion } from "framer-motion";
+import { ChevronLeft } from "lucide-react";
 
 // Support both Firefox and Chrome extension IDs
 const FIREFOX_EXT_ID = "{a8f4c9e2-7b3d-4e1a-9c5f-2d8b6e4a1c7f}";
@@ -222,8 +223,8 @@ const Login = () => {
   };
 
   return (
-    <div className="w-full h-screen flex text-center text-black justify-center items-center bg-gray-200">
-      <div className="relative w-full h-full overflow-hidden">
+    <div className="w-full h-screen text-black bg-gray-200">
+      <div className="relative flex items-center justify-center md:justify-start w-full h-full overflow-hidden">
         <div
           id="image-container"
           className="z-[1] w-1/2 h-full absolute rotate-[20deg] translate-x-[5%] -translate-y-1/2 opacity-10"
@@ -245,24 +246,38 @@ const Login = () => {
           />
         </div>
 
-        <div className="z-[2] border w-fit h-fit rounded-lg p-8 flex flex-col justify-center items-center gap-6 bg-white shadow-xl absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-          <motion.h3
+        <div className="z-[2] flex flex-col justify-center bg-white shadow-xl absolute p-8 items-center rounded-lg md:items-start w-3/4 md:w-1/3 md:h-full md:text-start md:rounded-tr-lg md:rounded-br-lg">
+          <motion.h2
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-2xl font-bold text-gray-800"
+            className="text-2xl font-bold text-gray-800 text-center md:text-start md:text-4xl"
           >
-            Sign up / Log in
-          </motion.h3>
+            {/*  */}
+            <span className="hidden md:inline">
+              Get started with Chaos
+              <p className="mb-5 text-stone-500 text-sm font-medium md:text-base">
+                Get ready to experience stress-free shopping 😎
+              </p>
+            </span>
+            <span className="w-full md:hidden">
+              Sign in
+              <p className="mb-5 text-stone-500 text-sm font-medium md:text-base">
+                Stress-free shopping with Chaos
+              </p>
+            </span>
+          </motion.h2>
 
-          <GoogleLogin
-            onSuccess={handleGoogleSuccess}
-            onError={() => console.log("Login failed")}
-            theme="outline"
-            size="large"
-            text="signin_with"
-            shape="rectangular"
-            logo_alignment="center"
-          />
+          <div className="w-fit">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => console.log("Login failed")}
+              theme="outline"
+              size="large"
+              text="signin_with"
+              shape="rectangular"
+              logo_alignment="center"
+            />
+          </div>
         </div>
       </div>
     </div>
