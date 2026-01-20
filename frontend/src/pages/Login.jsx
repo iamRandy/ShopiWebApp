@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 
 // Support both Firefox and Chrome extension IDs
 const FIREFOX_EXT_ID = "{a8f4c9e2-7b3d-4e1a-9c5f-2d8b6e4a1c7f}";
-const CHROME_EXT_ID = "kihghmelfnfgbkbeiebkgconkmgboilg";
+const CHROME_EXT_ID = import.meta.env.VITE_EXTENSION_ID || "kihghmelfnfgbkbeiebkgconkmgboilg";
 
 console.log("Extension IDs configured:", {
   firefox: FIREFOX_EXT_ID,
