@@ -1,4 +1,4 @@
-import { User, Blocks, BadgeQuestionMark, HeartPlus, Menu, X } from "lucide-react";
+import { User, Blocks, BadgeQuestionMark, HeartPlus, Menu, X, Cog } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
