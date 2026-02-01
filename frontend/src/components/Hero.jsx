@@ -71,7 +71,7 @@ export default function Hero() {
             }}
             transition={{ duration: 0.35 }}
             onClick={() => navigate("/login")}
-            className="px-16 py-4 bg-[#FFBC42] text-white font-bold rounded-full text-lg shadow-lg"
+            className="px-16 py-4 bg-[var(--primary-btncolor)] text-white font-bold rounded-full text-lg shadow-lg"
           >
             GET STARTED
           </motion.button>

@@ -1,4 +1,7 @@
 #root {
+  --primary-bgcolor: rgba(255,234,207,1);
+  --primary-btncolor: #FFBC42;
+  --primary-btncolor-shadow: #eb9c36;
   width: 100vw;
   height: 100vh;
 }

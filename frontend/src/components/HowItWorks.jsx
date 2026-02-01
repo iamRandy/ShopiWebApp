@@ -24,7 +24,7 @@ export default function HowItWorks() {
     };
 
     return (
-        <section id="how-it-works" className="h-[200vh] p-5 md:h-screen flex items-center justify-center bg-gradient-to-b to-[rgba(255,234,207,0)] from-[rgba(255,234,207,1)]">
+        <section id="how-it-works" className="h-[200vh] p-5 md:h-screen flex items-center justify-center bg-gradient-to-b to-[rgba(255,234,207,0)] from-[var(--primary-bgcolor)]">
             <div className="w-full">
                 <div className="md:text-center">
                     {/* Sentence */}
@@ -33,7 +33,7 @@ export default function HowItWorks() {
                     whileInView={{ translateY: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.8, ease: "easeInOut", delay: .5}}
-                    className="mb-5"
+                    className="mb-24"
                     >
                         <h2 className="text-4xl font-bold">Why should I use Chaos?</h2>
                         <p className="text-primary-dark mt-2">Chaos is built to make even the most complex shopping decisions, easier.</p>
