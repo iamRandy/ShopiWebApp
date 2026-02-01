@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { X } from "lucide-react";
 import { getAffiliateLink } from "../utils/affiliate";
 import { authenticatedFetch } from "../utils/api";
 import { useNavigate } from "react-router-dom";
@@ -163,7 +164,7 @@ const CartModal = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex flex-row justify-center items-center gap-10 z-50 p-4"
+      className="fixed inset-0 bg-[rgba(0,0,0,0.8)] flex flex-row justify-center items-center gap-10 z-50 p-4"
       onClick={handleBackdropClick}
     >
       <div className="col-span-1 flex flex-col gap-4 items-center justify-center w-[300px] min-h-[100px]">
@@ -190,7 +191,7 @@ const CartModal = ({
             className="absolute top-3 left-3 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full w-8 h-8 flex items-center justify-center transition-colors duration-200"
             title="Close"
           >
-            ×
+            <X className="w-[28px] h-[28px]" />
           </button>
 
           <div className="flex justify-center items-center">
