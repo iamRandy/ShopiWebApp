@@ -17,7 +17,6 @@ export default function Landing() {
                 <HowItWorks />  {/* Renamed to "Organize" in nav */}
                 <LandingEnd />
             </main>
-            
             <Footer />
         </div>
     );

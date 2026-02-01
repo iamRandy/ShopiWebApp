@@ -120,32 +120,16 @@ const NavBar = ({ isLanding }) => {
   };
 
   // --- Render ---
-  const isCollapsed =
-    isScrolled && !isScrollingUp && !isHovering && isLanding && !isMobile;
 
   return (
     <>
-      <motion.nav
-        initial={{ width: isLanding ? "95%" : "100%" }}
+      <nav
         className={`
           ${isLanding ? "top-3" : "top-0"}
           text-black fixed left-0 right-0 ${
             isMobileMenuOpen ? "z-30" : "z-50"
-          } h-fit mx-auto
-          ${isCollapsed ? "flex justify-center items-center" : ""}
+          } h-fit mx-4
         `}
-        animate={{
-          width:
-            isScrolled &&
-            !isScrollingUp &&
-            !isHovering &&
-            isLanding &&
-            !isMobile
-              ? "10%"
-              : isLanding
-              ? "95%"
-              : "100%",
-        }}
         onHoverStart={() => setIsHovering(true)}
         onHoverEnd={() => setIsHovering(false)}
         transition={{ duration: 0.8, ease: "easeInOut" }}
@@ -155,9 +139,8 @@ const NavBar = ({ isLanding }) => {
             isLanding
               ? "rounded-full border border-stone-500/20 backdrop-blur-lg"
               : ""
-          } relative flex w-full items-center justify-between bg-white/10 shadow-lg gap-4 sm:gap-10 p-4 px-4 sm:px-10 h-16
-        `}
-        >
+          } relative flex items-center justify-between bg-white/10 shadow-lg gap-4 sm:gap-10 p-4 h-16
+        `}>
           {/* Left side: Logo */}
           <div className="relative flex items-center w-full h-full">
             <motion.a
@@ -165,24 +148,18 @@ const NavBar = ({ isLanding }) => {
               href={isLanding ? "#" : ""}
               className="text-xl sm:text-2xl font-bold flex items-center gap-2 absolute"
               onClick={handleLinkClick}
-              animate={{
-                left: isCollapsed ? "50%" : "0%",
-                x: isCollapsed ? "-50%" : "0%",
-              }}
               transition={{ duration: 0.8, ease: "easeInOut" }}
             >
               <AnimatePresence>
-                {!isCollapsed && (
-                  <motion.img
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    transition={{ duration: 0.3, ease: "easeInOut" }}
-                    src="/images/Avee.png"
-                    alt="Shopi Logo"
-                    className="w-6 h-6 sm:w-8 sm:h-8 object-contain"
-                  />
-                )}
+                <motion.img
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                  src="/images/Avee.png"
+                  alt="Shopi Logo"
+                  className="w-6 h-6 sm:w-8 sm:h-8 object-contain"
+                />
               </AnimatePresence>
               Chaos
             </motion.a>
@@ -197,17 +174,11 @@ const NavBar = ({ isLanding }) => {
 
           {/* Desktop Navigation Links and User Actions */}
           {!isMobile && (
-            <AnimatePresence>
-              {(!isScrolled || isScrollingUp || isHovering) && (
                 <>
                   {/* Landing page navigation */}
                   {isLanding && (
-                    <motion.div
+                    <div
                       className="flex flex-1 justify-center gap-5 lg:gap-10 items-center whitespace-nowrap"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.2, delay: 0.2 }}
                     >
                       <a
                         href="#features"
@@ -233,7 +204,7 @@ const NavBar = ({ isLanding }) => {
                         <BadgeQuestionMark className="w-4 h-4 lg:w-5 lg:h-5" />
                         Get started
                       </a>
-                    </motion.div>
+                    </div>
                   )}
 
                   {/* Authenticated user navigation */}
@@ -307,12 +278,10 @@ const NavBar = ({ isLanding }) => {
                     </motion.div>
                   )}
                 </>
-              )}
-            </AnimatePresence>
           )}
 
           {/* Mobile Hamburger Menu Button */}
-          {isMobile && !isCollapsed && (
+          {isMobile && (
             <motion.button
               onClick={handleMobileMenuToggle}
               className="p-2 rounded-lg hover:bg-white/20 transition-colors"
@@ -328,7 +297,7 @@ const NavBar = ({ isLanding }) => {
             </motion.button>
           )}
         </div>
-      </motion.nav>
+      </nav>
 
       {/* Mobile Menu Overlay */}
       <AnimatePresence>
@@ -393,12 +362,12 @@ const NavBar = ({ isLanding }) => {
                     How it works
                   </a>
                   <a
-                    href="#how-it-works"
+                    href=""
                     className="text-lg flex gap-3 items-center p-3 rounded-lg hover:bg-gray-100 transition-colors"
-                    onClick={handleLinkClick}
+                    onClick={handleLogin}
                   >
-                    <BadgeQuestionMark className="w-5 h-5" />
-                    FAQs
+                    <BadgeQuestionMark className="w-4 h-4 lg:w-5 lg:h-5" />
+                    Get started
                   </a>
                 </>
               )}

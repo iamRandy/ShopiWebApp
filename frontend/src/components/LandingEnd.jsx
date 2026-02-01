@@ -20,7 +20,7 @@ export default function LandingEnd() {
     }, [isInView]);
 
     return (
-        <section ref={ref} id="landing-end" className=" md:h-screen flex justify-center items-center relative mb-20">
+        <section ref={ref} id="landing-end" className=" md:h-screen flex justify-center items-center relative mb-48">
             <div className="flex flex-col items-center justify-center text-black p-5 h-100">
                 <h2 className="text-2xl font-bold text-center mb-20">
                     <AnimatePresence mode="wait">
@@ -51,7 +51,8 @@ export default function LandingEnd() {
                     </AnimatePresence>
                 </h2>
 
-                <div className="w-[14rem] h-[14rem] rounded-full bg-[var(--primary-btncolor-shadow)]">
+                <div className="w-[14rem] h-[14rem] rounded-full bg-[var(--primary-btncolor-shadow)]
+                z-30">
                     <motion.button 
                     initial={{ x: 0, y: 0 }}
                     whileInView={{ x: 10, y: -10 }}
@@ -59,7 +60,8 @@ export default function LandingEnd() {
                     whileTap={{ x: 0, y: 0, transition: { ease: "easeIn", duration: .05 } }}
                     style={{borderRadius: "50%", fontSize: "2em", color: "white", fontWeight: "bold"}} 
                     onClick={() => navigate("/login")}
-                    className="popup_button w-full h-full border-none cursor-pointer bg-[var(--primary-btncolor)]">
+                    className="popup_button w-full h-full border-none cursor-pointer 
+                    bg-[var(--primary-btncolor)]">
                         START
                     </motion.button>
                 </div>
@@ -97,7 +99,9 @@ export default function LandingEnd() {
                 </motion.div>
             </div>
 
-            <div className="w-2/3 h-2/3 absolute -top-44 -right-40 -rotate-90 md:w-auto md:h-auto md:top-0 md:-right-[22rem]">
+            <div 
+            className="w-2/3 h-2/3 absolute -top-44 -right-40 -rotate-90
+            md:w-2/3 md:h-2/3 md:top-0 md:-right-[22rem]">
                 <img src="\images\Avee.png"></img>
             </div>
         </section>
