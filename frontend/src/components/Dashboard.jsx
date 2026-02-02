@@ -2,70 +2,100 @@ import ProductArea from "./ProductArea";
 import CartArea from "./CartArea";
 import { ChevronRight } from "lucide-react";
 import * as Icons from "lucide-react";
-import { useState, useEffect } from "react";
+import { useQuery } from '@tanstack/react-query';
+import { useState } from "react";
 import { authenticatedFetch } from "../utils/api";
 import { AnimatePresence, motion } from "framer-motion";
 
 const Dashboard = () => {
-  const [carts, setCarts] = useState([]);
-  const [hideSidebar, setHideSidebar] = useState(false);
-  const [selectedCart, setSelectedCart] = useState(null); // cart id
-  const [selectedCartObj, setSelectedCartObj] = useState(null); // cart obj
-  const [selectedCartProducts, setSelectedCartProducts] = useState([]); // cart products
-  const [loading, setLoading] = useState(true);
 
-  // const selectedCartObj = carts.find(cart => cart.id === selectedCart);
-  // const selectedCartProducts = selectedCartObj?.products || [];
-  // console.log("selectedCartProducts", selectedCartProducts);
-  useEffect(() => {
-    const fetchCarts = async () => {
-      setLoading(true);
-      try {
-        const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
-        const response = await authenticatedFetch(`${API_URL}/api/carts`);
-        const data = await response.json();
-        setCarts(data);
-        setSelectedCart(data?.[0]?.id || null); // Select first cart by default
-        setSelectedCartObj(data?.[0] || null);
-        setSelectedCartProducts(data?.[0]?.products || []);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching carts:", error);
-        setLoading(false);
-      }
-    };
-    fetchCarts();
-  }, []);
+  console.log("DASHBOARD HIT");
+
+  // const [carts, setCarts] = useState([]);
+  // const [selectedCart, setSelectedCart] = useState(null); // cart id
+  // const [selectedCartObj, setSelectedCartObj] = useState(null); // cart obj
+  // const [selectedCartProducts, setSelectedCartProducts] = useState([]); // cart products
+  // const [loading, setLoading] = useState(true);
+
+  const { data: carts, isLoading } = useQuery({
+    queryKey: ['carts'],
+    queryFn: async () => {
+      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+      const response = await authenticatedFetch(`${API_URL}/api/carts`);
+      if (!response.ok) throw new Error('Network response was not ok');
+      return response.json();
+    },
+  });
+
+  const [selectedCartId, setSelectedCartId] = useState(null);
+  const [hideSidebar, setHideSidebar] = useState(false);
+
+  const activeId = selectedCartId || carts?.[0]?.id;
+  console.log("CONTROL: " + selectedCartId);
+  const selectedCartObj = carts?.find(cart => cart.id === activeId);
+  const selectedCartProducts = selectedCartObj?.products || [];
+
+  if (isLoading && !carts) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        Loading carts from storage...
+      </div>
+    );
+  }
+
+  // If we aren't loading but carts is still somehow null/empty
+  if (!isLoading && (!carts || carts.length === 0)) {
+    return <div>No carts found. Create your first one!</div>;
+  }
+  // useEffect(() => {
+  //   const fetchCarts = async () => {
+  //     setLoading(true);
+  //     try {
+  //       const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+  //       const response = await authenticatedFetch(`${API_URL}/api/carts`);
+  //       const data = await response.json();
+  //       setCarts(data);
+  //       setSelectedCart(data?.[0]?.id || null); // Select first cart by default
+  //       setSelectedCartObj(data?.[0] || null);
+  //       setSelectedCartProducts(data?.[0]?.products || []);
+  //       setLoading(false);
+  //     } catch (error) {
+  //       console.error("Error fetching carts:", error);
+  //       setLoading(false);
+  //     }
+  //   };
+  //   fetchCarts();
+  // }, []);
 
   // Swap between carts and their products
-  const cartSelected = async (cartId) => {
-    setSelectedCart(cartId);
-    try {
-      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
-      const response = await authenticatedFetch(
-        `${API_URL}/api/carts/selectCart`,
-        {
-          method: "POST",
-          body: JSON.stringify({ cartId }),
-        }
-      );
-      const data = await response.json();
-      setSelectedCartObj(data);
-      setSelectedCartProducts(data?.products || []);
-      // console.log("cartSelected: new products", data?.products);
-    } catch (error) {
-      console.error("Error selecting cart:", error);
-    }
-  };
+  // const cartSelected = async (cartId) => {
+  //   setSelectedCartId(cartId);
+    // try {
+    //   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+    //   const response = await authenticatedFetch(
+    //     `${API_URL}/api/carts/selectCart`,
+    //     {
+    //       method: "POST",
+    //       body: JSON.stringify({ cartId }),
+    //     }
+    //   );
+    //   const data = await response.json();
+    //   setSelectedCartObj(data);
+    //   setSelectedCartProducts(data?.products || []);
+    //   // console.log("cartSelected: new products", data?.products);
+    // } catch (error) {
+    //   console.error("Error selecting cart:", error);
+    // }
+  // };
 
-  const getIconByName = (name, props) => {
-    const LucideIcon = Icons[name];
-    return LucideIcon ? (
-      <LucideIcon {...props} />
-    ) : (
-      <Icons.ShoppingCart {...props} />
-    );
-  };
+  // const getIconByName = (name, props) => {
+  //   const LucideIcon = Icons[name];
+  //   return LucideIcon ? (
+  //     <LucideIcon {...props} />
+  //   ) : (
+  //     <Icons.ShoppingCart {...props} />
+  //   );
+  // };
 
   return (
     <div className="p-9 mt-16 relative">
@@ -96,17 +126,17 @@ const Dashboard = () => {
       <div className="grid grid-cols-6">
         {!hideSidebar && (
           <div className="flex flex-col col-span-1 gap-2">
-            {!loading && (
+            {!isLoading && (
               <CartArea
                 carts={carts}
-                selectedCart={selectedCart}
-                cartSelected={cartSelected}
+                selectedCart={activeId}
+                cartSelected={setSelectedCartId}
               />
             )}
           </div>
         )}
         <div className={hideSidebar ? "col-span-6" : "col-span-5"}>
-          {loading ? (
+          {isLoading ? (
             <div className="flex justify-center items-center h-64 text-lg text-black">
               Loading products...
             </div>
@@ -114,7 +144,7 @@ const Dashboard = () => {
             selectedCartProducts && (
               <ProductArea
                 products={selectedCartProducts}
-                cartId={selectedCart}
+                cartId={selectedCartId}
                 hideSidebar={hideSidebar}
               />
             )
