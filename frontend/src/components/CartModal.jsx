@@ -19,6 +19,43 @@ const CartModal = ({
   const [cartColor, setCartColor] = useState("#000000");
   const queryClient = useQueryClient(); // for cache
 
+  const deleteCartMutation = useMutation({
+    mutationFn: async ({ cartId }) => {
+      console.log("MUTATION ID:", cartId);
+      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
+      const url = `${API_URL}/api/carts/${cartId}`;
+
+      const response = await authenticatedFetch(
+        url,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to delete cart");
+      }
+
+      return cartId
+    },
+    onSuccess: (cartId) => {
+      queryClient.setQueryData(["carts"], (oldCarts = []) =>
+        oldCarts.filter(cart => cart.id !== cartId)
+      );
+    },
+    onError: (error) => {
+      setStatus("Failed to delete cart. Please try again.");
+
+      if (
+        error.message === "No authentication token found" ||
+        error.message === "Authentication failed"
+      ) {
+        navigate("/login");
+      }
+    },
+  });
+
   const cartMutation = useMutation({
     mutationFn: async ({ isEditMode, cartData, payload }) => {
       const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
@@ -39,7 +76,7 @@ const CartModal = ({
         throw new Error("Failed to save cart");
       }
 
-      return response.json(); // ← this becomes `data` in onSuccess
+      return response.json();
     },
 
     onSuccess: (data, variables) => {
@@ -94,57 +131,17 @@ const CartModal = ({
 
   if (!isOpen) return null;
 
-  const handleDeleteCart = async (e) => {
+  const handleDeleteCart = (e) => {
     e.stopPropagation();
-    if (
-      window.confirm(
-        "Are you sure you want to delete this cart? This action cannot be undone."
-      )
-    ) {
-      try {
-        const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
-        console.log(`attempting to hit: ${API_URL}/api/carts/${cartData.id}`)
-        const response = await authenticatedFetch(
-          `${API_URL}/api/carts/${cartData.id}`,
-          {
-            method: "DELETE",
-          }
-        );
 
-        if (response.ok) {
-          setStatus("Cart deleted successfully!");
-          setTimeout(() => {
-            setStatus(null);
-            onClose();
-            window.location.reload();
-          }, 1500);
-        } else {
-          console.log("response was not okay");
-          try {
-            const errorData = await response.json();
-            console.log("json response");
-            setStatus("Failed to delete cart: " + (errorData.error || errorData.message || "Unknown error"));
-          } catch (jsonError) {
-            // If response is not JSON, use status text
-            console.log("non json response:", response);
-            console.log("jsonError:", jsonError);
-            setStatus(`Failed to delete cart: ${response.status} ${response.statusText}`);
-          }
-        }
-      } catch (error) {
-        console.error("Error deleting cart:", error);
-
-        if (
-          error.message === "No authentication token found" ||
-          error.message === "Authentication failed"
-        ) {
-          navigate("/login");
-          return;
-        }
-
-        setStatus("Failed to delete cart. Please try again.");
-      }
+    if (window.confirm("Are you sure you want to delete this cart?")) {
+      deleteCartMutation.mutate({ cartId: cartData.id });
     }
+
+    setTimeout(() => {
+      setStatus(null);
+      onClose();
+    }, 1500);
   };
 
   const handleBackdropClick = (e) => {

@@ -130,9 +130,6 @@ const NavBar = ({ isLanding }) => {
             isMobileMenuOpen ? "z-30" : "z-50"
           } h-fit
         `}
-        onHoverStart={() => setIsHovering(true)}
-        onHoverEnd={() => setIsHovering(false)}
-        transition={{ duration: 0.8, ease: "easeInOut" }}
       >
         <div
           className={`${
