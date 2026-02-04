@@ -1,5 +1,6 @@
 import ProductArea from "./ProductArea";
 import CartArea from "./CartArea";
+import Loading from "./ux/ChaosStalling";
 import { ChevronRight } from "lucide-react";
 import * as Icons from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
@@ -8,9 +9,6 @@ import { authenticatedFetch } from "../utils/api";
 import { AnimatePresence, motion } from "framer-motion";
 
 const Dashboard = () => {
-
-  console.log("DASHBOARD HIT");
-
   // const [carts, setCarts] = useState([]);
   // const [selectedCart, setSelectedCart] = useState(null); // cart id
   // const [selectedCartObj, setSelectedCartObj] = useState(null); // cart obj
@@ -31,15 +29,13 @@ const Dashboard = () => {
   const [hideSidebar, setHideSidebar] = useState(false);
 
   const activeId = selectedCartId || carts?.[0]?.id;
-  console.log("CONTROL: " + selectedCartId);
+  // console.log("CONTROL: " + selectedCartId);
   const selectedCartObj = carts?.find(cart => cart.id === activeId);
   const selectedCartProducts = selectedCartObj?.products || [];
 
-  if (isLoading && !carts) {
+  if (!isLoading && !carts) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        Loading carts from storage...
-      </div>
+      <Loading message={"Loading carts from storage..."} />
     );
   }
 
@@ -110,7 +106,6 @@ const Dashboard = () => {
                     */}
           </motion.button>
         </div>
-
         <div className="grid grid-cols-6 pb-8 text-black">
           {!hideSidebar && <div className="col-span-1"></div>}
           <div className="col-span-5 flex flex-col items-start gap-2">

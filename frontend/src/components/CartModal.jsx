@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import { getAffiliateLink } from "../utils/affiliate";
 import { authenticatedFetch } from "../utils/api";
 import { useNavigate } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 const CartModal = ({
   isOpen,
@@ -16,6 +17,44 @@ const CartModal = ({
   const [cartName, setCartName] = useState("");
   const [cartIcon, setCartIcon] = useState("ShoppingCart");
   const [cartColor, setCartColor] = useState("#000000");
+  const queryClient = useQueryClient(); // for cache
+
+  const cartMutation = useMutation({
+    mutationFn: async ({ isEditMode, cartData, payload }) => {
+      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
+      const url = isEditMode
+        ? `${API_URL}/api/carts/${cartData.id}`
+        : `${API_URL}/api/carts`;
+
+      const method = isEditMode ? "PUT" : "POST";
+
+      const response = await authenticatedFetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save cart");
+      }
+
+      return response.json(); // ← this becomes `data` in onSuccess
+    },
+
+    onSuccess: (data, variables) => {
+      const { isEditMode } = variables;
+
+      queryClient.setQueryData(["carts"], (oldCarts = []) => {
+        if (isEditMode) {
+          return oldCarts.map(cart =>
+            cart.id === data.id ? data : cart
+          );
+        }
+        return [...oldCarts, data];
+      });
+    },
+  });
 
   const ICON_OPTIONS = [
     "ShoppingCart",
@@ -121,45 +160,22 @@ const CartModal = ({
       return;
     }
 
-    const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
-    const url = isEditMode
-      ? `${API_URL}/api/carts/${cartData.id}`
-      : `${API_URL}/api/carts`;
-
-    const method = isEditMode ? "PUT" : "POST";
-
-    authenticatedFetch(url, {
-      method: method,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    cartMutation.mutate({
+      isEditMode,
+      cartData,
+      payload: {
         name: cartName,
         icon: cartIcon,
         color: cartColor,
-      }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log(isEditMode ? "cart updated" : "cart created", data);
-        setStatus(isEditMode ? "Cart updated!" : "Cart created!");
-        setTimeout(() => {
-          setStatus(null);
-          onClose();
-          window.location.reload();
-        }, 1500);
-      })
-      .catch((error) => {
-        console.error(
-          `Error ${isEditMode ? "updating" : "creating"} cart:`,
-          error
-        );
-        setStatus(
-          `Failed to ${
-            isEditMode ? "update" : "create"
-          } cart. Please try again.`
-        );
-      });
+      },
+    });
+
+    setStatus(isEditMode ? "Cart updated!" : "Cart created!");
+
+    setTimeout(() => {
+      setStatus(null);
+      onClose();
+    }, 1500);
   };
 
   return (
@@ -204,9 +220,11 @@ const CartModal = ({
         {/* Content */}
         <div className="p-6 text-black">
           <div className="flex flex-col md:flex-row gap-4 relative">
-            {status !== null && (
+            {status !== null ||cartMutation.isError && (
               <div className="absolute w-full flex justify-center">
-                <p className="text-[#FFBC42] italic">{status}</p>
+                <p className="text-[#FFBC42] italic">
+                  {status !== null ? status : cartMutation.error.message}
+                </p>
               </div>
             )}
             {/* Cart Info */}
@@ -248,6 +266,7 @@ const CartModal = ({
               <div className="flex gap-2 mt-4">
                 <button
                   type="submit"
+                  disabled={cartMutation.isLoading}
                   className="bg-[#FFBC42] hover:bg-[#f7ad3e] text-white px-4 py-2 rounded-md"
                 >
                   {isEditMode ? "Save Changes" : "Create Cart"}
