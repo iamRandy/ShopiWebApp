@@ -9,6 +9,19 @@ import Dashboard from "../components/Dashboard";
 const FIREFOX_EXT_ID = "{a8f4c9e2-7b3d-4e1a-9c5f-2d8b6e4a1c7f}";
 const CHROME_EXT_ID = "kihghmelfnfgbkbeiebkgconkmgboilg";
 
+const getCandidateExtensionIds = () => {
+  const extensionIdFromUrl = new URLSearchParams(window.location.search).get(
+    "extId"
+  );
+  const extensionIdFromEnv = import.meta.env.VITE_EXTENSION_ID;
+  return [
+    extensionIdFromUrl,
+    extensionIdFromEnv,
+    CHROME_EXT_ID,
+    FIREFOX_EXT_ID,
+  ].filter(Boolean);
+};
+
 const Home = () => {
   const navigate = useNavigate();
 
@@ -90,9 +103,23 @@ const Home = () => {
           });
         };
 
-        // Try both extension IDs
-        await sendToExtension(FIREFOX_EXT_ID, "Firefox");
-        await sendToExtension(CHROME_EXT_ID, "Chrome");
+        const extensionIds = getCandidateExtensionIds();
+        let didSync = false;
+
+        for (const extId of extensionIds) {
+          const success = await sendToExtension(extId, extId);
+          if (success) {
+            didSync = true;
+            break;
+          }
+        }
+
+        if (!didSync) {
+          console.warn(
+            "Could not reach any extension ID during home sync:",
+            extensionIds
+          );
+        }
       } else {
         // Fallback to postMessage for Firefox
         window.postMessage(

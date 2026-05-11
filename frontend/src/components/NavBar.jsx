@@ -45,51 +45,72 @@ const NavBar = ({ isLanding }) => {
   }, [lastScrollY]);
 
   // --- Handlers ---
+  // Clears extension storage. Primary path is the content-script bridge so it
+  // works for ANY installation ID (including unpacked dev installs whose IDs
+  // don't match the hardcoded production ID). External messaging is tried in
+  // parallel as a backup if the content script isn't present on the page.
   const clearExtensionStorage = async () => {
     return new Promise((resolve) => {
+      const TIMEOUT_MS = 1500;
+      let settled = false;
+      const finish = (reason) => {
+        if (settled) return;
+        settled = true;
+        window.removeEventListener("message", onResponse);
+        console.log("clearExtensionStorage resolved:", reason);
+        resolve();
+      };
+
+      const onResponse = (event) => {
+        if (event.source !== window) return;
+        const data = event.data;
+        if (!data || data.type !== "SHOPI_EXT_RESPONSE") return;
+        const msg = data?.response?.message;
+        if (msg === "Storage cleared successfully" || data?.response?.ok) {
+          finish("content-script bridge");
+        }
+      };
+      window.addEventListener("message", onResponse);
+
+      // Primary: content-script bridge (no extension ID needed)
+      window.postMessage(
+        { type: "SHOPI_CLEAR_STORAGE", payload: { type: "CLEAR_STORAGE" } },
+        "*"
+      );
+
+      // Backup: external messaging in case content script isn't injected
       const FIREFOX_EXT_ID = "{a8f4c9e2-7b3d-4e1a-9c5f-2d8b6e4a1c7f}";
       const CHROME_EXT_ID =
         import.meta.env.VITE_EXTENSION_ID || "kihghmelfnfgbkbeiebkgconkmgboilg";
 
-      const message = { type: "CLEAR_STORAGE" };
-
-      // Chrome-style messaging available?
-      if (window.chrome?.runtime?.sendMessage) {
-        // Try Firefox first
+      const tryExternal = (extId, label) => {
+        if (!window.chrome?.runtime?.sendMessage) return;
         try {
-          window.chrome.runtime.sendMessage(FIREFOX_EXT_ID, message, () => {
-            if (chrome.runtime.lastError) {
-              // Try Chrome if Firefox failed
-              window.chrome.runtime.sendMessage(CHROME_EXT_ID, message, () => {
-                if (chrome.runtime.lastError) {
-                  console.log("No compatible extension found");
-                } else {
-                  console.log("Chrome extension storage cleared");
-                }
-                resolve(); // <-- still resolve so logout continues
-              });
-            } else {
-              console.log("Firefox extension storage cleared");
-              resolve();
+          window.chrome.runtime.sendMessage(
+            extId,
+            { type: "CLEAR_STORAGE" },
+            (response) => {
+              if (chrome.runtime.lastError) {
+                console.log(
+                  `External clear failed (${label}):`,
+                  chrome.runtime.lastError.message
+                );
+                return;
+              }
+              if (response?.ok) finish(`external messaging (${label})`);
             }
-          });
+          );
         } catch (err) {
-          console.log("Error messaging Firefox extension, trying Chrome...");
-          window.chrome.runtime.sendMessage(CHROME_EXT_ID, message, () => {
-            console.log("Chrome extension storage cleared");
-            resolve();
-          });
+          console.log(`External clear threw (${label}):`, err.message);
         }
-      } else {
-        // Fallback (Firefox via window.postMessage)
-        window.postMessage(
-          { type: "SHOPI_CLEAR_STORAGE", payload: message },
-          "*"
-        );
-        console.log("Sent clear storage via postMessage");
-        // There's no callback here so just resolve immediately
-        resolve();
-      }
+      };
+      tryExternal(FIREFOX_EXT_ID, "firefox");
+      tryExternal(CHROME_EXT_ID, "chrome");
+
+      // Hard timeout so logout never blocks indefinitely if no extension is
+      // installed at all. Subsequent focus/storage events on the web app will
+      // self-heal via the content script if needed.
+      setTimeout(() => finish("timeout"), TIMEOUT_MS);
     });
   };
 
