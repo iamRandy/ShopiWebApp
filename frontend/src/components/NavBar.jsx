@@ -1,5 +1,5 @@
 import { User, Blocks, BadgeQuestionMark, HeartPlus, Menu, X, Cog } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { GoogleLogin } from "@react-oauth/google";
@@ -9,6 +9,7 @@ import { logout } from "../utils/api";
 const NavBar = ({ isLanding }) => {
   // --- State and hooks ---
   const navigate = useNavigate();
+  const location = useLocation();
   const authToken = localStorage.getItem("authToken");
   const isAuthenticated = !!authToken;
   const userName = localStorage.getItem("userName") || "User";
@@ -136,8 +137,41 @@ const NavBar = ({ isLanding }) => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
-  const handleLinkClick = () => {
+  const handleLogoClick = (e) => {
+    e.preventDefault();
     setIsMobileMenuOpen(false);
+    if (location.pathname === "/") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    navigate("/");
+  };
+
+  const scrollToSectionWhenReady = (sectionId) => {
+    let attempts = 0;
+    const maxAttempts = 45;
+    const tick = () => {
+      const el = document.getElementById(sectionId);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth" });
+        return;
+      }
+      if (attempts++ < maxAttempts) {
+        requestAnimationFrame(tick);
+      }
+    };
+    requestAnimationFrame(tick);
+  };
+
+  const handleLandingSectionClick = (sectionId) => (e) => {
+    e.preventDefault();
+    setIsMobileMenuOpen(false);
+    if (location.pathname === "/") {
+      document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
+    navigate(`/#${sectionId}`);
+    scrollToSectionWhenReady(sectionId);
   };
 
   // --- Render ---
@@ -166,9 +200,9 @@ const NavBar = ({ isLanding }) => {
           <div className="relative flex items-center w-full h-full">
             <motion.a
               id="logo_text"
-              href={isLanding ? "#" : ""}
+              href="/"
               className="text-xl sm:text-2xl font-bold flex items-center gap-2 absolute"
-              onClick={handleLinkClick}
+              onClick={handleLogoClick}
               transition={{ duration: 0.8, ease: "easeInOut" }}
             >
               <AnimatePresence>
@@ -202,17 +236,17 @@ const NavBar = ({ isLanding }) => {
                       className="flex flex-1 justify-center gap-5 lg:gap-10 items-center whitespace-nowrap"
                     >
                       <a
-                        href="#features"
+                        href="/#features"
                         className="text-base lg:text-lg flex gap-1 items-center special_links"
-                        onClick={handleLinkClick}
+                        onClick={handleLandingSectionClick("features")}
                       >
                         <HeartPlus className="w-4 h-4 lg:w-5 lg:h-5" />
                         Save
                       </a>
                       <a
-                        href="#how-it-works"
+                        href="/#how-it-works"
                         className="text-base lg:text-lg flex gap-1 items-center special_links"
-                        onClick={handleLinkClick}
+                        onClick={handleLandingSectionClick("how-it-works")}
                       >
                         <Blocks className="w-4 h-4 lg:w-5 lg:h-5" />
                         Organize
@@ -367,17 +401,17 @@ const NavBar = ({ isLanding }) => {
               {isLanding && (
                 <>
                   <a
-                    href="#features"
+                    href="/#features"
                     className="text-lg flex gap-3 items-center p-3 rounded-lg hover:bg-gray-100 transition-colors"
-                    onClick={handleLinkClick}
+                    onClick={handleLandingSectionClick("features")}
                   >
                     <Cog className="w-5 h-5" />
                     Key Features
                   </a>
                   <a
-                    href="#how-it-works"
+                    href="/#how-it-works"
                     className="text-lg flex gap-3 items-center p-3 rounded-lg hover:bg-gray-100 transition-colors"
-                    onClick={handleLinkClick}
+                    onClick={handleLandingSectionClick("how-it-works")}
                   >
                     <Blocks className="w-5 h-5" />
                     How it works
