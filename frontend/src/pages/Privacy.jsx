@@ -3,7 +3,7 @@ import NavBar from "../components/NavBar";
 import Footer from "../components/Footer";
 
 const LAST_UPDATED = "May 10, 2026";
-const CONTACT_EMAIL = "privacy@chaos-cart.app";
+const CONTACT_EMAIL = "shoppii.cart@gmail.com";
 
 const Section = ({ id, title, children }) => (
   <section id={id} className="mb-10 scroll-mt-24">
