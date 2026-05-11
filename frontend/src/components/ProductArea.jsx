@@ -44,7 +44,7 @@ const ProductArea = ({ products = [], cartId, hideSidebar }) => {
   return (
     <>
       <div>
-        <div className="rounded-lg h-[630px] overflow-y-auto">
+        <div className="rounded-lg h-[630px] overflow-y-auto scrollbar-minimal">
           <div
             className={`grid ${
               hideSidebar
