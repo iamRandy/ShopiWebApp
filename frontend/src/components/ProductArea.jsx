@@ -44,7 +44,7 @@ const ProductArea = ({ products = [], cartId, hideSidebar }) => {
   return (
     <>
       <div>
-        <div className="max-h-[calc(100dvh-11rem)] min-h-[240px] overflow-y-auto rounded-lg scrollbar-minimal md:max-h-none md:h-[630px]">
+        <div className="rounded-lg">
           <div
             className={`grid gap-3 sm:gap-5 ${
               hideSidebar
