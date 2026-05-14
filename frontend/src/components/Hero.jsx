@@ -33,9 +33,13 @@ export default function Hero() {
           ease: "easeInOut",
           repeat: Infinity,
         }}
-        className="px-6 w-full mb-11 md:mb-0"
+        className="px-6 w-full mb-11 md:mb-0 md:pr-4"
       >
-        <img src="/images/Avee.png" alt="Avee" className="w-40 md:w-1/3 mx-auto" />
+        <img
+          src="/images/Avee.png"
+          alt="Avee"
+          className="w-40 md:w-1/3 mx-auto md:ml-auto md:mr-2"
+        />
       </motion.div>
 
       {/* Phrase */}

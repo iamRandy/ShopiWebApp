@@ -1,5 +1,5 @@
 import { User, Blocks, BadgeQuestionMark, HeartPlus, Menu, X, Cog } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { GoogleLogin } from "@react-oauth/google";
@@ -9,6 +9,7 @@ import { logout } from "../utils/api";
 const NavBar = ({ isLanding }) => {
   // --- State and hooks ---
   const navigate = useNavigate();
+  const location = useLocation();
   const authToken = localStorage.getItem("authToken");
   const isAuthenticated = !!authToken;
   const userName = localStorage.getItem("userName") || "User";
@@ -45,51 +46,72 @@ const NavBar = ({ isLanding }) => {
   }, [lastScrollY]);
 
   // --- Handlers ---
+  // Clears extension storage. Primary path is the content-script bridge so it
+  // works for ANY installation ID (including unpacked dev installs whose IDs
+  // don't match the hardcoded production ID). External messaging is tried in
+  // parallel as a backup if the content script isn't present on the page.
   const clearExtensionStorage = async () => {
     return new Promise((resolve) => {
+      const TIMEOUT_MS = 1500;
+      let settled = false;
+      const finish = (reason) => {
+        if (settled) return;
+        settled = true;
+        window.removeEventListener("message", onResponse);
+        console.log("clearExtensionStorage resolved:", reason);
+        resolve();
+      };
+
+      const onResponse = (event) => {
+        if (event.source !== window) return;
+        const data = event.data;
+        if (!data || data.type !== "SHOPI_EXT_RESPONSE") return;
+        const msg = data?.response?.message;
+        if (msg === "Storage cleared successfully" || data?.response?.ok) {
+          finish("content-script bridge");
+        }
+      };
+      window.addEventListener("message", onResponse);
+
+      // Primary: content-script bridge (no extension ID needed)
+      window.postMessage(
+        { type: "SHOPI_CLEAR_STORAGE", payload: { type: "CLEAR_STORAGE" } },
+        "*"
+      );
+
+      // Backup: external messaging in case content script isn't injected
       const FIREFOX_EXT_ID = "{a8f4c9e2-7b3d-4e1a-9c5f-2d8b6e4a1c7f}";
       const CHROME_EXT_ID =
         import.meta.env.VITE_EXTENSION_ID || "kihghmelfnfgbkbeiebkgconkmgboilg";
 
-      const message = { type: "CLEAR_STORAGE" };
-
-      // Chrome-style messaging available?
-      if (window.chrome?.runtime?.sendMessage) {
-        // Try Firefox first
+      const tryExternal = (extId, label) => {
+        if (!window.chrome?.runtime?.sendMessage) return;
         try {
-          window.chrome.runtime.sendMessage(FIREFOX_EXT_ID, message, () => {
-            if (chrome.runtime.lastError) {
-              // Try Chrome if Firefox failed
-              window.chrome.runtime.sendMessage(CHROME_EXT_ID, message, () => {
-                if (chrome.runtime.lastError) {
-                  console.log("No compatible extension found");
-                } else {
-                  console.log("Chrome extension storage cleared");
-                }
-                resolve(); // <-- still resolve so logout continues
-              });
-            } else {
-              console.log("Firefox extension storage cleared");
-              resolve();
+          window.chrome.runtime.sendMessage(
+            extId,
+            { type: "CLEAR_STORAGE" },
+            (response) => {
+              if (chrome.runtime.lastError) {
+                console.log(
+                  `External clear failed (${label}):`,
+                  chrome.runtime.lastError.message
+                );
+                return;
+              }
+              if (response?.ok) finish(`external messaging (${label})`);
             }
-          });
+          );
         } catch (err) {
-          console.log("Error messaging Firefox extension, trying Chrome...");
-          window.chrome.runtime.sendMessage(CHROME_EXT_ID, message, () => {
-            console.log("Chrome extension storage cleared");
-            resolve();
-          });
+          console.log(`External clear threw (${label}):`, err.message);
         }
-      } else {
-        // Fallback (Firefox via window.postMessage)
-        window.postMessage(
-          { type: "SHOPI_CLEAR_STORAGE", payload: message },
-          "*"
-        );
-        console.log("Sent clear storage via postMessage");
-        // There's no callback here so just resolve immediately
-        resolve();
-      }
+      };
+      tryExternal(FIREFOX_EXT_ID, "firefox");
+      tryExternal(CHROME_EXT_ID, "chrome");
+
+      // Hard timeout so logout never blocks indefinitely if no extension is
+      // installed at all. Subsequent focus/storage events on the web app will
+      // self-heal via the content script if needed.
+      setTimeout(() => finish("timeout"), TIMEOUT_MS);
     });
   };
 
@@ -115,8 +137,41 @@ const NavBar = ({ isLanding }) => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
-  const handleLinkClick = () => {
+  const handleLogoClick = (e) => {
+    e.preventDefault();
     setIsMobileMenuOpen(false);
+    if (location.pathname === "/") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    navigate("/");
+  };
+
+  const scrollToSectionWhenReady = (sectionId) => {
+    let attempts = 0;
+    const maxAttempts = 45;
+    const tick = () => {
+      const el = document.getElementById(sectionId);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth" });
+        return;
+      }
+      if (attempts++ < maxAttempts) {
+        requestAnimationFrame(tick);
+      }
+    };
+    requestAnimationFrame(tick);
+  };
+
+  const handleLandingSectionClick = (sectionId) => (e) => {
+    e.preventDefault();
+    setIsMobileMenuOpen(false);
+    if (location.pathname === "/") {
+      document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
+    navigate(`/#${sectionId}`);
+    scrollToSectionWhenReady(sectionId);
   };
 
   // --- Render ---
@@ -145,9 +200,9 @@ const NavBar = ({ isLanding }) => {
           <div className="relative flex items-center w-full h-full">
             <motion.a
               id="logo_text"
-              href={isLanding ? "#" : ""}
+              href="/"
               className="text-xl sm:text-2xl font-bold flex items-center gap-2 absolute"
-              onClick={handleLinkClick}
+              onClick={handleLogoClick}
               transition={{ duration: 0.8, ease: "easeInOut" }}
             >
               <AnimatePresence>
@@ -181,17 +236,17 @@ const NavBar = ({ isLanding }) => {
                       className="flex flex-1 justify-center gap-5 lg:gap-10 items-center whitespace-nowrap"
                     >
                       <a
-                        href="#features"
+                        href="/#features"
                         className="text-base lg:text-lg flex gap-1 items-center special_links"
-                        onClick={handleLinkClick}
+                        onClick={handleLandingSectionClick("features")}
                       >
                         <HeartPlus className="w-4 h-4 lg:w-5 lg:h-5" />
                         Save
                       </a>
                       <a
-                        href="#how-it-works"
+                        href="/#how-it-works"
                         className="text-base lg:text-lg flex gap-1 items-center special_links"
-                        onClick={handleLinkClick}
+                        onClick={handleLandingSectionClick("how-it-works")}
                       >
                         <Blocks className="w-4 h-4 lg:w-5 lg:h-5" />
                         Organize
@@ -346,17 +401,17 @@ const NavBar = ({ isLanding }) => {
               {isLanding && (
                 <>
                   <a
-                    href="#features"
+                    href="/#features"
                     className="text-lg flex gap-3 items-center p-3 rounded-lg hover:bg-gray-100 transition-colors"
-                    onClick={handleLinkClick}
+                    onClick={handleLandingSectionClick("features")}
                   >
                     <Cog className="w-5 h-5" />
                     Key Features
                   </a>
                   <a
-                    href="#how-it-works"
+                    href="/#how-it-works"
                     className="text-lg flex gap-3 items-center p-3 rounded-lg hover:bg-gray-100 transition-colors"
-                    onClick={handleLinkClick}
+                    onClick={handleLandingSectionClick("how-it-works")}
                   >
                     <Blocks className="w-5 h-5" />
                     How it works
