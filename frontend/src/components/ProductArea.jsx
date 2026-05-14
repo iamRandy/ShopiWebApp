@@ -27,7 +27,7 @@ const ProductArea = ({ products = [], cartId, hideSidebar }) => {
 
   if (products.length === 0) {
     return (
-      <div className="relative p-3 flex flex-col justify-center items-center h-full">
+      <div className="relative p-3 sm:p-4 flex flex-col justify-center items-center min-h-[12rem]">
         <div className="text-gray-500">
           No products saved yet. Use the extension to save some products!
         </div>
@@ -44,13 +44,13 @@ const ProductArea = ({ products = [], cartId, hideSidebar }) => {
   return (
     <>
       <div>
-        <div className="rounded-lg h-[630px] overflow-y-auto scrollbar-minimal">
+        <div className="max-h-[calc(100dvh-11rem)] min-h-[240px] overflow-y-auto rounded-lg scrollbar-minimal md:max-h-none md:h-[630px]">
           <div
-            className={`grid ${
+            className={`grid gap-3 sm:gap-5 ${
               hideSidebar
-                ? "grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
-                : "grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
-            } gap-5`}
+                ? "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+                : "grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4"
+            }`}
           >
             {/* Products are now stored directly in carts */}
             {products.map((product) => (

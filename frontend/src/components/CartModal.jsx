@@ -164,106 +164,126 @@ const CartModal = ({
 
   return (
     <div
-      className="fixed inset-0 bg-[rgba(0,0,0,0.8)] flex flex-row justify-center items-center gap-10 z-50 p-4"
+      className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-black/80 p-0 pb-[env(safe-area-inset-bottom,0px)] sm:items-center sm:p-4"
       onClick={handleBackdropClick}
     >
-      <div className="col-span-1 flex flex-col gap-4 items-center justify-center w-[300px] min-h-[100px]">
-        <p className="text-2xl font-bold">PREVIEW</p>
-        <div
-          style={{ backgroundColor: "#FFBC42" }}
-          className="rounded-3xl rounded-l-none w-full max-h-[70vh] overflow-y-auto shadow-2xl p-4 flex flex-row items-center justify-end gap-3"
-        >
-          <p className="text-2xl font-bold">
-            {getIconByName(cartIcon, { className: "w-[28px] h-[28px]" })}
+      <div
+        className="flex w-full max-w-4xl flex-col gap-3 p-3 sm:max-h-[min(90vh,100dvh-1rem)] sm:flex-row sm:items-start sm:justify-center sm:gap-6 md:gap-8"
+      >
+        {/* Preview — compact tab on desktop; full-width strip on mobile */}
+        <div className="flex w-full shrink-0 flex-col items-center gap-2 sm:w-auto md:min-w-[260px] md:max-w-[300px]">
+          <p className="text-sm font-bold tracking-wide text-white/90 sm:text-base md:text-lg">
+            PREVIEW
           </p>
-          <p className="text-2xl font-bold text-nowrap">
-            {cartName || "Unnamed Cart"}
-          </p>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[70vh] overflow-y-auto shadow-2xl col-span-5">
-        {/* Header */}
-        <div className="relative p-4">
-          {/* X button in top left */}
-          <button
-            onClick={onClose}
-            className="absolute top-3 left-3 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full w-8 h-8 flex items-center justify-center transition-colors duration-200"
-            title="Close"
+          <div
+            style={{ backgroundColor: "#FFBC42" }}
+            className="flex h-auto w-full max-w-md shrink-0 flex-row items-center justify-end gap-2 rounded-2xl rounded-l-none p-3 shadow-2xl sm:max-w-none sm:p-4"
           >
-            <X className="w-[28px] h-[28px]" />
-          </button>
-
-          <div className="flex justify-center items-center">
-            <h2 className="text-2xl font-bold text-black">
-              {isEditMode ? "Edit Cart" : "Create a New Cart"}
-            </h2>
+            <span className="text-xl font-bold sm:text-2xl">
+              {getIconByName(cartIcon, {
+                className: "h-7 w-7 sm:h-7 sm:w-7 md:h-7 md:w-7",
+              })}
+            </span>
+            <p className="min-w-0 flex-1 truncate text-right text-lg font-bold sm:text-xl md:text-2xl">
+              {cartName || "Unnamed Cart"}
+            </p>
           </div>
         </div>
 
-        {/* Content */}
-        <div className="p-6 text-black">
-          <div className="flex flex-col md:flex-row gap-4 relative">
-            {status !== null && (
-              <div className="absolute w-full flex justify-center">
-                <p className="text-[#FFBC42] italic">{status}</p>
-              </div>
-            )}
-            {/* Cart Info */}
-            <form onSubmit={handleSubmit} className="flex-1">
-              <h3 className="text-lg font-semibold">Cart Name</h3>
-              <input
-                type="text"
-                name="cartName"
-                placeholder="Cart Name"
-                className="bg-white w-full p-2 border border-gray-300 rounded-md"
-                value={cartName}
-                onChange={(e) => setCartName(e.target.value)}
-                maxLength={20}
-              />
-              <div className="text-xs text-gray-500 text-right">
-                {cartName.length}/20
-              </div>
-              <div>
-                <h4 className="text-lg font-semibold mb-2">Choose an Icon</h4>
-                <div className="grid grid-cols-5 gap-2">
-                  {ICON_OPTIONS.map((iconName) => (
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:max-h-[min(90vh,100dvh-1rem)] sm:rounded-3xl">
+          {/* Header */}
+          <div className="relative shrink-0 border-b border-stone-100 p-3 pt-12 sm:p-4 sm:pt-14">
+            <button
+              type="button"
+              onClick={onClose}
+              className="absolute left-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors hover:bg-gray-200 sm:left-4 sm:top-4"
+              title="Close"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="flex justify-center px-2">
+              <h2 className="text-center text-xl font-bold text-black sm:text-2xl">
+                {isEditMode ? "Edit Cart" : "Create a New Cart"}
+              </h2>
+            </div>
+          </div>
+
+          <div className="scrollbar-minimal min-h-0 flex-1 overflow-y-auto p-4 text-black sm:p-6">
+            <div className="relative flex flex-col gap-4">
+              {status !== null && (
+                <div className="flex justify-center">
+                  <p className="text-center text-sm italic text-[#FFBC42] sm:text-base">
+                    {status}
+                  </p>
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                <div>
+                  <h3 className="mb-1 text-base font-semibold sm:text-lg">
+                    Cart Name
+                  </h3>
+                  <input
+                    type="text"
+                    name="cartName"
+                    placeholder="Cart Name"
+                    className="w-full rounded-md border border-gray-300 bg-white p-3 text-base outline-none ring-offset-2 focus:ring-2 focus:ring-[#FFBC42]/60"
+                    value={cartName}
+                    onChange={(e) => setCartName(e.target.value)}
+                    maxLength={20}
+                    autoComplete="off"
+                  />
+                  <div className="mt-1 text-right text-xs text-gray-500">
+                    {cartName.length}/20
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="mb-2 text-base font-semibold sm:text-lg">
+                    Choose an Icon
+                  </h4>
+                  <div className="grid grid-cols-4 gap-2 sm:grid-cols-5">
+                    {ICON_OPTIONS.map((iconName) => (
+                      <button
+                        type="button"
+                        key={iconName}
+                        className={`flex min-h-[44px] min-w-0 items-center justify-center rounded-lg border p-2 transition-colors active:scale-[0.98] ${
+                          cartIcon === iconName
+                            ? "border-blue-500 bg-blue-100"
+                            : "border-gray-200 bg-white hover:bg-stone-50"
+                        }`}
+                        onClick={() => setCartIcon(iconName)}
+                        aria-label={iconName}
+                      >
+                        {getIconByName(iconName, {
+                          className: "h-6 w-6 sm:h-6 sm:w-6",
+                        })}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-3">
+                  <button
+                    type="submit"
+                    className="min-h-[48px] flex-1 rounded-md bg-[#FFBC42] px-4 py-3 text-base font-medium text-white hover:bg-[#f7ad3e] sm:flex-none sm:px-6"
+                  >
+                    {isEditMode ? "Save Changes" : "Create Cart"}
+                  </button>
+
+                  {isEditMode && (
                     <button
                       type="button"
-                      key={iconName}
-                      className={`p-2 rounded-lg border ${
-                        cartIcon === iconName
-                          ? "border-blue-500 bg-blue-100"
-                          : "border-gray-200 bg-white"
-                      } flex items-center justify-center`}
-                      onClick={() => setCartIcon(iconName)}
-                      aria-label={iconName}
+                      onClick={handleDeleteCart}
+                      className="min-h-[48px] flex-1 rounded-md bg-red-500 px-4 py-3 text-base font-medium text-white hover:bg-red-600 sm:flex-none sm:px-6"
                     >
-                      {getIconByName(iconName, { className: "w-6 h-6" })}
+                      Delete Cart
                     </button>
-                  ))}
+                  )}
                 </div>
-              </div>
-
-              <div className="flex gap-2 mt-4">
-                <button
-                  type="submit"
-                  className="bg-[#FFBC42] hover:bg-[#f7ad3e] text-white px-4 py-2 rounded-md"
-                >
-                  {isEditMode ? "Save Changes" : "Create Cart"}
-                </button>
-
-                {isEditMode && (
-                  <button
-                    type="button"
-                    onClick={handleDeleteCart}
-                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md"
-                  >
-                    Delete Cart
-                  </button>
-                )}
-              </div>
-            </form>
+              </form>
+            </div>
           </div>
         </div>
       </div>

@@ -180,10 +180,9 @@ const NavBar = ({ isLanding }) => {
     <>
       <nav
         className={`
-          ${isLanding ? "top-3" : "top-0"}
-          text-black fixed left-0 right-0 ${
-            isMobileMenuOpen ? "z-30" : "z-50"
-          } h-fit mx-4
+          left-0 right-0 text-black fixed ${
+            isLanding ? "top-3 mx-4" : "top-0 mx-0 w-full"
+          } ${isMobileMenuOpen ? "z-30" : "z-50"} h-fit
         `}
         onHoverStart={() => setIsHovering(true)}
         onHoverEnd={() => setIsHovering(false)}
@@ -192,12 +191,12 @@ const NavBar = ({ isLanding }) => {
         <div
           className={`${
             isLanding
-              ? "rounded-full border border-stone-500/20 backdrop-blur-lg"
-              : ""
-          } relative flex items-center justify-between bg-white/10 shadow-lg gap-4 sm:gap-10 p-4 h-16
+              ? "rounded-full border border-stone-500/20 backdrop-blur-lg bg-white/10 shadow-lg"
+              : "border-b border-stone-200/90 bg-white/95 shadow-sm backdrop-blur-md"
+          } relative flex items-center justify-between gap-3 sm:gap-6 md:gap-10 px-4 sm:px-5 md:px-6 py-3 min-h-16
         `}>
           {/* Left side: Logo */}
-          <div className="relative flex items-center w-full h-full">
+          <div className="relative flex flex-1 min-w-0 items-center h-full">
             <motion.a
               id="logo_text"
               href="/"
@@ -339,7 +338,7 @@ const NavBar = ({ isLanding }) => {
           {isMobile && (
             <motion.button
               onClick={handleMobileMenuToggle}
-              className="p-2 rounded-lg hover:bg-white/20 transition-colors"
+              className="shrink-0 p-2 rounded-lg hover:bg-stone-100/80 transition-colors"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -375,7 +374,7 @@ const NavBar = ({ isLanding }) => {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed top-0 right-0 z-50 w-80 h-full bg-white/95 backdrop-blur-lg shadow-2xl p-6"
+            className="fixed top-0 right-0 z-50 h-full w-full max-w-sm bg-white/95 backdrop-blur-lg shadow-2xl p-6 pb-10"
           >
             {/* Mobile Menu Header */}
             <div className="flex items-center justify-between mb-8">

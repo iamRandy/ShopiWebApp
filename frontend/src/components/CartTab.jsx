@@ -19,9 +19,9 @@ const CartTab = ({
           id={cartId}
           onClick={() => handleCartSelect(cartId)}
           style={{ borderColor: "#57382a" }}
-          className="w-full flex justify-center items-center gap-2
-                    top-0 left-0 h-[60px] bg-transparent rounded-r-lg -ml-9 px-4
-                    border-2 border-dotted border-l-0 cursor-pointer"
+          className="flex h-[52px] w-full min-w-[5.5rem] shrink-0 cursor-pointer items-center
+                    justify-center gap-2 rounded-xl border-2 border-dotted border-l-0
+                    bg-transparent px-3 md:-ml-9 md:h-[60px] md:min-w-0 md:rounded-r-lg md:rounded-l-none md:px-4"
         >
           <motion.div
             initial={{ rotate: 0 }}
@@ -41,16 +41,18 @@ const CartTab = ({
           whileHover={{ translateX: -5 }}
           transition={{ duration: 0.2, ease: "easeInOut" }}
           onClick={() => handleCartSelect(cartId)}
-          className={`w-full border-r-4 hover:border-r-8 justify-end flex items-center gap-2 top-0 
-                    left-0 h-[60px] rounded-r-lg -ml-9 pl-4 pr-8 cursor-pointer text-black relative group
+          className={`group relative flex h-[52px] w-full min-w-[10.5rem] shrink-0 cursor-pointer
+                    items-center justify-end gap-2 rounded-xl border-r-4 pl-3 pr-6 text-black
+                    hover:border-r-[6px] md:h-[60px] md:min-w-0 md:-ml-9 md:rounded-r-lg md:rounded-l-none
+                    md:pl-4 md:pr-8 md:hover:border-r-8
                     ${
                       selected
-                        ? "opacity-100 border-[#FFBC42]"
-                        : "opacity-25 border-black"
+                        ? "border-[#FFBC42] opacity-100"
+                        : "border-black opacity-25"
                     }`}
         >
           <div className="flex-shrink-0">{icon}</div>
-          <span className="text-xl font-bold truncate flex-1 mr-2">
+          <span className="mr-2 flex-1 truncate text-sm font-semibold md:text-xl md:font-bold">
             {title}
           </span>
 
@@ -60,12 +62,13 @@ const CartTab = ({
               e.stopPropagation();
               handleCartEdit(cartId);
             }}
-            className={`absolute right-2 top-1/2 transform -translate-y-1/2 transition-opacity duration-200
-                        bg-gray-100 hover:bg-gray-200 rounded-full p-1 text-gray-600 hover:text-gray-800 flex-shrink-0
+            className={`absolute right-2 top-1/2 flex -translate-y-1/2 transform flex-shrink-0
+                        rounded-full bg-gray-100 p-1 text-gray-600 transition-opacity duration-200
+                        hover:bg-gray-200 hover:text-gray-800 max-md:opacity-100
                         ${
                           selected
                             ? "opacity-100"
-                            : "opacity-0 group-hover:opacity-100"
+                            : "opacity-0 md:group-hover:opacity-100"
                         }`}
             title="Edit cart"
           >

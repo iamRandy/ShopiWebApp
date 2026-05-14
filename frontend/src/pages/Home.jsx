@@ -136,12 +136,12 @@ const Home = () => {
   };
 
   return (
-    <>
-      <div className="h-full overflow-hidden">
-        <Navbar />
+    <div className="min-h-[100dvh] flex flex-col overflow-x-hidden bg-[#f8f6f0]">
+      <Navbar />
+      <main className="flex-1 min-h-0 w-full min-w-0">
         <Dashboard />
-      </div>
-    </>
+      </main>
+    </div>
   );
 };
 

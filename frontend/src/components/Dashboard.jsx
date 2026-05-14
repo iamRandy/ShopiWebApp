@@ -68,7 +68,7 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="p-9 mt-16 relative">
+    <div className="relative px-3 pt-[4.5rem] pb-8 sm:px-4 md:px-6 md:pt-20 md:pb-10 lg:px-9">
       <div className="relative text-black">
         <div className="absolute right-0 top-0 flex items-center justify-start h-[60px]">
           <motion.button
@@ -81,33 +81,36 @@ const Dashboard = () => {
           </motion.button>
         </div>
 
-        <div className="grid grid-cols-6 pb-8 text-black">
-          {!hideSidebar && <div className="col-span-1"></div>}
-          <div className="col-span-5 flex flex-col items-start gap-2">
-            <p className="tracking-wide text-4xl whitespace-nowrap font-bold">
+        <div className="mb-6 md:mb-8 text-black md:grid md:grid-cols-6 md:gap-4">
+          {!hideSidebar && <div className="hidden md:block md:col-span-1" aria-hidden />}
+          <div className="flex min-w-0 flex-col items-start gap-1 md:col-span-5">
+            <p className="tracking-wide text-2xl font-bold sm:text-3xl md:text-4xl">
               Your Carts
             </p>
-            {/* TODO: Implement description for each cart */}
-            <p className="text-stone-400">See everything in one place.</p>
+            <p className="text-sm text-stone-500 sm:text-base md:text-stone-400">
+              See everything in one place.
+            </p>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-6">
-        {!hideSidebar && (
-          <div className="flex flex-col col-span-1 gap-2">
-            {!loading && (
-              <CartArea
-                carts={carts}
-                selectedCart={selectedCart}
-                cartSelected={cartSelected}
-              />
-            )}
+      <div className="flex flex-col gap-5 md:grid md:grid-cols-6 md:gap-6 lg:gap-8">
+        {!hideSidebar && !loading && (
+          <div className="flex flex-row gap-2 overflow-x-auto pb-1 scrollbar-minimal md:col-span-1 md:flex-col md:overflow-x-visible md:overflow-y-visible md:pb-0">
+            <CartArea
+              carts={carts}
+              selectedCart={selectedCart}
+              cartSelected={cartSelected}
+            />
           </div>
         )}
-        <div className={hideSidebar ? "col-span-6" : "col-span-5"}>
+        <div
+          className={
+            hideSidebar || loading ? "min-w-0 md:col-span-6" : "min-w-0 md:col-span-5"
+          }
+        >
           {loading ? (
-            <div className="flex justify-center items-center h-64 text-lg text-black">
+            <div className="flex h-48 items-center justify-center text-base text-black sm:h-64 sm:text-lg">
               Loading products...
             </div>
           ) : (
