@@ -38,6 +38,23 @@ const Dashboard = () => {
   }, []);
 
   // Swap between carts and their products
+  const handleProductUpdated = (productId, updates) => {
+    const updateProducts = (products) =>
+      products.map((p) => (p.id === productId ? { ...p, ...updates } : p));
+
+    setSelectedCartProducts((prev) => updateProducts(prev));
+    setCarts((prev) =>
+      prev.map((cart) =>
+        cart.id === selectedCart
+          ? { ...cart, products: updateProducts(cart.products || []) }
+          : cart
+      )
+    );
+    setSelectedCartObj((prev) =>
+      prev ? { ...prev, products: updateProducts(prev.products || []) } : prev
+    );
+  };
+
   const cartSelected = async (cartId) => {
     setSelectedCart(cartId);
     try {
@@ -119,6 +136,7 @@ const Dashboard = () => {
                 products={selectedCartProducts}
                 cartId={selectedCart}
                 hideSidebar={hideSidebar}
+                onProductUpdated={handleProductUpdated}
               />
             )
           )}

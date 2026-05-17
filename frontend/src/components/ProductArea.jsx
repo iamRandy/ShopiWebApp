@@ -1,12 +1,9 @@
-import { AnimatePresence, motion } from "framer-motion";
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import ProductCard from "./ProductCard";
 import ProductModal from "./ProductModal";
-import { authenticatedFetch } from "../utils/api";
-import { useNavigate } from "react-router-dom";
+import { getProductDisplayName } from "../utils/product";
 
-const ProductArea = ({ products = [], cartId, hideSidebar }) => {
-  const navigate = useNavigate();
+const ProductArea = ({ products = [], cartId, hideSidebar, onProductUpdated }) => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -15,9 +12,34 @@ const ProductArea = ({ products = [], cartId, hideSidebar }) => {
     window.location.reload();
   };
 
-  const handleProductClick = (productData) => {
-    setSelectedProduct(productData);
+  const handleProductClick = (product) => {
+    setSelectedProduct({
+      productName: getProductDisplayName(product),
+      productImg:
+        product.image || "https://via.placeholder.com/300x300?text=No+Image",
+      productPrice: product.price
+        ? `${product.currency || "$"}${product.price}`
+        : "Price not available",
+      productId: product.id,
+      productUrl: product.url,
+      productDescription: product.description,
+      productNickname: product.nickname,
+      originalTitle: product.title || "Unknown Product",
+    });
     setIsModalOpen(true);
+  };
+
+  const handleProductUpdated = (productId, updates) => {
+    onProductUpdated?.(productId, updates);
+    setSelectedProduct((prev) => {
+      if (!prev || prev.productId !== productId) return prev;
+      const nickname = updates.nickname?.trim() || "";
+      return {
+        ...prev,
+        productNickname: nickname || undefined,
+        productName: nickname || prev.originalTitle,
+      };
+    });
   };
 
   const handleCloseModal = () => {
@@ -56,7 +78,7 @@ const ProductArea = ({ products = [], cartId, hideSidebar }) => {
             {products.map((product) => (
               <ProductCard
                 key={product.id}
-                productName={product.title || "Unknown Product"}
+                productName={getProductDisplayName(product)}
                 productImg={
                   product.image ||
                   "https://via.placeholder.com/300x300?text=No+Image"
@@ -71,7 +93,7 @@ const ProductArea = ({ products = [], cartId, hideSidebar }) => {
                 productDescription={product.description}
                 cartId={cartId}
                 onDelete={handleProductDelete}
-                onProductClick={handleProductClick}
+                onProductClick={() => handleProductClick(product)}
                 hostname={product.hostname}
               />
             ))}
@@ -88,8 +110,11 @@ const ProductArea = ({ products = [], cartId, hideSidebar }) => {
         productId={selectedProduct?.productId}
         productUrl={selectedProduct?.productUrl}
         productDescription={selectedProduct?.productDescription}
+        productNickname={selectedProduct?.productNickname}
+        originalTitle={selectedProduct?.originalTitle}
         cartId={cartId}
         onDelete={handleProductDelete}
+        onProductUpdated={handleProductUpdated}
       />
     </>
   );
