@@ -1,109 +1,185 @@
-import { AnimatePresence, motion, useInView } from "framer-motion";
-import { useState, useRef, useEffect } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { Sparkles } from "lucide-react";
+import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
+const QUOTES = [
+  {
+    text: "Wow, it's so easy to use!",
+    author: "Happy shopper",
+    rotate: "-rotate-6",
+    position: "left-[4%] top-[0%] md:left-[7%] md:top-[18%]",
+    hideOnMobile: false,
+  },
+  {
+    text: "10/10 would recommend.",
+    author: "Cart collector",
+    rotate: "rotate-3",
+    position: "right-[6%] top-[0%] md:right-[7%] md:top-[20%]",
+    hideOnMobile: false,
+  },
+  {
+    text: "Pssst… it's totally free!",
+    author: "Your wallet",
+    rotate: "-rotate-2",
+    position: "left-[10%] bottom-[0%] md:left-[14%] md:bottom-[32%]",
+    hideOnMobile: false,
+  },
+  {
+    text: "I finally stopped losing links.",
+    author: "Tab hoarder",
+    rotate: "rotate-6",
+    position: "right-[8%] bottom-[0%] md:right-[10%] md:bottom-[28%]",
+    hideOnMobile: false,
+  },
+];
+
+function QuoteBubble({ quote, opacity, scale, y }) {
+  return (
+    <motion.div
+      style={{ opacity, scale, y }}
+      className={`absolute max-w-[11rem] sm:max-w-[13rem] ${quote.position} ${quote.rotate} z-20 ${quote.hideOnMobile ? "hidden sm:block" : ""}`}
+    >
+      <div className="rounded-2xl border-2 border-black bg-white px-4 py-3 shadow-[5px_5px_0_#FFBC42]">
+        <p className="text-sm font-semibold leading-snug text-black">
+          &ldquo;{quote.text}&rdquo;
+        </p>
+        <p className="mt-1 text-xs font-medium text-[#b45309]">— {quote.author}</p>
+      </div>
+      <div
+        className={`absolute -bottom-2 h-4 w-4 rotate-45 border-b-2 border-r-2 border-black bg-white ${
+          quote.position.includes("right") ? "right-6" : "left-6"
+        }`}
+        aria-hidden
+      />
+    </motion.div>
+  );
+}
+
 export default function LandingEnd() {
-    const navigate = useNavigate();
-    const ref = useRef(null);
-    const isInView = useInView(ref, { once: true, amount: 0.5 });
+  const navigate = useNavigate();
+  const sectionRef = useRef(null);
 
-    const [showSecond, setShowSecond] = useState(false);
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start end", "center center"],
+  });
 
-    useEffect(() => {
-        if (!isInView) return;
+  const headlineOpacity = useTransform(scrollYProgress, [0, 0.35, 0.55], [0, 0.5, 1]);
+  const headlineY = useTransform(scrollYProgress, [0, 0.35, 0.55], [40, 20, 0]);
+  const subOpacity = useTransform(scrollYProgress, [0.2, 0.45, 0.65], [0, 0.4, 1]);
+  const buttonScale = useTransform(scrollYProgress, [0.35, 0.6, 0.8], [0.85, 0.95, 1]);
+  const buttonOpacity = useTransform(scrollYProgress, [0.3, 0.55, 0.75], [0, 0.6, 1]);
+  const quoteReveal = useTransform(scrollYProgress, [0.15, 0.55], [0, 1]);
+  const quoteScale = useTransform(quoteReveal, [0, 1], [0.9, 1]);
+  const quoteY = useTransform(quoteReveal, [0, 1], [24, 0]);
+  const aveeOpacity = useTransform(scrollYProgress, [0.4, 0.75], [0, 1]);
+  const aveeY = useTransform(scrollYProgress, [0.4, 0.75], [36, 0]);
 
-        const timer = setTimeout(() => {
-            setShowSecond(true);
-        }, 2500);
+  return (
+    <section
+      ref={sectionRef}
+      id="landing-end"
+      className="relative min-h-[110vh] overflow-hidden pb-32 pt-16 md:min-h-screen md:pb-40"
+    >
+      <div
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_40%,rgba(255,188,66,0.35),transparent_70%)]"
+        aria-hidden
+      />
+      <motion.div
+        className="pointer-events-none absolute -left-20 top-1/4 h-56 w-56 rounded-full bg-[#FFBC42]/20 blur-3xl"
+        animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0.7, 0.4] }}
+        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+        aria-hidden
+      />
+      <motion.div
+        className="pointer-events-none absolute -right-16 bottom-1/4 h-64 w-64 rounded-full bg-[#FFBC42]/15 blur-3xl"
+        animate={{ scale: [1.1, 1, 1.1], opacity: [0.3, 0.55, 0.3] }}
+        transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+        aria-hidden
+      />
 
-        return () => clearTimeout(timer);
-    }, [isInView]);
+      <div className="relative mx-auto flex min-h-[85vh] max-w-5xl flex-col items-center justify-center px-5">
+        {QUOTES.map((quote) => (
+          <QuoteBubble
+            key={quote.text}
+            quote={quote}
+            opacity={quoteReveal}
+            scale={quoteScale}
+            y={quoteY}
+          />
+        ))}
 
-    return (
-        <section ref={ref} id="landing-end" className=" md:h-screen flex justify-center items-center relative mb-48">
-            <div className="flex flex-col items-center justify-center text-black p-5 h-100">
-                <h2 className="text-2xl font-bold text-center mb-20">
-                    <AnimatePresence mode="wait">
-                        {!showSecond && (
-                            <motion.span
-                                key="first"
-                                initial={{ opacity: 0, y: -20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: 20 }}
-                                transition={{ duration: 0.4 }}
-                                className="inline-block"
-                            >
-                                Still thinking about it?
-                            </motion.span>
-                        )}
+        <motion.div
+          className="relative z-30 flex max-w-lg flex-col items-center text-center"
+          style={{ opacity: headlineOpacity, y: headlineY }}
+        >
+          <motion.div
+            className="mb-4 inline-flex items-center gap-2 rounded-full border-2 border-black bg-white/90 px-4 py-1.5 text-sm font-semibold shadow-[3px_3px_0_#000]"
+            style={{ opacity: subOpacity }}
+          >
+            <Sparkles className="h-4 w-4 text-[#FFBC42]" strokeWidth={2.5} />
+            Free to start · No credit card
+          </motion.div>
 
-                        {showSecond && (
-                            <motion.span
-                                key="second"
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ duration: 0.4 }}
-                                className="inline-block"
-                            >
-                                Try Chaos for yourself!
-                            </motion.span>
-                        )}
-                    </AnimatePresence>
-                </h2>
+          <h2 className="text-3xl font-extrabold leading-tight tracking-tight text-black sm:text-4xl md:text-5xl">
+            Still juggling tabs?
+            <br />
+            <span className="underline decoration-[#FFBC42] decoration-4 underline-offset-4">
+              Let&apos;s fix that.
+            </span>
+          </h2>
 
-                <div className="w-[14rem] h-[14rem] rounded-full bg-[var(--primary-btncolor-shadow)]
-                z-30">
-                    <motion.button 
-                    initial={{ x: 0, y: 0 }}
-                    whileInView={{ x: 10, y: -10 }}
-                    whileHover={{ x: 14, y: -14 }}
-                    whileTap={{ x: 0, y: 0, transition: { ease: "easeIn", duration: .05 } }}
-                    style={{borderRadius: "50%", fontSize: "2em", color: "white", fontWeight: "bold"}} 
-                    onClick={() => navigate("/login")}
-                    className="popup_button w-full h-full border-none cursor-pointer 
-                    bg-[var(--primary-btncolor)]">
-                        START
-                    </motion.button>
-                </div>
-            </div>
+          <motion.p
+            className="mt-4 text-base text-primary-dark sm:text-lg"
+            style={{ opacity: subOpacity }}
+          >
+            One click to save anything. One place to find it later. Your future
+            self will thank you.
+          </motion.p>
+        </motion.div>
 
-            <div style={{ fontWeight: "bolder" }}>
-                <motion.div
-                initial={{ x: -120 }} 
-                whileInView={{ x: 70 }}
-                transition={{ duration: .8, ease: "backInOut" }}
-                className="absolute left-0 top-80 -rotate-12 md:bottom-28 hidden md:inline">
-                    <small>
-                        - Wow it's so easy to use!
-                    </small>
-                </motion.div>
+        <motion.div
+          className="relative z-40 mt-12"
+          style={{ opacity: buttonOpacity, scale: buttonScale }}
+        >
+          <div className="h-[14rem] w-[14rem] rounded-full bg-[var(--primary-btncolor-shadow)]">
+            <motion.button
+              type="button"
+              initial={{ x: 0, y: 0 }}
+              whileInView={{ x: 10, y: -10 }}
+              whileHover={{ x: 14, y: -14 }}
+              whileTap={{ x: 0, y: 0, transition: { ease: "easeIn", duration: 0.05 } }}
+              style={{
+                borderRadius: "50%",
+                fontSize: "2em",
+                color: "white",
+                fontWeight: "bold",
+              }}
+              onClick={() => navigate("/login")}
+              className="popup_button h-full w-full cursor-pointer border-none bg-[var(--primary-btncolor)]"
+            >
+              START
+            </motion.button>
+          </div>
+        </motion.div>
 
-                <motion.div
-                initial={{ x: -120 }} 
-                whileInView={{ x: 30 }}
-                transition={{ duration: .8, ease: "backInOut" }}
-                className="absolute left-0 top-3/5  -rotate-3 md:bottom-28 hidden md:inline">
-                    <small>
-                        - 10/10 would recommend.
-                    </small>
-                </motion.div>
-                        
-                <motion.div
-                initial={{ x: -120 }} 
-                whileInView={{ x: 20 }}
-                transition={{ duration: .8, ease: "backInOut" }}
-                className="absolute left-0 -bottom-5 rotate-12 md:bottom-28">
-                    <small>
-                        - pssstttt, did we mention that it's totally free!
-                    </small>
-                </motion.div>
-            </div>
+        <motion.p
+          className="relative z-30 mt-8 text-center text-sm font-medium text-stone-600"
+          style={{ opacity: subOpacity }}
+        >
+          Join the shoppers who stopped losing great finds.
+        </motion.p>
+      </div>
 
-            <div 
-            className="w-2/3 h-2/3 absolute -top-44 -right-40 -rotate-90
-            md:w-2/3 md:h-2/3 md:top-0 md:-right-[22rem]">
-                <img src="\images\Avee.png"></img>
-            </div>
-        </section>
-    );
+      <motion.div
+        className="pointer-events-none absolute -bottom-8 right-0 z-10 w-40 sm:w-52 md:-right-4 md:w-64"
+        style={{ opacity: aveeOpacity, y: aveeY }}
+        animate={{ rotate: [0, 4, -2, 0] }}
+        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+      >
+        <img src="/images/Avee.png" alt="" className="w-full drop-shadow-lg" />
+      </motion.div>
+    </section>
+  );
 }

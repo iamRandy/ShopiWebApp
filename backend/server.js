@@ -315,6 +315,62 @@ app.delete("/api/carts/:cartId", verifyToken, async (req, res) => {
 // No longer need separate products array or batch fetching
 // Products are automatically deleted when their cart is deleted
 
+// Update a product nickname in a specific cart
+app.patch("/api/carts/:cartId/products/:productId", verifyToken, async (req, res) => {
+  try {
+    const { cartId, productId } = req.params;
+    const { nickname } = req.body;
+
+    if (!cartId || !productId) {
+      return res.status(400).json({ error: "Cart ID and Product ID are required" });
+    }
+
+    if (nickname !== undefined && typeof nickname !== "string") {
+      return res.status(400).json({ error: "Nickname must be a string" });
+    }
+
+    const trimmedNickname =
+      typeof nickname === "string" ? nickname.trim() : undefined;
+
+    const update =
+      trimmedNickname === undefined
+        ? {}
+        : trimmedNickname
+          ? { $set: { "carts.$[c].products.$[p].nickname": trimmedNickname } }
+          : { $unset: { "carts.$[c].products.$[p].nickname": "" } };
+
+    if (!update.$set && !update.$unset) {
+      return res.status(400).json({ error: "Nickname is required" });
+    }
+
+    const result = await usersCollection.updateOne(
+      { sub: req.user.sub },
+      update,
+      { arrayFilters: [{ "c.id": cartId }, { "p.id": productId }] }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: "Product not found in cart or cart not found" });
+    }
+
+    const user = await usersCollection.findOne(
+      { sub: req.user.sub },
+      { projection: { _id: 0, carts: 1 } }
+    );
+    const cart = user?.carts?.find((c) => c.id === cartId);
+    const product = cart?.products?.find((p) => p.id === productId);
+
+    if (!product) {
+      return res.status(404).json({ error: "Product not found after update" });
+    }
+
+    res.json({ success: true, product });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Failed to update product" });
+  }
+});
+
 // Delete a product from a specific cart
 app.delete("/api/carts/:cartId/products/:productId", verifyToken, async (req, res) => {
   try {
