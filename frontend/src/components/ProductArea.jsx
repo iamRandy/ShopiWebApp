@@ -1,7 +1,10 @@
 import { useState } from "react";
 import ProductCard from "./ProductCard";
 import ProductModal from "./ProductModal";
-import { getProductDisplayName } from "../utils/product";
+import {
+  getProductDisplayName,
+  getFormattedProductPrice,
+} from "../utils/product";
 
 const ProductArea = ({ products = [], cartId, hideSidebar, onProductUpdated }) => {
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -17,9 +20,7 @@ const ProductArea = ({ products = [], cartId, hideSidebar, onProductUpdated }) =
       productName: getProductDisplayName(product),
       productImg:
         product.image || "https://via.placeholder.com/300x300?text=No+Image",
-      productPrice: product.price
-        ? `${product.currency || "$"}${product.price}`
-        : "Price not available",
+      productPrice: getFormattedProductPrice(product),
       productId: product.id,
       productUrl: product.url,
       productDescription: product.description,
@@ -54,7 +55,9 @@ const ProductArea = ({ products = [], cartId, hideSidebar, onProductUpdated }) =
           No products saved yet. Use the extension to save some products!
         </div>
         <a
-          href="http://localhost:5173/"
+          href="https://chromewebstore.google.com/detail/chaos-cart-saver/bjofoogkolnnpldckgedhdeekajhnpcb?authuser=0&hl=en"
+          target="_blank"
+          rel="noopener noreferrer"
           className="text-sm text-blue-500 hover:text-blue-700"
         >
           Need help?
@@ -83,11 +86,7 @@ const ProductArea = ({ products = [], cartId, hideSidebar, onProductUpdated }) =
                   product.image ||
                   "https://via.placeholder.com/300x300?text=No+Image"
                 }
-                productPrice={
-                  product.price
-                    ? `${product.currency || "$"}${product.price}`
-                    : "Price not available"
-                }
+                productPrice={getFormattedProductPrice(product)}
                 productId={product.id}
                 productUrl={product.url}
                 productDescription={product.description}

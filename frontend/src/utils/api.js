@@ -1,4 +1,6 @@
 // Utility function for making authenticated API calls with automatic token refresh
+import { jwtDecode } from "jwt-decode";
+
 let isRefreshing = false;
 let failedQueue = [];
 
@@ -16,10 +18,27 @@ const processQueue = (error, token = null) => {
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-const refreshToken = async () => {
+export const clearAuthStorage = () => {
+  localStorage.removeItem("authToken");
+  localStorage.removeItem("refreshToken");
+  localStorage.removeItem("userSub");
+  localStorage.removeItem("userEmail");
+  localStorage.removeItem("userName");
+};
+
+const isAccessTokenValid = (token) => {
+  const decoded = jwtDecode(token);
+  const currentTime = Math.floor(Date.now() / 1000);
+  return decoded.exp > currentTime;
+};
+
+/** Refresh tokens; optionally redirect to login when refresh fails. */
+export const refreshAccessToken = async ({ redirectOnFailure = true } = {}) => {
   const refreshTokenValue = localStorage.getItem("refreshToken");
 
   if (!refreshTokenValue) {
+    clearAuthStorage();
+    if (redirectOnFailure) window.location.href = "/login";
     throw new Error("No refresh token available");
   }
 
@@ -32,23 +51,42 @@ const refreshToken = async () => {
   });
 
   if (!response.ok) {
-    // Refresh token is invalid or expired
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("userSub");
-    localStorage.removeItem("userEmail");
-    localStorage.removeItem("userName");
-    window.location.href = "/";
+    clearAuthStorage();
+    if (redirectOnFailure) window.location.href = "/login";
     throw new Error("Refresh token invalid");
   }
 
   const data = await response.json();
 
-  // Store new tokens
   localStorage.setItem("authToken", data.accessToken);
   localStorage.setItem("refreshToken", data.refreshToken);
 
   return data.accessToken;
+};
+
+/**
+ * Returns true when the user has a usable session (valid access token or
+ * successful silent refresh). Clears stale tokens without redirecting.
+ */
+export const ensureValidSession = async () => {
+  const token = localStorage.getItem("authToken");
+  const refreshToken = localStorage.getItem("refreshToken");
+
+  if (!token || !refreshToken) {
+    return false;
+  }
+
+  try {
+    if (isAccessTokenValid(token)) {
+      return true;
+    }
+
+    await refreshAccessToken({ redirectOnFailure: false });
+    return true;
+  } catch {
+    clearAuthStorage();
+    return false;
+  }
 };
 
 export const authenticatedFetch = async (url, options = {}) => {
@@ -70,17 +108,14 @@ export const authenticatedFetch = async (url, options = {}) => {
       ...options.headers,
     },
   };
-  console.log("fetchoptions:", fetchOptions);
 
   const response = await fetch(url, fetchOptions);
 
   if (response.status === 401) {
-    console.log("EREROEOROREOR");
     const errorData = await response.json().catch(() => ({}));
 
     // Check if token is expired
     if (errorData.code === "TOKEN_EXPIRED") {
-      console.log("token expired... refreshing");
       if (isRefreshing) {
         // If refresh is already in progress, queue this request
         return new Promise((resolve, reject) => {
@@ -101,7 +136,7 @@ export const authenticatedFetch = async (url, options = {}) => {
       isRefreshing = true;
 
       try {
-        const newToken = await refreshToken();
+        const newToken = await refreshAccessToken();
         processQueue(null, newToken);
 
         // Retry original request with new token
@@ -121,13 +156,8 @@ export const authenticatedFetch = async (url, options = {}) => {
         isRefreshing = false;
       }
     } else {
-      // Other auth error, clear tokens and redirect
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("refreshToken");
-      localStorage.removeItem("userSub");
-      localStorage.removeItem("userEmail");
-      localStorage.removeItem("userName");
-      window.location.href = "/";
+      clearAuthStorage();
+      window.location.href = "/login";
       throw new Error("Authentication failed");
     }
   } else if(response.status === 405) {
@@ -152,10 +182,5 @@ export const logout = async () => {
     // Continue with local logout even if server logout fails
   }
 
-  // Clear all tokens
-  localStorage.removeItem("authToken");
-  localStorage.removeItem("refreshToken");
-  localStorage.removeItem("userSub");
-  localStorage.removeItem("userEmail");
-  localStorage.removeItem("userName");
+  clearAuthStorage();
 };

@@ -64,7 +64,6 @@ const CartModal = ({
     ) {
       try {
         const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
-        console.log(`attempting to hit: ${API_URL}/api/carts/${cartData.id}`)
         const response = await authenticatedFetch(
           `${API_URL}/api/carts/${cartData.id}`,
           {
@@ -80,15 +79,10 @@ const CartModal = ({
             window.location.reload();
           }, 1500);
         } else {
-          console.log("response was not okay");
           try {
             const errorData = await response.json();
-            console.log("json response");
             setStatus("Failed to delete cart: " + (errorData.error || errorData.message || "Unknown error"));
-          } catch (jsonError) {
-            // If response is not JSON, use status text
-            console.log("non json response:", response);
-            console.log("jsonError:", jsonError);
+          } catch {
             setStatus(`Failed to delete cart: ${response.status} ${response.statusText}`);
           }
         }
@@ -140,8 +134,7 @@ const CartModal = ({
       }),
     })
       .then((response) => response.json())
-      .then((data) => {
-        console.log(isEditMode ? "cart updated" : "cart created", data);
+      .then(() => {
         setStatus(isEditMode ? "Cart updated!" : "Cart created!");
         setTimeout(() => {
           setStatus(null);

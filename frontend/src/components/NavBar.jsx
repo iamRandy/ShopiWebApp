@@ -54,11 +54,10 @@ const NavBar = ({ isLanding }) => {
     return new Promise((resolve) => {
       const TIMEOUT_MS = 1500;
       let settled = false;
-      const finish = (reason) => {
+      const finish = () => {
         if (settled) return;
         settled = true;
         window.removeEventListener("message", onResponse);
-        console.log("clearExtensionStorage resolved:", reason);
         resolve();
       };
 
@@ -68,7 +67,7 @@ const NavBar = ({ isLanding }) => {
         if (!data || data.type !== "SHOPI_EXT_RESPONSE") return;
         const msg = data?.response?.message;
         if (msg === "Storage cleared successfully" || data?.response?.ok) {
-          finish("content-script bridge");
+          finish();
         }
       };
       window.addEventListener("message", onResponse);
@@ -92,17 +91,13 @@ const NavBar = ({ isLanding }) => {
             { type: "CLEAR_STORAGE" },
             (response) => {
               if (chrome.runtime.lastError) {
-                console.log(
-                  `External clear failed (${label}):`,
-                  chrome.runtime.lastError.message
-                );
                 return;
               }
-              if (response?.ok) finish(`external messaging (${label})`);
+              if (response?.ok) finish();
             }
           );
-        } catch (err) {
-          console.log(`External clear threw (${label}):`, err.message);
+        } catch {
+          // External messaging unavailable; content-script bridge or timeout applies
         }
       };
       tryExternal(FIREFOX_EXT_ID, "firefox");
@@ -111,7 +106,7 @@ const NavBar = ({ isLanding }) => {
       // Hard timeout so logout never blocks indefinitely if no extension is
       // installed at all. Subsequent focus/storage events on the web app will
       // self-heal via the content script if needed.
-      setTimeout(() => finish("timeout"), TIMEOUT_MS);
+      setTimeout(() => finish(), TIMEOUT_MS);
     });
   };
 

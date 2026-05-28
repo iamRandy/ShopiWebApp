@@ -1,12 +1,7 @@
 const { connectToDatabase } = require("../_lib/db");
 const { verifyToken } = require("../_lib/auth");
 
-console.log("[cartId] hit");
 module.exports = async function handler(req, res) {
-  console.log(
-    `[cartId] API called with method: ${req.method}, cartId: ${req.query.cartId}`
-  );
-
   // Enable CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "PUT, DELETE, OPTIONS");
@@ -90,7 +85,6 @@ module.exports = async function handler(req, res) {
       res.status(500).json({ error: "Failed to delete cart" });
     }
   } else {
-    console.log(`[cartId] Method not allowed: ${req.method}`);
     res.setHeader("Allow", "PUT, DELETE, OPTIONS");
     res.status(405).json({ error: "Method not allowed" });
   }

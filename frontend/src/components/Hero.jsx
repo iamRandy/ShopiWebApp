@@ -67,10 +67,10 @@ export default function Hero() {
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4, ease: "easeInOut", delay: 1.5 }}
-        className="mt-5 flex justify-center md:justify-start"
+        className="mt-5 flex justify-center md:justify-start gap-4"
         >
           <motion.button
-            whileHover={{ rotate: 4, scale: 1.1,
+            whileHover={{ rotate: -4, scale: 1.1,
               transition: 0.1
             }}
             transition={{ duration: 0.35 }}
@@ -78,6 +78,20 @@ export default function Hero() {
             className="px-16 py-4 bg-[var(--primary-btncolor)] text-white font-bold rounded-full text-lg shadow-lg"
           >
             GET STARTED
+          </motion.button>
+          <motion.button
+            whileHover={{ rotate: 4, scale: 1.1,
+              transition: 0.1
+            }}
+            transition={{ duration: 0.35 }}
+            className="px-16 py-4 bg-black text-white font-bold rounded-full text-lg shadow-lg"
+            onClick={() => window.open(
+              "https://chromewebstore.google.com/detail/chaos-cart-saver/bjofoogkolnnpldckgedhdeekajhnpcb?authuser=0&hl=en",
+              "_blank", 
+              "noopener,noreferrer"
+            )}
+          >
+            EXTENSION LINK
           </motion.button>
         </motion.div>
       </div>

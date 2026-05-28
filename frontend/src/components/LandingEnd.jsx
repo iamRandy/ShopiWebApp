@@ -1,6 +1,6 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Sparkles } from "lucide-react";
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const QUOTES = [
@@ -59,6 +59,16 @@ function QuoteBubble({ quote, opacity, scale, y }) {
 export default function LandingEnd() {
   const navigate = useNavigate();
   const sectionRef = useRef(null);
+  const [isStartHovered, setIsStartHovered] = useState(false);
+  const [canHoverDesktop, setCanHoverDesktop] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px) and (hover: hover)");
+    const update = () => setCanHoverDesktop(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -75,6 +85,8 @@ export default function LandingEnd() {
   const quoteY = useTransform(quoteReveal, [0, 1], [24, 0]);
   const aveeOpacity = useTransform(scrollYProgress, [0.4, 0.75], [0, 1]);
   const aveeY = useTransform(scrollYProgress, [0.4, 0.75], [36, 0]);
+
+  const startHovered = isStartHovered && canHoverDesktop;
 
   return (
     <section
@@ -142,13 +154,29 @@ export default function LandingEnd() {
         <motion.div
           className="relative z-40 mt-12"
           style={{ opacity: buttonOpacity, scale: buttonScale }}
+          onMouseEnter={() => canHoverDesktop && setIsStartHovered(true)}
+          onMouseLeave={() => setIsStartHovered(false)}
         >
-          <div className="h-[14rem] w-[14rem] rounded-full bg-[var(--primary-btncolor-shadow)]">
+          <div
+            className={`relative h-[14rem] w-[14rem] rounded-full bg-[var(--primary-btncolor-shadow)] transition-shadow duration-300 ${
+              startHovered
+                ? "shadow-[0_0_24px_rgba(255,188,66,0.28),0_0_48px_rgba(255,160,40,0.12)]"
+                : ""
+            }`}
+          >
+            {startHovered && (
+              <div
+                className="pointer-events-none absolute inset-0 animate-pulse rounded-full ring-2 ring-[#FFBC42]/20"
+                aria-hidden
+              />
+            )}
             <motion.button
               type="button"
               initial={{ x: 0, y: 0 }}
               whileInView={{ x: 10, y: -10 }}
-              whileHover={{ x: 14, y: -14 }}
+              whileHover={
+                canHoverDesktop ? { x: 14, y: -14 } : undefined
+              }
               whileTap={{ x: 0, y: 0, transition: { ease: "easeIn", duration: 0.05 } }}
               style={{
                 borderRadius: "50%",
@@ -157,7 +185,11 @@ export default function LandingEnd() {
                 fontWeight: "bold",
               }}
               onClick={() => navigate("/login")}
-              className="popup_button h-full w-full cursor-pointer border-none bg-[var(--primary-btncolor)]"
+              className={`popup_button relative z-10 h-full w-full cursor-pointer border-none bg-[var(--primary-btncolor)] transition-shadow duration-300 ${
+                startHovered
+                  ? "shadow-[0_0_16px_rgba(255,188,66,0.35)]"
+                  : ""
+              }`}
             >
               START
             </motion.button>
@@ -175,10 +207,22 @@ export default function LandingEnd() {
       <motion.div
         className="pointer-events-none absolute -bottom-8 right-0 z-10 w-40 sm:w-52 md:-right-4 md:w-64"
         style={{ opacity: aveeOpacity, y: aveeY }}
-        animate={{ rotate: [0, 4, -2, 0] }}
-        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
       >
-        <img src="/images/Avee.png" alt="" className="w-full drop-shadow-lg" />
+        <motion.div
+          className="will-change-transform"
+          animate={
+            startHovered
+              ? { y: [0, -14, 0] }
+              : { rotate: [0, 4, -2, 0], y: 0 }
+          }
+          transition={
+            startHovered
+              ? { duration: 0.55, repeat: Infinity, ease: "easeInOut" }
+              : { duration: 5, repeat: Infinity, ease: "easeInOut" }
+          }
+        >
+          <img src="/images/Avee.png" alt="" className="w-full drop-shadow-lg" />
+        </motion.div>
       </motion.div>
     </section>
   );

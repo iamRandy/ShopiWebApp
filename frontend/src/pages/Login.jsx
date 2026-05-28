@@ -2,19 +2,13 @@
 import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft } from "lucide-react";
+import { ensureValidSession } from "../utils/api";
 
 // Support both Firefox and Chrome extension IDs
 const FIREFOX_EXT_ID = "{a8f4c9e2-7b3d-4e1a-9c5f-2d8b6e4a1c7f}";
 const CHROME_EXT_ID = import.meta.env.VITE_EXTENSION_ID || "kihghmelfnfgbkbeiebkgconkmgboilg";
-
-console.log("Extension IDs configured:", {
-  firefox: FIREFOX_EXT_ID,
-  chrome: CHROME_EXT_ID,
-  fromEnv: import.meta.env.VITE_EXTENSION_ID,
-});
 
 const getCandidateExtensionIds = () => {
   const extensionIdFromUrl = new URLSearchParams(window.location.search).get(
@@ -31,39 +25,29 @@ const getCandidateExtensionIds = () => {
 
 const Login = () => {
   const navigate = useNavigate();
+  const [sessionChecked, setSessionChecked] = useState(false);
 
-  // Check if user is already authenticated
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
-    const refreshToken = localStorage.getItem("refreshToken");
+    let cancelled = false;
 
-    if (token && refreshToken) {
-      try {
-        const decoded = jwtDecode(token);
-        const currentTime = Math.floor(Date.now() / 1000);
+    (async () => {
+      const hasSession = await ensureValidSession();
+      if (cancelled) return;
 
-        if (decoded.exp < currentTime) {
-          console.log("Found expired access token, but refresh token exists");
-          // Don't clear tokens here - let the API utility handle refresh
-          navigate("/home");
-        } else {
-          console.log("Token is valid, redirecting to home");
-          navigate("/home");
-        }
-      } catch (error) {
-        console.log("Invalid token, clearing...", error);
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("refreshToken");
-        localStorage.removeItem("userSub");
-        localStorage.removeItem("userEmail");
-        localStorage.removeItem("userName");
+      if (hasSession) {
+        navigate("/home", { replace: true });
+        return;
       }
-    }
+
+      setSessionChecked(true);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [navigate]);
 
   const handleGoogleSuccess = (credentialResponse) => {
-    console.log("JWT credential response:", credentialResponse);
-
     try {
       const decoded = jwtDecode(credentialResponse.credential);
 
@@ -73,7 +57,6 @@ const Login = () => {
       localStorage.setItem("userName", decoded.name);
 
       loginSuccess(credentialResponse, decoded.sub, decoded.name);
-      console.log("JWT decoded successfully.");
     } catch (error) {
       console.error("Error decoding JWT:", error);
     }
@@ -94,10 +77,6 @@ const Login = () => {
             localStorage.setItem("authToken", data.accessToken);
             localStorage.setItem("refreshToken", data.refreshToken);
 
-            console.log("Stored access and refresh tokens");
-
-            // Send user info to extension and wait for it to complete
-            console.log("About to send user info to extension...");
             await sendUserInfoToExtension(
               sub,
               name,
@@ -108,8 +87,6 @@ const Login = () => {
             // Wait a moment to ensure message is sent
             await new Promise((resolve) => setTimeout(resolve, 500));
 
-            // Navigate after extension message is sent
-            console.log("Navigating to /home...");
             window.location.href = "/home";
           }
         })
@@ -127,24 +104,6 @@ const Login = () => {
     accessToken,
     refreshToken
   ) => {
-    console.log("sendUserInfoToExtension called with:", {
-      userSub,
-      userName,
-      hasAccessToken: !!accessToken,
-      hasRefreshToken: !!refreshToken,
-    });
-
-    console.log("Browser APIs available:", {
-      hasChrome: typeof chrome !== "undefined",
-      hasChromeRuntime: typeof chrome !== "undefined" && !!chrome.runtime,
-      hasChromeSendMessage:
-        typeof chrome !== "undefined" && !!chrome.runtime?.sendMessage,
-    });
-
-    console.log(
-      `Extension IDs: Firefox=${FIREFOX_EXT_ID}, Chrome=${CHROME_EXT_ID}`
-    );
-
     const message = {
       type: "SET_USER_INFO",
       name: userName,
@@ -153,8 +112,6 @@ const Login = () => {
       refreshToken: refreshToken,
     };
 
-    console.log("Message to send:", message);
-
     try {
       // Chrome approach: Use chrome.runtime.sendMessage with extension ID
       if (
@@ -162,23 +119,12 @@ const Login = () => {
         chrome.runtime &&
         chrome.runtime.sendMessage
       ) {
-        console.log("Using Chrome API for extension communication");
-
-        const sendToExtension = async (extId, label) => {
+        const sendToExtension = async (extId) => {
           return new Promise((resolve) => {
-            console.log(`Trying to send to ${label} extension:`, extId);
-            chrome.runtime.sendMessage(extId, message, (response) => {
+            chrome.runtime.sendMessage(extId, message, () => {
               if (chrome.runtime.lastError) {
-                console.log(
-                  `${label} extension with id ${extId} not found:`,
-                  chrome.runtime.lastError.message
-                );
                 resolve(false);
               } else {
-                console.log(
-                  `Successfully sent user info to ${label} extension`,
-                  response
-                );
                 resolve(true);
               }
             });
@@ -206,15 +152,9 @@ const Login = () => {
       }
       // Firefox/Safari approach: Use window.postMessage to communicate with content script
       else {
-        console.log(
-          "🔍 Using postMessage API for extension communication (Firefox/Safari)"
-        );
-
         return new Promise((resolve) => {
-          // Listen for response from content script
           const handleResponse = (event) => {
             if (event.data && event.data.type === "SHOPI_EXT_RESPONSE") {
-              console.log("✅ Received response from extension:", event.data);
               window.removeEventListener("message", handleResponse);
               resolve();
             }
@@ -222,7 +162,6 @@ const Login = () => {
 
           window.addEventListener("message", handleResponse);
 
-          // Send message to content script via window.postMessage
           window.postMessage(
             {
               type: "SHOPI_SET_USER_INFO",
@@ -231,20 +170,24 @@ const Login = () => {
             "*"
           );
 
-          console.log("📨 Sent postMessage to content script");
-
-          // Timeout after 2 seconds
           setTimeout(() => {
             window.removeEventListener("message", handleResponse);
-            console.log("⏱️ Extension message timeout");
             resolve();
           }, 2000);
         });
       }
     } catch (error) {
-      console.log("❌ Extension communication error:", error.message);
+      console.error("Extension communication error:", error);
     }
   };
+
+  if (!sessionChecked) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-gray-200 text-black">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#FFBC42] border-t-transparent" />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-screen text-black bg-gray-200">
@@ -294,7 +237,7 @@ const Login = () => {
           <div className="w-fit">
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
-              onError={() => console.log("Login failed")}
+              onError={() => console.error("Google login failed")}
               theme="outline"
               size="large"
               text="signin_with"

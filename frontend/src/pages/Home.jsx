@@ -1,9 +1,10 @@
 // ShopiWebApp/frontend/src/pages/Home.jsx
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import Navbar from "../components/NavBar";
 import Dashboard from "../components/Dashboard";
+import { ensureValidSession } from "../utils/api";
 
 // Support both Firefox and Chrome extension IDs
 const FIREFOX_EXT_ID = "{a8f4c9e2-7b3d-4e1a-9c5f-2d8b6e4a1c7f}";
@@ -24,15 +25,11 @@ const getCandidateExtensionIds = () => {
 
 const Home = () => {
   const navigate = useNavigate();
+  const [sessionReady, setSessionReady] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
-    if (!token) {
-      navigate("/");
-      return;
-    }
+    let cancelled = false;
 
-    // Sync user info to extension on page load
     const syncToExtension = async () => {
       try {
         const userSub = localStorage.getItem("userSub");
@@ -42,7 +39,7 @@ const Home = () => {
 
         if (!userSub || !userName) {
           // Try to decode from token
-          const decoded = jwtDecode(token);
+          const decoded = jwtDecode(authToken);
           const sub = decoded.sub;
           const name = decoded.name;
 
@@ -60,11 +57,26 @@ const Home = () => {
           );
         }
       } catch (error) {
-        console.log("Error syncing to extension:", error);
+        console.error("Error syncing to extension:", error);
       }
     };
 
-    syncToExtension();
+    (async () => {
+      const hasSession = await ensureValidSession();
+      if (cancelled) return;
+
+      if (!hasSession) {
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      await syncToExtension();
+      if (!cancelled) setSessionReady(true);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [navigate]);
 
   const sendUserInfoToExtension = async (
@@ -87,16 +99,12 @@ const Home = () => {
         chrome.runtime &&
         chrome.runtime.sendMessage
       ) {
-        console.log("Syncing user info to extension...");
-
-        const sendToExtension = async (extId, label) => {
+        const sendToExtension = async (extId) => {
           return new Promise((resolve) => {
             chrome.runtime.sendMessage(extId, message, () => {
               if (chrome.runtime.lastError) {
-                console.log(`${label} extension not reachable`);
                 resolve(false);
               } else {
-                console.log(`✅ Synced user info to ${label} extension`);
                 resolve(true);
               }
             });
@@ -131,9 +139,17 @@ const Home = () => {
         );
       }
     } catch (error) {
-      console.log("Extension sync error:", error.message);
+      console.error("Extension sync error:", error);
     }
   };
+
+  if (!sessionReady) {
+    return (
+      <div className="flex min-h-[100dvh] items-center justify-center bg-[#f8f6f0]">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#FFBC42] border-t-transparent" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[100dvh] flex flex-col overflow-x-hidden bg-[#f8f6f0]">

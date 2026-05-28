@@ -12,18 +12,15 @@ const CartArea = ({ carts, selectedCart, cartSelected }) => {
 
   const handleCartSelect = (cartId) => {
     if (cartId === "addCart") {
-      console.log("create cart");
       setIsEditMode(false);
       setCartBeingEdited(null);
       setIsCartModalOpen(true);
     } else {
-      console.log("cart selected:", cartId);
       cartSelected(cartId);
     }
   };
 
   const handleCartEdit = (cartId) => {
-    console.log("edit cart:", cartId);
     const cartToEdit = carts.find((cart) => cart.id === cartId);
     if (cartToEdit) {
       setIsEditMode(true);
