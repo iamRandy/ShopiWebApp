@@ -92,7 +92,7 @@ export default function LandingEnd() {
     <section
       ref={sectionRef}
       id="landing-end"
-      className="relative min-h-[110vh] overflow-hidden pb-32 pt-16 md:min-h-screen md:pb-40"
+      className="relative min-h-[110vh] overflow-hidden pb-12 pt-16 md:min-h-screen md:pb-16"
     >
       <div
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_40%,rgba(255,188,66,0.35),transparent_70%)]"
@@ -131,7 +131,7 @@ export default function LandingEnd() {
             style={{ opacity: subOpacity }}
           >
             <Sparkles className="h-4 w-4 text-[#FFBC42]" strokeWidth={2.5} />
-            Free to start · No credit card
+            No credit card required
           </motion.div>
 
           <h2 className="text-3xl font-extrabold leading-tight tracking-tight text-black sm:text-4xl md:text-5xl">

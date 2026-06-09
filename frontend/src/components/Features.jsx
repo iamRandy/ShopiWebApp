@@ -57,8 +57,12 @@ export default function Features() {
   return (
     <section
       id="features"
-      className="relative z-0 flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-b from-[#f8f6f0] via-[#fef6eb] to-[rgba(255,234,207,1)] px-5 py-16 md:px-8 md:py-20"
+      className="relative z-0 -mt-24 flex min-h-screen items-center justify-center overflow-hidden px-5 pb-16 pt-36 md:px-8 md:pb-20 md:pt-44"
     >
+      <div
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-[75%] bg-gradient-to-b from-transparent via-[#fff8ee]/60 to-[rgba(255,234,207,1)]"
+        aria-hidden
+      />
       <div
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_55%_at_50%_75%,rgba(255,188,66,0.12),transparent_70%)]"
         aria-hidden
