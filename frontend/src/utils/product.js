@@ -27,3 +27,54 @@ export function getFormattedProductPrice(product) {
     "Price not available"
   );
 }
+
+export function getProductNumericPrice(product) {
+  if (product?.price === null || product?.price === undefined || product?.price === "") {
+    return null;
+  }
+  const normalized =
+    typeof product.price === "string"
+      ? product.price.replace(/,/g, "").trim()
+      : product.price;
+  const numeric = Number(normalized);
+  return Number.isNaN(numeric) ? null : numeric;
+}
+
+export function formatRelativeAdded(savedAt) {
+  if (!savedAt) return "—";
+
+  const date = new Date(savedAt);
+  if (Number.isNaN(date.getTime())) return "—";
+
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const diffDays = Math.floor((startOfToday - startOfDate) / (1000 * 60 * 60 * 24));
+
+  if (diffDays <= 0) return "Today";
+  if (diffDays === 1) return "1d ago";
+  if (diffDays < 7) return `${diffDays}d ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
+  if (diffDays < 365) return `${Math.floor(diffDays / 30)}mo ago`;
+  return `${Math.floor(diffDays / 365)}y ago`;
+}
+
+export function sortProducts(products = []) {
+  return [...products].sort((a, b) => {
+    const favA = a.isFavorite ? 1 : 0;
+    const favB = b.isFavorite ? 1 : 0;
+    if (favA !== favB) return favB - favA;
+
+    const dateA = a.savedAt ? new Date(a.savedAt).getTime() : 0;
+    const dateB = b.savedAt ? new Date(b.savedAt).getTime() : 0;
+    if (dateA !== dateB) return dateB - dateA;
+
+    return (a.title || "").localeCompare(b.title || "");
+  });
+}
+
+export function formatItemCount(count) {
+  if (count === 0) return "0 Items";
+  if (count === 1) return "1 Item";
+  return `${count} Items`;
+}

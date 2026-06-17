@@ -33,25 +33,41 @@ module.exports = async function handler(req, res) {
     const { usersCollection } = await connectToDatabase();
 
     if (req.method === "PATCH") {
-      const { nickname } = req.body;
+      const { nickname, isFavorite } = req.body;
 
       if (nickname !== undefined && typeof nickname !== "string") {
         return res.status(400).json({ error: "Nickname must be a string" });
       }
 
+      if (isFavorite !== undefined && typeof isFavorite !== "boolean") {
+        return res.status(400).json({ error: "isFavorite must be a boolean" });
+      }
+
       const trimmedNickname =
         typeof nickname === "string" ? nickname.trim() : undefined;
 
-      const update =
-        trimmedNickname === undefined
-          ? {}
-          : trimmedNickname
-            ? { $set: { "carts.$[c].products.$[p].nickname": trimmedNickname } }
-            : { $unset: { "carts.$[c].products.$[p].nickname": "" } };
+      const $set = {};
+      const $unset = {};
 
-      if (!update.$set && !update.$unset) {
-        return res.status(400).json({ error: "Nickname is required" });
+      if (trimmedNickname !== undefined) {
+        if (trimmedNickname) {
+          $set["carts.$[c].products.$[p].nickname"] = trimmedNickname;
+        } else {
+          $unset["carts.$[c].products.$[p].nickname"] = "";
+        }
       }
+
+      if (isFavorite !== undefined) {
+        $set["carts.$[c].products.$[p].isFavorite"] = isFavorite;
+      }
+
+      if (Object.keys($set).length === 0 && Object.keys($unset).length === 0) {
+        return res.status(400).json({ error: "No valid fields to update" });
+      }
+
+      const update = {};
+      if (Object.keys($set).length > 0) update.$set = $set;
+      if (Object.keys($unset).length > 0) update.$unset = $unset;
 
       const result = await usersCollection.updateOne(
         { sub: req.user.sub },

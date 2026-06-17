@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
-import Navbar from "../components/NavBar";
 import Dashboard from "../components/Dashboard";
 import { ensureValidSession } from "../utils/api";
 
@@ -151,14 +150,7 @@ const Home = () => {
     );
   }
 
-  return (
-    <div className="min-h-[100dvh] flex flex-col overflow-x-hidden bg-[#f8f6f0]">
-      <Navbar />
-      <main className="flex-1 min-h-0 w-full min-w-0">
-        <Dashboard />
-      </main>
-    </div>
-  );
+  return <Dashboard />;
 };
 
 export default Home;

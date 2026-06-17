@@ -9,7 +9,7 @@ import LandingEnd from '../components/LandingEnd';
 export default function Landing() {
 
     return (
-        <div className="overflow-hidden bg-primary text-black">
+        <div className="bg-primary text-black">
             <NavBar isLanding={true} />
             <main className="md:mt-0">
                 <Hero />

@@ -1,45 +1,83 @@
-import ProductArea from "./ProductArea";
-import CartArea from "./CartArea";
-import AveeLoader from "./AveeLoader";
-import * as Icons from "lucide-react";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { authenticatedFetch } from "../utils/api";
-import { motion } from "framer-motion";
+import {
+  getProductDisplayName,
+  getFormattedProductPrice,
+  sortProducts,
+} from "../utils/product";
+import AveeLoader from "./AveeLoader";
+import ProductModal from "./ProductModal";
+import AppShell from "./dashboard/AppShell";
+import ProductToolbar from "./dashboard/ProductToolbar";
+import ProductGridView from "./dashboard/ProductGridView";
+import ProductListView from "./dashboard/ProductListView";
+import FilterModal from "./dashboard/FilterModal";
+import Pagination from "./dashboard/Pagination";
+import {
+  useProductFilters,
+  countActiveFilters,
+  DEFAULT_FILTERS,
+} from "./dashboard/useProductFilters";
+import { usePagination } from "./dashboard/usePagination";
+import { VIEW_MODE_KEY } from "./dashboard/constants";
 
-function formatProductCount(count) {
-  if (count === 0) return "No products yet";
-  if (count === 1) return "1 product";
-  return `${count} products`;
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
+function getInitialViewMode() {
+  try {
+    const stored = localStorage.getItem(VIEW_MODE_KEY);
+    if (stored === "list" || stored === "grid") return stored;
+  } catch {
+    /* ignore */
+  }
+  return "grid";
 }
 
 const Dashboard = () => {
   const [carts, setCarts] = useState([]);
-  const [hideSidebar, setHideSidebar] = useState(false);
   const [selectedCart, setSelectedCart] = useState(null);
   const [selectedCartObj, setSelectedCartObj] = useState(null);
   const [selectedCartProducts, setSelectedCartProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [cartSwitching, setCartSwitching] = useState(false);
 
-  useEffect(() => {
-    const fetchCarts = async () => {
-      setLoading(true);
-      try {
-        const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
-        const response = await authenticatedFetch(`${API_URL}/api/carts`);
-        const data = await response.json();
-        setCarts(data);
-        setSelectedCart(data?.[0]?.id || null);
-        setSelectedCartObj(data?.[0] || null);
-        setSelectedCartProducts(data?.[0]?.products || []);
-      } catch (error) {
-        console.error("Error fetching carts:", error);
-      } finally {
-        setLoading(false);
+  const [viewMode, setViewMode] = useState(getInitialViewMode);
+  const [filters, setFilters] = useState(DEFAULT_FILTERS);
+  const [filterModalOpen, setFilterModalOpen] = useState(false);
+
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [favoriteLoadingId, setFavoriteLoadingId] = useState(null);
+
+  const fetchCarts = useCallback(async (preserveSelection = false) => {
+    if (!preserveSelection) setLoading(true);
+    try {
+      const response = await authenticatedFetch(`${API_URL}/api/carts`);
+      const data = await response.json();
+      setCarts(data);
+
+      if (preserveSelection && selectedCart) {
+        const current = data.find((c) => c.id === selectedCart);
+        if (current) {
+          setSelectedCartObj(current);
+          setSelectedCartProducts(current.products || []);
+          return;
+        }
       }
-    };
+
+      setSelectedCart(data?.[0]?.id || null);
+      setSelectedCartObj(data?.[0] || null);
+      setSelectedCartProducts(data?.[0]?.products || []);
+    } catch (error) {
+      console.error("Error fetching carts:", error);
+    } finally {
+      if (!preserveSelection) setLoading(false);
+    }
+  }, [selectedCart]);
+
+  useEffect(() => {
     fetchCarts();
-  }, []);
+  }, [fetchCarts]);
 
   const handleProductUpdated = (productId, updates) => {
     const updateProducts = (products) =>
@@ -60,6 +98,7 @@ const Dashboard = () => {
 
   const cartSelected = async (cartId) => {
     setSelectedCart(cartId);
+    setFilters(DEFAULT_FILTERS);
     const cartFromList = carts.find((c) => c.id === cartId);
     if (cartFromList) {
       setSelectedCartObj(cartFromList);
@@ -67,14 +106,10 @@ const Dashboard = () => {
 
     setCartSwitching(true);
     try {
-      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
-      const response = await authenticatedFetch(
-        `${API_URL}/api/carts/selectCart`,
-        {
-          method: "POST",
-          body: JSON.stringify({ cartId }),
-        }
-      );
+      const response = await authenticatedFetch(`${API_URL}/api/carts/selectCart`, {
+        method: "POST",
+        body: JSON.stringify({ cartId }),
+      });
       const data = await response.json();
       setSelectedCartObj(data);
       setSelectedCartProducts(data?.products || []);
@@ -85,83 +120,188 @@ const Dashboard = () => {
     }
   };
 
+  const handleViewModeChange = (mode) => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem(VIEW_MODE_KEY, mode);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const handleFavoriteToggle = async (product, isFavorite) => {
+    if (!selectedCart || favoriteLoadingId) return;
+
+    setFavoriteLoadingId(product.id);
+    try {
+      const response = await authenticatedFetch(
+        `${API_URL}/api/carts/${selectedCart}/products/${product.id}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({ isFavorite }),
+        }
+      );
+      if (response.ok) {
+        handleProductUpdated(product.id, { isFavorite });
+      }
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+    } finally {
+      setFavoriteLoadingId(null);
+    }
+  };
+
+  const openProductModal = (product) => {
+    setSelectedProduct({
+      productName: getProductDisplayName(product),
+      productImg:
+        product.image || "https://via.placeholder.com/300x300?text=No+Image",
+      productPrice: getFormattedProductPrice(product),
+      productId: product.id,
+      productUrl: product.url,
+      productDescription: product.description,
+      productNickname: product.nickname,
+      originalTitle: product.title || "Unknown Product",
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleModalProductUpdated = (productId, updates) => {
+    handleProductUpdated(productId, updates);
+    setSelectedProduct((prev) => {
+      if (!prev || prev.productId !== productId) return prev;
+      const nickname = updates.nickname?.trim() || "";
+      return {
+        ...prev,
+        productNickname: nickname || undefined,
+        productName: nickname || prev.originalTitle,
+      };
+    });
+  };
+
+  const handleProductDelete = () => {
+    window.location.reload();
+  };
+
   const activeCart =
     selectedCartObj || carts.find((c) => c.id === selectedCart) || null;
-
   const cartTitle = activeCart?.name || "Unnamed cart";
+  const rawProducts = selectedCartProducts ?? [];
 
-  const productCount = useMemo(() => {
-    if (selectedCartProducts?.length !== undefined) {
-      return selectedCartProducts.length;
-    }
-    return activeCart?.products?.length ?? 0;
-  }, [selectedCartProducts, activeCart]);
+  const filteredProducts = useProductFilters(rawProducts, filters);
+  const sortedProducts = useMemo(
+    () => sortProducts(filteredProducts),
+    [filteredProducts]
+  );
+  const { page, setPage, totalPages, pageItems, hasNext } =
+    usePagination(sortedProducts);
 
-  const cartSubtitle = formatProductCount(productCount);
+  const storeOptions = useMemo(() => {
+    const hosts = new Set();
+    rawProducts.forEach((p) => {
+      if (p.hostname) hosts.add(p.hostname);
+    });
+    return [...hosts].sort();
+  }, [rawProducts]);
+
+  const activeFilterCount = countActiveFilters(filters);
+  const showEmptyCart = !loading && rawProducts.length === 0;
+
+  const sidebarProps = {
+    carts,
+    selectedCartId: selectedCart,
+    onCartSelect: cartSelected,
+    onCartsChanged: () => fetchCarts(true),
+  };
 
   return (
-    <div className="relative px-3 pt-[4.5rem] pb-8 sm:px-4 md:px-6 md:pt-20 md:pb-10 lg:px-9">
-      <div className="relative text-black">
-        <div className="absolute right-0 top-0 flex h-[60px] items-center justify-start">
-          <motion.button
-            className="m-0 bg-transparent p-0"
-            onClick={() => setHideSidebar((prev) => !prev)}
-          />
-        </div>
-
-        <div className="mb-6 text-black md:mb-8 md:grid md:grid-cols-6 md:gap-4">
-          {!hideSidebar && (
-            <div className="hidden md:col-span-1 md:block" aria-hidden />
-          )}
-          <div className="flex min-w-0 flex-col items-start gap-1 md:col-span-5">
-            <p className="text-2xl font-bold tracking-wide sm:text-3xl md:text-4xl">
-              {cartTitle}
-            </p>
-            {/* Future: cart description can replace or sit below product count */}
-            <p className="text-sm text-stone-500 sm:text-base md:text-stone-400">
-              {cartSubtitle}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-5 md:grid md:grid-cols-6 md:gap-6 lg:gap-8">
-        {!hideSidebar && !loading && (
-          <div className="scrollbar-minimal flex flex-row gap-2 overflow-x-auto pb-1 md:col-span-1 md:flex-col md:overflow-x-visible md:overflow-y-visible md:pb-0">
-            <CartArea
-              carts={carts}
-              selectedCart={selectedCart}
-              cartSelected={cartSelected}
+    <AppShell sidebarProps={sidebarProps}>
+      <div className="relative min-h-0 flex-1 px-4 py-6 sm:px-6 lg:px-8">
+        {loading ? (
+          <AveeLoader message="Loading cart…" />
+        ) : (
+          <>
+            <ProductToolbar
+              title={cartTitle}
+              itemCount={rawProducts.length}
+              viewMode={viewMode}
+              onViewModeChange={handleViewModeChange}
+              onFilterOpen={() => setFilterModalOpen(true)}
+              activeFilterCount={activeFilterCount}
             />
-          </div>
+
+            {showEmptyCart ? (
+              <div className="flex min-h-[12rem] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-stone-300 bg-white/50 p-8 text-center">
+                <p className="text-stone-500">
+                  No products saved yet. Use the extension to save some products!
+                </p>
+                <a
+                  href="https://chromewebstore.google.com/detail/chaos-cart-saver/bjofoogkolnnpldckgedhdeekajhnpcb?authuser=0&hl=en"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 text-sm font-semibold text-[#c47f00] hover:underline"
+                >
+                  Need help?
+                </a>
+              </div>
+            ) : viewMode === "grid" ? (
+              <ProductGridView
+                products={pageItems}
+                onFavoriteToggle={handleFavoriteToggle}
+                onOpen={openProductModal}
+                favoriteLoadingId={favoriteLoadingId}
+              />
+            ) : (
+              <ProductListView
+                products={pageItems}
+                onFavoriteToggle={handleFavoriteToggle}
+                onOpen={openProductModal}
+                onMenu={openProductModal}
+                favoriteLoadingId={favoriteLoadingId}
+              />
+            )}
+
+            {!showEmptyCart && (
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                onPageChange={setPage}
+                hasNext={hasNext}
+              />
+            )}
+          </>
         )}
-        <div
-          className={
-            hideSidebar || loading
-              ? "relative min-w-0 md:col-span-6"
-              : "relative min-w-0 md:col-span-5"
-          }
-        >
-          {loading ? (
-            <AveeLoader message="Loading cart…" />
-          ) : (
-            <>
-              {selectedCartProducts && (
-                <ProductArea
-                  products={selectedCartProducts}
-                  cartId={selectedCart}
-                  hideSidebar={hideSidebar}
-                  onProductUpdated={handleProductUpdated}
-                />
-              )}
-              {cartSwitching && (
-                <AveeLoader message="Loading cart…" overlay />
-              )}
-            </>
-          )}
-        </div>
+
+        {cartSwitching && <AveeLoader message="Loading cart…" overlay />}
+
+        <FilterModal
+          isOpen={filterModalOpen}
+          onClose={() => setFilterModalOpen(false)}
+          filters={filters}
+          onApply={setFilters}
+          storeOptions={storeOptions}
+        />
+
+        <ProductModal
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedProduct(null);
+          }}
+          productName={selectedProduct?.productName}
+          productImg={selectedProduct?.productImg}
+          productPrice={selectedProduct?.productPrice}
+          productId={selectedProduct?.productId}
+          productUrl={selectedProduct?.productUrl}
+          productDescription={selectedProduct?.productDescription}
+          productNickname={selectedProduct?.productNickname}
+          originalTitle={selectedProduct?.originalTitle}
+          cartId={selectedCart}
+          onDelete={handleProductDelete}
+          onProductUpdated={handleModalProductUpdated}
+        />
       </div>
-    </div>
+    </AppShell>
   );
 };
 
