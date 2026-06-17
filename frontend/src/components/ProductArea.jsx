@@ -5,8 +5,11 @@ import {
   getProductDisplayName,
   getProductDescription,
   getFormattedProductPrice,
+  getProductImageUrl,
   stripHtml,
 } from "../utils/product";
+
+const PLACEHOLDER_IMAGE = "https://via.placeholder.com/300x300?text=No+Image";
 
 const ProductArea = ({ products = [], cartId, hideSidebar, onProductUpdated }) => {
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -20,8 +23,7 @@ const ProductArea = ({ products = [], cartId, hideSidebar, onProductUpdated }) =
   const handleProductClick = (product) => {
     setSelectedProduct({
       productName: getProductDisplayName(product),
-      productImg:
-        product.image || "https://via.placeholder.com/300x300?text=No+Image",
+      productImg: getProductImageUrl(product, PLACEHOLDER_IMAGE),
       productPrice: getFormattedProductPrice(product),
       productId: product.id,
       productUrl: product.url,
@@ -84,10 +86,7 @@ const ProductArea = ({ products = [], cartId, hideSidebar, onProductUpdated }) =
               <ProductCard
                 key={product.id}
                 productName={getProductDisplayName(product)}
-                productImg={
-                  product.image ||
-                  "https://via.placeholder.com/300x300?text=No+Image"
-                }
+                productImg={getProductImageUrl(product, PLACEHOLDER_IMAGE)}
                 productPrice={getFormattedProductPrice(product)}
                 productId={product.id}
                 productUrl={product.url}

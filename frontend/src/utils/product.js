@@ -1,3 +1,35 @@
+export function resolveAbsoluteUrl(url, baseUrl) {
+  if (url == null || typeof url !== "string") return "";
+
+  const trimmed = url.trim();
+  if (!trimmed) return "";
+
+  if (/^(https?:|data:|blob:)/i.test(trimmed)) return trimmed;
+
+  if (trimmed.startsWith("//")) {
+    try {
+      const base = baseUrl ? new URL(baseUrl) : null;
+      return `${base?.protocol || "https:"}${trimmed}`;
+    } catch {
+      return `https:${trimmed}`;
+    }
+  }
+
+  if (!baseUrl) return trimmed;
+
+  try {
+    return new URL(trimmed, baseUrl).href;
+  } catch {
+    return trimmed;
+  }
+}
+
+export function getProductImageUrl(product, fallback = null) {
+  const image = product?.image?.trim();
+  if (!image) return fallback;
+  return resolveAbsoluteUrl(image, product?.url) || fallback;
+}
+
 export function stripHtml(text) {
   if (text == null || typeof text !== "string") return "";
 
