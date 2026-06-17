@@ -3,7 +3,9 @@ import ProductCard from "./ProductCard";
 import ProductModal from "./ProductModal";
 import {
   getProductDisplayName,
+  getProductDescription,
   getFormattedProductPrice,
+  stripHtml,
 } from "../utils/product";
 
 const ProductArea = ({ products = [], cartId, hideSidebar, onProductUpdated }) => {
@@ -23,9 +25,9 @@ const ProductArea = ({ products = [], cartId, hideSidebar, onProductUpdated }) =
       productPrice: getFormattedProductPrice(product),
       productId: product.id,
       productUrl: product.url,
-      productDescription: product.description,
+      productDescription: getProductDescription(product),
       productNickname: product.nickname,
-      originalTitle: product.title || "Unknown Product",
+      originalTitle: stripHtml(product.title) || "Unknown Product",
     });
     setIsModalOpen(true);
   };
@@ -89,7 +91,7 @@ const ProductArea = ({ products = [], cartId, hideSidebar, onProductUpdated }) =
                 productPrice={getFormattedProductPrice(product)}
                 productId={product.id}
                 productUrl={product.url}
-                productDescription={product.description}
+                productDescription={getProductDescription(product)}
                 cartId={cartId}
                 onDelete={handleProductDelete}
                 onProductClick={() => handleProductClick(product)}
