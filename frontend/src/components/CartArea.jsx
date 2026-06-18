@@ -1,8 +1,8 @@
-import { Globe, ShoppingCart, Plus } from "lucide-react";
+import { Plus, ShoppingCart } from "lucide-react";
 import CartTab from "./CartTab";
 import CartModal from "./CartModal";
 import { useState } from "react";
-import * as Icons from "lucide-react";
+import { getCartIcon } from "../utils/cartIcons";
 
 const CartArea = ({ carts, selectedCart, cartSelected }) => {
   const [error, setError] = useState(null);
@@ -35,15 +35,6 @@ const CartArea = ({ carts, selectedCart, cartSelected }) => {
     setCartBeingEdited(null);
   };
 
-  const getIconByName = (name, props) => {
-    const LucideIcon = Icons[name];
-    return LucideIcon ? (
-      <LucideIcon {...props} />
-    ) : (
-      <Icons.ShoppingCart {...props} />
-    );
-  };
-
   if (error) {
     return (
       <div className="w-full">
@@ -61,7 +52,7 @@ const CartArea = ({ carts, selectedCart, cartSelected }) => {
           cartId={cart.id}
           title={cart.name || "Unnamed Cart"}
           icon={
-            getIconByName(cart.icon, { className: "w-[28px] h-[28px]" }) || (
+            getCartIcon(cart.icon, { className: "w-[28px] h-[28px]" }) || (
               <ShoppingCart className="w-[28px] h-[28px]" />
             )
           }
@@ -83,7 +74,6 @@ const CartArea = ({ carts, selectedCart, cartSelected }) => {
 
       {isCartModalOpen && (
         <CartModal
-          getIconByName={getIconByName}
           isOpen={isCartModalOpen}
           onClose={handleCloseModal}
           isEditMode={isEditMode}

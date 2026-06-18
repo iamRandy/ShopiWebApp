@@ -1,6 +1,6 @@
 import { useState } from "react";
 import ProductCard from "./ProductCard";
-import ProductModal from "./ProductModal";
+import ProductModal from "./productModal/ProductModal";
 import {
   getProductDisplayName,
   getFormattedProductPrice,
@@ -24,8 +24,10 @@ const ProductArea = ({ products = [], cartId, hideSidebar, onProductUpdated }) =
       productId: product.id,
       productUrl: product.url,
       productDescription: product.description,
+      productNote: product.note,
       productNickname: product.nickname,
       originalTitle: product.title || "Unknown Product",
+      productHostname: product.hostname,
     });
     setIsModalOpen(true);
   };
@@ -35,9 +37,11 @@ const ProductArea = ({ products = [], cartId, hideSidebar, onProductUpdated }) =
     setSelectedProduct((prev) => {
       if (!prev || prev.productId !== productId) return prev;
       const nickname = updates.nickname?.trim() || "";
+      const note = updates.note !== undefined ? updates.note : prev.productNote;
       return {
         ...prev,
         productNickname: nickname || undefined,
+        productNote: note,
         productName: nickname || prev.originalTitle,
       };
     });
@@ -109,7 +113,9 @@ const ProductArea = ({ products = [], cartId, hideSidebar, onProductUpdated }) =
         productId={selectedProduct?.productId}
         productUrl={selectedProduct?.productUrl}
         productDescription={selectedProduct?.productDescription}
+        productNote={selectedProduct?.productNote}
         productNickname={selectedProduct?.productNickname}
+        productHostname={selectedProduct?.productHostname}
         originalTitle={selectedProduct?.originalTitle}
         cartId={cartId}
         onDelete={handleProductDelete}

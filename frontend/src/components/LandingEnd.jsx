@@ -146,8 +146,8 @@ export default function LandingEnd() {
             className="mt-4 text-base text-primary-dark sm:text-lg"
             style={{ opacity: subOpacity }}
           >
-            One click to save anything. One place to find it later. Your future
-            self will thank you.
+            Save from any store, organize in carts, and come back when you&apos;re
+            ready to buy. Your dashboard keeps every find in one place.
           </motion.p>
         </motion.div>
 

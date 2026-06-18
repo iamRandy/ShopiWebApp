@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { authenticatedFetch } from "../utils/api";
 import {
   getProductDisplayName,
@@ -6,7 +6,7 @@ import {
   sortProducts,
 } from "../utils/product";
 import AveeLoader from "./AveeLoader";
-import ProductModal from "./ProductModal";
+import ProductModal from "./productModal/ProductModal";
 import AppShell from "./dashboard/AppShell";
 import ProductToolbar from "./dashboard/ProductToolbar";
 import ProductGridView from "./dashboard/ProductGridView";
@@ -19,7 +19,7 @@ import {
   DEFAULT_FILTERS,
 } from "./dashboard/useProductFilters";
 import { usePagination } from "./dashboard/usePagination";
-import { VIEW_MODE_KEY } from "./dashboard/constants";
+import { VIEW_MODE_KEY, GRID_PAGE_SIZE, LIST_PAGE_SIZE } from "./dashboard/constants";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -49,6 +49,9 @@ const Dashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [favoriteLoadingId, setFavoriteLoadingId] = useState(null);
 
+  const selectedCartRef = useRef(selectedCart);
+  selectedCartRef.current = selectedCart;
+
   const fetchCarts = useCallback(async (preserveSelection = false) => {
     if (!preserveSelection) setLoading(true);
     try {
@@ -56,8 +59,9 @@ const Dashboard = () => {
       const data = await response.json();
       setCarts(data);
 
-      if (preserveSelection && selectedCart) {
-        const current = data.find((c) => c.id === selectedCart);
+      const cartIdToKeep = selectedCartRef.current;
+      if (preserveSelection && cartIdToKeep) {
+        const current = data.find((c) => c.id === cartIdToKeep);
         if (current) {
           setSelectedCartObj(current);
           setSelectedCartProducts(current.products || []);
@@ -73,7 +77,7 @@ const Dashboard = () => {
     } finally {
       if (!preserveSelection) setLoading(false);
     }
-  }, [selectedCart]);
+  }, []);
 
   useEffect(() => {
     fetchCarts();
@@ -97,11 +101,14 @@ const Dashboard = () => {
   };
 
   const cartSelected = async (cartId) => {
+    if (cartId === selectedCartRef.current) return;
+
     setSelectedCart(cartId);
     setFilters(DEFAULT_FILTERS);
     const cartFromList = carts.find((c) => c.id === cartId);
     if (cartFromList) {
       setSelectedCartObj(cartFromList);
+      setSelectedCartProducts(cartFromList.products || []);
     }
 
     setCartSwitching(true);
@@ -113,6 +120,9 @@ const Dashboard = () => {
       const data = await response.json();
       setSelectedCartObj(data);
       setSelectedCartProducts(data?.products || []);
+      setCarts((prev) =>
+        prev.map((cart) => (cart.id === cartId ? { ...cart, ...data } : cart))
+      );
     } catch (error) {
       console.error("Error selecting cart:", error);
     } finally {
@@ -128,6 +138,8 @@ const Dashboard = () => {
       /* ignore */
     }
   };
+
+  const pageSize = viewMode === "grid" ? GRID_PAGE_SIZE : LIST_PAGE_SIZE;
 
   const handleFavoriteToggle = async (product, isFavorite) => {
     if (!selectedCart || favoriteLoadingId) return;
@@ -160,8 +172,10 @@ const Dashboard = () => {
       productId: product.id,
       productUrl: product.url,
       productDescription: product.description,
+      productNote: product.note,
       productNickname: product.nickname,
       originalTitle: product.title || "Unknown Product",
+      productHostname: product.hostname,
     });
     setIsModalOpen(true);
   };
@@ -171,9 +185,11 @@ const Dashboard = () => {
     setSelectedProduct((prev) => {
       if (!prev || prev.productId !== productId) return prev;
       const nickname = updates.nickname?.trim() || "";
+      const note = updates.note !== undefined ? updates.note : prev.productNote;
       return {
         ...prev,
         productNickname: nickname || undefined,
+        productNote: note,
         productName: nickname || prev.originalTitle,
       };
     });
@@ -194,7 +210,7 @@ const Dashboard = () => {
     [filteredProducts]
   );
   const { page, setPage, totalPages, pageItems, hasNext } =
-    usePagination(sortedProducts);
+    usePagination(sortedProducts, pageSize);
 
   const storeOptions = useMemo(() => {
     const hosts = new Set();
@@ -294,7 +310,9 @@ const Dashboard = () => {
           productId={selectedProduct?.productId}
           productUrl={selectedProduct?.productUrl}
           productDescription={selectedProduct?.productDescription}
+          productNote={selectedProduct?.productNote}
           productNickname={selectedProduct?.productNickname}
+          productHostname={selectedProduct?.productHostname}
           originalTitle={selectedProduct?.originalTitle}
           cartId={selectedCart}
           onDelete={handleProductDelete}

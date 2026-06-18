@@ -21,6 +21,7 @@ export function useProductFilters(products = [], filters = DEFAULT_FILTERS) {
         const haystack = [
           product.title,
           product.nickname,
+          product.note,
           product.hostname,
           product.description,
         ]

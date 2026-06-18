@@ -1,11 +1,11 @@
-import { Sparkles } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
 
 export default function SectionHeader({ className = "" }) {
   return (
     <header className={`text-center ${className}`}>
       <span className="mb-4 inline-flex items-center gap-2 rounded-full border-2 border-black bg-white px-4 py-1.5 text-sm font-semibold shadow-[3px_3px_0_#FFBC42]">
-        <Sparkles className="h-4 w-4 text-[#b45309]" strokeWidth={2.25} />
-        3 reasons you&apos;ll love it
+        <ShoppingBag className="h-4 w-4 text-[#b45309]" strokeWidth={2.25} />
+        Built for serial shoppers
       </span>
       <h2 className="text-3xl font-bold leading-tight sm:text-4xl md:text-5xl">
         Why should I use{" "}
@@ -20,9 +20,10 @@ export default function SectionHeader({ className = "" }) {
         </span>
         ?
       </h2>
-      <p className="text-primary-dark mx-auto mt-4 max-w-lg text-base leading-relaxed sm:text-lg">
-        Chaos turns messy tabs and forgotten links into one happy, organized
-        place — no spreadsheet required.
+      <p className="text-primary-dark mx-auto mt-4 max-w-xl text-base leading-relaxed sm:text-lg">
+        Save products from anywhere, sort them into carts on a clean dashboard, then
+        favorite, note, and filter your way to the perfect buy — without another
+        spreadsheet.
       </p>
     </header>
   );

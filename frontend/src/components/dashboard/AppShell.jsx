@@ -1,14 +1,46 @@
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import DashboardSidebar from "./DashboardSidebar";
+import { SIDEBAR_COLLAPSED_KEY } from "./constants";
+
+function getInitialSidebarCollapsed() {
+  try {
+    return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
 
 export default function AppShell({ children, sidebarProps }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(getInitialSidebarCollapsed);
+
+  const toggleSidebarCollapsed = () => {
+    setSidebarCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(next));
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  };
+
+  const desktopSidebarProps = {
+    ...sidebarProps,
+    collapsed: sidebarCollapsed,
+    onToggleCollapse: toggleSidebarCollapsed,
+  };
 
   return (
     <div className="flex min-h-[100dvh] w-full bg-[#f8f6f0]">
-      <div className="hidden md:flex md:h-[100dvh] md:shrink-0 md:sticky md:top-0">
-        <DashboardSidebar {...sidebarProps} />
+      <div
+        className={`hidden shrink-0 transition-[width] duration-200 ease-out md:sticky md:top-0 md:block md:h-[100dvh] ${
+          sidebarCollapsed ? "md:w-16" : "md:w-64 lg:w-72"
+        }`}
+      >
+        <DashboardSidebar {...desktopSidebarProps} />
       </div>
 
       {drawerOpen && (
@@ -22,6 +54,7 @@ export default function AppShell({ children, sidebarProps }) {
           <div className="relative h-full w-[min(18rem,85vw)] shadow-xl">
             <DashboardSidebar
               {...sidebarProps}
+              collapsed={false}
               onCartsChanged={() => {
                 sidebarProps.onCartsChanged?.();
                 setDrawerOpen(false);
@@ -30,7 +63,7 @@ export default function AppShell({ children, sidebarProps }) {
             <button
               type="button"
               onClick={() => setDrawerOpen(false)}
-              className="absolute right-3 top-4 flex h-8 w-8 items-center justify-center rounded-lg border-2 border-black bg-white shadow-[2px_2px_0_#000]"
+              className="absolute right-3 top-4 flex h-8 w-8 items-center justify-center rounded-lg border-2 border-black bg-white text-black shadow-[2px_2px_0_#000]"
               aria-label="Close sidebar"
             >
               <X className="h-4 w-4" />
@@ -44,7 +77,7 @@ export default function AppShell({ children, sidebarProps }) {
           <button
             type="button"
             onClick={() => setDrawerOpen(true)}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border-2 border-black bg-white shadow-[2px_2px_0_#000]"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border-2 border-black bg-white text-black shadow-[2px_2px_0_#000]"
             aria-label="Open menu"
           >
             <Menu className="h-5 w-5" />

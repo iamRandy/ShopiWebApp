@@ -4,6 +4,17 @@ export function getProductDisplayName(product) {
   return product?.title?.trim() || "Unknown Product";
 }
 
+export function getProductNote(product) {
+  return product?.note?.trim() || "";
+}
+
+/** Note replaces description in display when present. */
+export function getProductDisplayDescription(product) {
+  const note = getProductNote(product);
+  if (note) return note;
+  return product?.description?.trim() || "";
+}
+
 /** Formats numeric prices with two decimal places (e.g. 12.0 → "12.00"). */
 export function formatProductPrice(price, currency = "$") {
   if (price === null || price === undefined || price === "") {

@@ -9,22 +9,22 @@ export default function ProductListView({
 }) {
   if (products.length === 0) {
     return (
-      <div className="flex min-h-[12rem] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-stone-300 bg-white/50 p-8 text-center">
+      <div className="flex min-h-[12rem] flex-col items-center justify-center rounded-xl border border-dashed border-stone-200 bg-stone-50/50 p-8 text-center">
         <p className="text-stone-500">No products match your filters.</p>
       </div>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border-2 border-black bg-white shadow-[4px_4px_0_#FFBC42]">
-      <div className="hidden grid-cols-[minmax(0,2fr)_minmax(4rem,1fr)_minmax(5rem,1fr)_minmax(4rem,1fr)_auto] gap-3 border-b-2 border-stone-200 px-4 py-3 text-xs font-bold uppercase tracking-wide text-stone-400 sm:grid">
+    <div className="overflow-hidden rounded-xl border border-stone-200/80 bg-white">
+      <div className="hidden grid-cols-[minmax(0,2fr)_minmax(4rem,1fr)_minmax(5rem,1fr)_minmax(4rem,1fr)_auto] gap-3 border-b border-stone-100 px-4 py-2.5 text-xs font-medium text-stone-400 sm:grid">
         <span>Product</span>
         <span>Price</span>
         <span>Store</span>
         <span>Added</span>
         <span className="sr-only">Actions</span>
       </div>
-      <div>
+      <div className="divide-y divide-stone-100">
         {products.map((product) => (
           <ListProductRow
             key={product.id}

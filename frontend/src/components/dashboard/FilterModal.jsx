@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { DEFAULT_FILTERS } from "./useProductFilters";
+import ModalPortal from "../ModalPortal";
 
 export default function FilterModal({
   isOpen,
@@ -33,17 +34,18 @@ export default function FilterModal({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-      onClick={handleBackdropClick}
-    >
+    <ModalPortal>
+      <div
+        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4"
+        onClick={handleBackdropClick}
+      >
       <div className="w-full max-w-md overflow-hidden rounded-2xl border-2 border-black bg-white shadow-[8px_8px_0_#FFBC42]">
         <div className="flex items-center justify-between border-b-2 border-stone-200 px-5 py-4">
           <h2 className="text-lg font-extrabold text-black">Filter products</h2>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1 hover:bg-stone-100"
+            className="rounded-lg p-1 text-black hover:bg-stone-100"
             aria-label="Close filter"
           >
             <X className="h-5 w-5" />
@@ -123,19 +125,20 @@ export default function FilterModal({
           <button
             type="button"
             onClick={handleClear}
-            className="flex-1 rounded-xl border-2 border-black bg-white px-4 py-2.5 text-sm font-bold shadow-[2px_2px_0_#000] transition-transform hover:-translate-y-0.5"
+            className="flex-1 rounded-xl border-2 border-black bg-white px-4 py-2.5 text-sm font-bold text-black shadow-[2px_2px_0_#000] transition-transform hover:-translate-y-0.5"
           >
             Clear
           </button>
           <button
             type="button"
             onClick={handleApply}
-            className="flex-1 rounded-xl border-2 border-black bg-[#FFBC42] px-4 py-2.5 text-sm font-bold shadow-[2px_2px_0_#000] transition-transform hover:-translate-y-0.5"
+            className="flex-1 rounded-xl border-2 border-black bg-[#FFBC42] px-4 py-2.5 text-sm font-bold text-black shadow-[2px_2px_0_#000] transition-transform hover:-translate-y-0.5"
           >
             Apply
           </button>
         </div>
       </div>
     </div>
+    </ModalPortal>
   );
 }

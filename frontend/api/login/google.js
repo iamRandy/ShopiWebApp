@@ -43,19 +43,26 @@ module.exports = async function handler(req, res) {
     const update = {
       $set: {
         email: payload.email,
-        name: payload.name,
         picture: payload.picture,
-        sub: payload.sub,
         lastLogin: new Date(),
         refreshToken: refreshTokenValue,
       },
-      $setOnInsert: { products: [] },
+      $setOnInsert: {
+        carts: [],
+        sub: payload.sub,
+        name: payload.name,
+        username: payload.name,
+        firstName: "",
+        lastName: "",
+      },
     };
     const options = { upsert: true };
     await usersCollection.updateOne(filter, update, options);
 
+    const user = await usersCollection.findOne({ sub: payload.sub });
+
     // Generate our own JWT tokens
-    const { accessToken, refreshToken } = generateTokens(payload);
+    const { accessToken, refreshToken } = generateTokens(user);
 
     res.status(200).json({
       message: "Login successful",

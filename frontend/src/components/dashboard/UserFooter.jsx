@@ -5,11 +5,21 @@ import { logout } from "../../utils/api";
 import { clearExtensionStorage } from "../../utils/extension";
 import { APP_VERSION } from "./constants";
 
-export default function UserFooter() {
+export default function UserFooter({ collapsed = false }) {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const containerRef = useRef(null);
-  const userName = localStorage.getItem("userName") || "Username";
+  const [userName, setUserName] = useState(
+    () => localStorage.getItem("userName") || "Username"
+  );
+
+  useEffect(() => {
+    const syncName = () => {
+      setUserName(localStorage.getItem("userName") || "Username");
+    };
+    window.addEventListener("profile-updated", syncName);
+    return () => window.removeEventListener("profile-updated", syncName);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -33,20 +43,32 @@ export default function UserFooter() {
   };
 
   return (
-    <div ref={containerRef} className="relative mt-auto border-t-2 border-stone-200 pt-4">
+    <div
+      ref={containerRef}
+      className={`relative mt-auto w-full border-t-2 border-stone-200 pt-4 ${
+        collapsed ? "flex flex-col items-center" : ""
+      }`}
+    >
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
         onMouseEnter={() => setOpen(true)}
-        className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left transition-colors hover:bg-stone-100"
+        title={collapsed ? userName : undefined}
+        className={`flex items-center rounded-lg py-2 text-left text-black transition-colors hover:bg-stone-100 ${
+          collapsed ? "justify-center px-2" : "w-full gap-2 px-2"
+        }`}
       >
         <User className="h-5 w-5 shrink-0 text-stone-600" strokeWidth={2} />
-        <span className="truncate text-sm font-semibold text-black">{userName}</span>
+        {!collapsed && (
+          <span className="truncate text-sm font-semibold text-black">{userName}</span>
+        )}
       </button>
 
       {open && (
         <div
-          className="absolute bottom-full left-0 right-0 mb-2 overflow-hidden rounded-xl border-2 border-black bg-white shadow-[4px_4px_0_#FFBC42]"
+          className={`absolute bottom-full mb-2 overflow-hidden rounded-xl border-2 border-black bg-white shadow-[4px_4px_0_#FFBC42] ${
+            collapsed ? "left-0 min-w-[10rem]" : "left-0 right-0"
+          }`}
           onMouseLeave={() => setOpen(false)}
         >
           <button
@@ -60,9 +82,11 @@ export default function UserFooter() {
         </div>
       )}
 
-      <p className="mt-3 px-2 text-[10px] font-bold uppercase tracking-widest text-stone-400">
-        CHAOS_WEB {APP_VERSION}
-      </p>
+      {!collapsed && (
+        <p className="mt-3 px-2 text-[10px] font-bold uppercase tracking-widest text-stone-400">
+          CHAOS_WEB {APP_VERSION}
+        </p>
+      )}
     </div>
   );
 }

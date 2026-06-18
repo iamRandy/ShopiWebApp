@@ -26,7 +26,7 @@ export default function ProductToolbar({
             type="button"
             onClick={() => onViewModeChange("grid")}
             aria-pressed={viewMode === "grid"}
-            className={`flex h-10 w-10 items-center justify-center transition-colors ${
+            className={`flex h-10 w-10 items-center justify-center text-black transition-colors ${
               viewMode === "grid" ? "bg-[#FFBC42]/40" : "hover:bg-stone-50"
             }`}
             title="Grid view"
@@ -37,7 +37,7 @@ export default function ProductToolbar({
             type="button"
             onClick={() => onViewModeChange("list")}
             aria-pressed={viewMode === "list"}
-            className={`flex h-10 w-10 items-center justify-center border-l-2 border-black transition-colors ${
+            className={`flex h-10 w-10 items-center justify-center border-l-2 border-black text-black transition-colors ${
               viewMode === "list" ? "bg-[#FFBC42]/40" : "hover:bg-stone-50"
             }`}
             title="List view"
@@ -49,7 +49,7 @@ export default function ProductToolbar({
         <button
           type="button"
           onClick={onFilterOpen}
-          className="relative flex h-10 items-center gap-2 rounded-xl border-2 border-black bg-white px-4 text-sm font-bold shadow-[3px_3px_0_#000] transition-transform hover:-translate-y-0.5"
+          className="relative flex h-10 items-center gap-2 rounded-xl border-2 border-black bg-white px-4 text-sm font-bold text-black shadow-[3px_3px_0_#000] transition-transform hover:-translate-y-0.5"
         >
           <SlidersHorizontal className="h-4 w-4" strokeWidth={2.25} />
           Filter

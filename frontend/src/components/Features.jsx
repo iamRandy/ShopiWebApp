@@ -88,11 +88,12 @@ export default function Features() {
         >
           <span className="mb-4 inline-flex items-center gap-2 rounded-full border-2 border-black bg-white px-4 py-1.5 text-sm font-semibold shadow-[3px_3px_0_#FFBC42]">
             <Bookmark className="h-4 w-4 text-[#b45309]" strokeWidth={2.25} />
-            Save from anywhere
+            See it in action
           </span>
-          <h2 className="text-4xl font-bold md:text-5xl">Just save it!</h2>
+          <h2 className="text-4xl font-bold md:text-5xl">One click to save</h2>
           <p className="text-primary-dark mx-auto mt-4 max-w-md text-lg leading-relaxed md:mx-0">
-            Found something you love? Save it now and decide later.
+            Spot something while you browse? Hit the Chaos extension and it lands in
+            your dashboard — price, image, and link included.
           </p>
         </motion.div>
 

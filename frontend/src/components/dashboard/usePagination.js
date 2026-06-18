@@ -8,7 +8,7 @@ export function usePagination(items = [], pageSize = PAGE_SIZE) {
 
   useEffect(() => {
     setPage(1);
-  }, [items]);
+  }, [items, pageSize]);
 
   useEffect(() => {
     if (page > totalPages) {

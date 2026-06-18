@@ -1,4 +1,4 @@
-import { User, Blocks, BadgeQuestionMark, HeartPlus, Menu, X, Cog } from "lucide-react";
+import { User, Bookmark, Sparkles, Rocket, Menu, X } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
@@ -169,6 +169,29 @@ const NavBar = ({ isLanding }) => {
     scrollToSectionWhenReady(sectionId);
   };
 
+  const handleDashboard = () => {
+    navigate("/home");
+    setIsMobileMenuOpen(false);
+  };
+
+  const landingNavItems = [
+    {
+      id: "features",
+      label: "One-click save",
+      icon: Bookmark,
+    },
+    {
+      id: "how-it-works",
+      label: "Why Chaos",
+      icon: Sparkles,
+    },
+    {
+      id: "landing-end",
+      label: "Start free",
+      icon: Rocket,
+    },
+  ];
+
   // --- Render ---
 
   return (
@@ -176,7 +199,7 @@ const NavBar = ({ isLanding }) => {
       <nav
         className={`
           left-0 right-0 text-black fixed ${
-            isLanding ? "top-3 mx-4" : "top-0 mx-0 w-full"
+            isLanding ? "top-3 px-4" : "top-0 mx-0 w-full"
           } ${isMobileMenuOpen ? "z-30" : "z-50"} h-fit
         `}
         onHoverStart={() => setIsHovering(true)}
@@ -186,16 +209,18 @@ const NavBar = ({ isLanding }) => {
         <div
           className={`${
             isLanding
-              ? "rounded-full border border-stone-500/20 backdrop-blur-lg bg-white/10 shadow-lg"
+              ? "mx-auto max-w-6xl rounded-2xl border-2 border-black bg-[#faf8f4]/95 shadow-[4px_4px_0_#FFBC42] backdrop-blur-sm"
               : "border-b border-stone-200/90 bg-white/95 shadow-sm backdrop-blur-md"
-          } relative flex items-center justify-between gap-3 sm:gap-6 md:gap-10 px-4 sm:px-5 md:px-6 py-3 min-h-16
+          } relative flex items-center justify-between gap-3 sm:gap-4 px-4 sm:px-5 md:px-6 py-3 min-h-[3.75rem]
         `}>
           {/* Left side: Logo */}
-          <div className="relative flex flex-1 min-w-0 items-center h-full">
+          <div className={`relative flex min-w-0 items-center h-full ${isLanding ? "shrink-0" : "flex-1"}`}>
             <motion.a
               id="logo_text"
               href="/"
-              className="text-xl sm:text-2xl font-bold flex items-center gap-2 absolute"
+              className={`text-xl sm:text-2xl font-bold flex items-center gap-2 ${
+                isLanding ? "relative" : "absolute"
+              }`}
               onClick={handleLogoClick}
               transition={{ duration: 0.8, ease: "easeInOut" }}
             >
@@ -226,33 +251,41 @@ const NavBar = ({ isLanding }) => {
                 <>
                   {/* Landing page navigation */}
                   {isLanding && (
-                    <div
-                      className="flex flex-1 justify-center gap-5 lg:gap-10 items-center whitespace-nowrap"
-                    >
-                      <a
-                        href="/#features"
-                        className="text-base lg:text-lg flex gap-1 items-center special_links"
-                        onClick={handleLandingSectionClick("features")}
-                      >
-                        <HeartPlus className="w-4 h-4 lg:w-5 lg:h-5" />
-                        Save
-                      </a>
-                      <a
-                        href="/#how-it-works"
-                        className="text-base lg:text-lg flex gap-1 items-center special_links"
-                        onClick={handleLandingSectionClick("how-it-works")}
-                      >
-                        <Blocks className="w-4 h-4 lg:w-5 lg:h-5" />
-                        Organize
-                      </a>
-                      <a
-                        href=""
-                        className="text-base lg:text-lg flex gap-1 items-center special_links"
-                        onClick={handleLogin}
-                      >
-                        <BadgeQuestionMark className="w-4 h-4 lg:w-5 lg:h-5" />
-                        Get started
-                      </a>
+                    <div className="flex flex-1 justify-center gap-2 lg:gap-3 items-center whitespace-nowrap">
+                      {landingNavItems.map(({ id, label, icon: Icon }) => (
+                        <a
+                          key={id}
+                          href={`/#${id}`}
+                          className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-stone-700 transition-colors hover:bg-white hover:text-black lg:px-4 lg:text-[0.95rem]"
+                          onClick={handleLandingSectionClick(id)}
+                        >
+                          <Icon className="h-4 w-4 text-[#b45309]" strokeWidth={2.25} />
+                          {label}
+                        </a>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Landing auth actions */}
+                  {isLanding && (
+                    <div className="flex shrink-0 items-center">
+                      {isAuthenticated ? (
+                        <button
+                          type="button"
+                          onClick={handleDashboard}
+                          className="rounded-lg border-2 border-black bg-[#FFBC42] px-4 py-2 text-sm font-bold text-black shadow-[2px_2px_0_#000] transition-transform hover:-translate-y-0.5"
+                        >
+                          Dashboard
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleLogin}
+                          className="rounded-lg border-2 border-black bg-[#FFBC42] px-4 py-2 text-sm font-bold text-black shadow-[2px_2px_0_#000] transition-transform hover:-translate-y-0.5"
+                        >
+                          Sign in
+                        </button>
+                      )}
                     </div>
                   )}
 
@@ -369,7 +402,7 @@ const NavBar = ({ isLanding }) => {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed top-0 right-0 z-50 h-full w-full max-w-sm bg-white/95 backdrop-blur-lg shadow-2xl p-6 pb-10"
+            className="fixed top-0 right-0 z-50 h-full w-full max-w-sm border-l-2 border-black bg-[#faf8f4] shadow-2xl p-6 pb-10"
           >
             {/* Mobile Menu Header */}
             <div className="flex items-center justify-between mb-8">
@@ -390,34 +423,42 @@ const NavBar = ({ isLanding }) => {
             </div>
 
             {/* Mobile Menu Content */}
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-3">
               {/* Landing page navigation */}
               {isLanding && (
                 <>
-                  <a
-                    href="/#features"
-                    className="text-lg flex gap-3 items-center p-3 rounded-lg hover:bg-gray-100 transition-colors"
-                    onClick={handleLandingSectionClick("features")}
-                  >
-                    <Cog className="w-5 h-5" />
-                    Key Features
-                  </a>
-                  <a
-                    href="/#how-it-works"
-                    className="text-lg flex gap-3 items-center p-3 rounded-lg hover:bg-gray-100 transition-colors"
-                    onClick={handleLandingSectionClick("how-it-works")}
-                  >
-                    <Blocks className="w-5 h-5" />
-                    How it works
-                  </a>
-                  <a
-                    href=""
-                    className="text-lg flex gap-3 items-center p-3 rounded-lg hover:bg-gray-100 transition-colors"
-                    onClick={handleLogin}
-                  >
-                    <BadgeQuestionMark className="w-4 h-4 lg:w-5 lg:h-5" />
-                    Get started
-                  </a>
+                  {landingNavItems.map(({ id, label, icon: Icon }) => (
+                    <a
+                      key={id}
+                      href={`/#${id}`}
+                      className="flex items-center gap-3 rounded-xl border-2 border-transparent p-3 text-lg font-semibold transition-colors hover:border-black hover:bg-white"
+                      onClick={handleLandingSectionClick(id)}
+                    >
+                      <span className="flex h-9 w-9 items-center justify-center rounded-lg border-2 border-black bg-white shadow-[2px_2px_0_#FFBC42]">
+                        <Icon className="h-4 w-4 text-[#b45309]" strokeWidth={2.25} />
+                      </span>
+                      {label}
+                    </a>
+                  ))}
+                  <div className="mt-4 border-t-2 border-stone-200 pt-4">
+                    {isAuthenticated ? (
+                      <button
+                        type="button"
+                        onClick={handleDashboard}
+                        className="w-full rounded-xl border-2 border-black bg-[#FFBC42] px-4 py-3 text-lg font-bold text-black shadow-[3px_3px_0_#000]"
+                      >
+                        Go to dashboard
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleLogin}
+                        className="w-full rounded-xl border-2 border-black bg-[#FFBC42] px-4 py-3 text-lg font-bold text-black shadow-[3px_3px_0_#000]"
+                      >
+                        Sign in
+                      </button>
+                    )}
+                  </div>
                 </>
               )}
 

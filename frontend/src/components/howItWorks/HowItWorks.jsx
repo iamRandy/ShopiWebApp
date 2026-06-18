@@ -89,7 +89,7 @@ function MobileHowItWorks() {
   return (
     <section
       id="how-it-works"
-      className="relative overflow-hidden bg-gradient-to-b from-[var(--primary-bgcolor)] via-[#fff8ee] to-[rgba(255,234,207,0)] px-5 py-20"
+      className="relative overflow-hidden bg-gradient-to-b from-[#f8f6f0] via-[#faf8f4] to-[#f8f6f0] px-5 py-20"
     >
       <SectionBackground />
       <div className="relative z-10 mx-auto w-full max-w-6xl">
@@ -169,7 +169,7 @@ function DesktopHowItWorks() {
     <section
       ref={sectionRef}
       id="how-it-works"
-      className="relative h-[160vh] overflow-hidden bg-gradient-to-b from-[var(--primary-bgcolor)] via-[#fff8ee] to-[rgba(255,234,207,0)] pt-52 [content-visibility:auto] md:pt-64"
+      className="relative h-[160vh] overflow-hidden bg-gradient-to-b from-[#f8f6f0] via-[#faf8f4] to-[#f8f6f0] pt-52 [content-visibility:auto] md:pt-64"
     >
       <SectionBackground />
 

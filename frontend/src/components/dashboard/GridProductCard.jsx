@@ -33,7 +33,7 @@ export default function GridProductCard({
 
   return (
     <article
-      className="flex h-full flex-col overflow-hidden rounded-2xl border-2 border-black bg-white shadow-[4px_4px_0_#FFBC42] transition-transform hover:-translate-y-1"
+      className="group relative aspect-square cursor-pointer overflow-hidden rounded-xl bg-stone-100 transition-shadow hover:shadow-md"
       onClick={() => onOpen(product)}
       role="button"
       tabIndex={0}
@@ -44,50 +44,52 @@ export default function GridProductCard({
         }
       }}
     >
-      <div className="relative aspect-square bg-stone-100">
-        <img
-          src={image}
-          alt={name}
-          className="h-full w-full object-cover"
-          loading="lazy"
-        />
-        <button
-          type="button"
-          onClick={handleFavorite}
-          disabled={isFavoriteLoading}
-          aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-          className={`absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full border-2 border-black bg-white shadow-[2px_2px_0_#000] transition-colors ${
-            isFavorite ? "text-red-500" : "text-stone-400 hover:text-red-400"
-          }`}
-        >
-          <Heart
-            className="h-4 w-4"
-            fill={isFavorite ? "currentColor" : "none"}
-            strokeWidth={2.25}
-          />
-        </button>
-        {product.hostname && (
-          <span className="absolute bottom-2 left-2 rounded-full border border-stone-200 bg-white/95 px-2 py-0.5 text-[10px] font-semibold text-stone-600">
-            {product.hostname}
-          </span>
-        )}
-      </div>
+      <img
+        src={image}
+        alt={name}
+        className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+        loading="lazy"
+      />
 
-      <div className="flex flex-1 flex-col gap-3 p-3">
-        <div>
-          <h3 className="line-clamp-2 text-sm font-bold leading-snug text-black">
-            {name}
-          </h3>
-          <p className="mt-1 text-sm font-extrabold text-black">{price}</p>
+      <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-black/5" />
+
+      {product.hostname && (
+        <span className="absolute left-2.5 top-2.5 max-w-[calc(100%-3rem)] truncate rounded-md bg-white/85 px-2 py-0.5 text-[10px] font-medium text-stone-600 backdrop-blur-sm">
+          {product.hostname}
+        </span>
+      )}
+
+      <button
+        type="button"
+        onClick={handleFavorite}
+        disabled={isFavoriteLoading}
+        aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+        className={`absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full bg-white/85 backdrop-blur-sm transition-colors ${
+          isFavorite ? "text-red-500" : "text-stone-400 hover:text-red-400"
+        }`}
+      >
+        <Heart
+          className="h-3.5 w-3.5"
+          fill={isFavorite ? "currentColor" : "none"}
+          strokeWidth={2}
+        />
+      </button>
+
+      <div className="absolute inset-x-0 bottom-0 p-3">
+        <h3 className="line-clamp-2 text-sm font-medium leading-snug text-white">
+          {name}
+        </h3>
+        <div className="mt-1.5 flex items-center justify-between gap-2">
+          <p className="text-sm font-semibold text-white/95">{price}</p>
+          <button
+            type="button"
+            onClick={handleVisit}
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/90 text-stone-700 transition-colors hover:bg-white"
+            aria-label="Visit product"
+          >
+            <ExternalLink className="h-3.5 w-3.5" strokeWidth={2} />
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={handleVisit}
-          className="mt-auto flex w-full items-center justify-center gap-2 rounded-xl border-2 border-black bg-white px-3 py-2 text-xs font-bold shadow-[2px_2px_0_#000] transition-transform hover:-translate-y-0.5"
-        >
-          Visit Product
-          <ExternalLink className="h-3.5 w-3.5" strokeWidth={2.25} />
-        </button>
       </div>
     </article>
   );

@@ -7,23 +7,93 @@ const EXTENSION_URL =
   "https://chromewebstore.google.com/detail/chaos-cart-saver/bjofoogkolnnpldckgedhdeekajhnpcb?authuser=0&hl=en";
 
 const CART_BURST_MOBILE = [
-  { color: "#b45309", scale: 0.9, rest: { x: -125, y: 40, rotate: -18 }, delay: 0.1 },
-  { color: "#FFBC42", scale: 1.1, rest: { x: -65, y: 82, rotate: 8 }, delay: 0.17 },
-  { color: "#57382a", scale: 0.85, rest: { x: 14, y: 96, rotate: -5 }, delay: 0.24 },
-  { color: "#eb9c36", scale: 1, rest: { x: 74, y: 74, rotate: 14 }, delay: 0.31 },
-  { color: "#d97706", scale: 0.95, rest: { x: 132, y: 34, rotate: -10 }, delay: 0.38 },
-  { color: "#92400e", scale: 1.05, rest: { x: -100, y: -18, rotate: 6 }, delay: 0.45 },
-  { color: "#f59e0b", scale: 0.88, rest: { x: 108, y: -14, rotate: -16 }, delay: 0.52 },
+  {
+    color: "#b45309",
+    scale: 0.9,
+    rest: { x: -125, y: 40, rotate: -18 },
+    delay: 0.1,
+  },
+  {
+    color: "#FFBC42",
+    scale: 1.1,
+    rest: { x: -65, y: 82, rotate: 8 },
+    delay: 0.17,
+  },
+  {
+    color: "#57382a",
+    scale: 0.85,
+    rest: { x: 14, y: 96, rotate: -5 },
+    delay: 0.24,
+  },
+  {
+    color: "#eb9c36",
+    scale: 1,
+    rest: { x: 74, y: 74, rotate: 14 },
+    delay: 0.31,
+  },
+  {
+    color: "#d97706",
+    scale: 0.95,
+    rest: { x: 132, y: 34, rotate: -10 },
+    delay: 0.38,
+  },
+  {
+    color: "#92400e",
+    scale: 1.05,
+    rest: { x: -100, y: -18, rotate: 6 },
+    delay: 0.45,
+  },
+  {
+    color: "#f59e0b",
+    scale: 0.88,
+    rest: { x: 108, y: -14, rotate: -16 },
+    delay: 0.52,
+  },
 ];
 
 const CART_BURST_DESKTOP = [
-  { color: "#b45309", scale: 1, rest: { x: -255, y: 50, rotate: -14 }, delay: 0.1 },
-  { color: "#FFBC42", scale: 1.15, rest: { x: -162, y: 96, rotate: 10 }, delay: 0.17 },
-  { color: "#57382a", scale: 0.9, rest: { x: -48, y: 112, rotate: -6 }, delay: 0.24 },
-  { color: "#eb9c36", scale: 1.05, rest: { x: 64, y: 106, rotate: 12 }, delay: 0.31 },
-  { color: "#d97706", scale: 0.95, rest: { x: 172, y: 76, rotate: -8 }, delay: 0.38 },
-  { color: "#92400e", scale: 1.1, rest: { x: 252, y: 28, rotate: 16 }, delay: 0.45 },
-  { color: "#f59e0b", scale: 0.88, rest: { x: -210, y: -24, rotate: 4 }, delay: 0.52 },
+  {
+    color: "#b45309",
+    scale: 1,
+    rest: { x: -255, y: 50, rotate: -14 },
+    delay: 0.1,
+  },
+  {
+    color: "#FFBC42",
+    scale: 1.15,
+    rest: { x: -162, y: 96, rotate: 10 },
+    delay: 0.17,
+  },
+  {
+    color: "#57382a",
+    scale: 0.9,
+    rest: { x: -48, y: 112, rotate: -6 },
+    delay: 0.24,
+  },
+  {
+    color: "#eb9c36",
+    scale: 1.05,
+    rest: { x: 64, y: 106, rotate: 12 },
+    delay: 0.31,
+  },
+  {
+    color: "#d97706",
+    scale: 0.95,
+    rest: { x: 172, y: 76, rotate: -8 },
+    delay: 0.38,
+  },
+  {
+    color: "#92400e",
+    scale: 1.1,
+    rest: { x: 252, y: 28, rotate: 16 },
+    delay: 0.45,
+  },
+  {
+    color: "#f59e0b",
+    scale: 0.88,
+    rest: { x: -210, y: -24, rotate: 4 },
+    delay: 0.52,
+  },
 ];
 
 const SPARKLE_POSITIONS = [
@@ -43,7 +113,7 @@ function HeroSparkles({ phase, reducedMotion, layer = "behind" }) {
   if (reducedMotion) return null;
 
   const sparkles = SPARKLE_POSITIONS.filter((pos) =>
-    layer === "front" ? pos.onTop : !pos.onTop
+    layer === "front" ? pos.onTop : !pos.onTop,
   );
 
   return (
@@ -153,7 +223,12 @@ function BurstCartIcon({ entry, phase, reducedMotion, isMobile }) {
               y: [rest.y, rest.y - 6, rest.y],
               opacity: 1,
               scale: entry.scale,
-              rotate: [rest.rotate, rest.rotate + 4, rest.rotate - 3, rest.rotate],
+              rotate: [
+                rest.rotate,
+                rest.rotate + 4,
+                rest.rotate - 3,
+                rest.rotate,
+              ],
             }
       }
       transition={
@@ -214,7 +289,11 @@ function HeroVisualStage({ phase, setPhase, reducedMotion }) {
   return (
     <div className="relative mx-auto w-full min-h-[320px] max-w-4xl -mt-8 md:min-h-[460px]">
       <div className="absolute inset-0 flex items-center justify-center">
-        <HeroSparkles phase={phase} reducedMotion={reducedMotion} layer="behind" />
+        <HeroSparkles
+          phase={phase}
+          reducedMotion={reducedMotion}
+          layer="behind"
+        />
 
         {cartBurst.map((entry, i) => (
           <BurstCartIcon
@@ -283,7 +362,11 @@ function HeroVisualStage({ phase, setPhase, reducedMotion }) {
           </motion.div>
         )}
 
-        <HeroSparkles phase={phase} reducedMotion={reducedMotion} layer="front" />
+        <HeroSparkles
+          phase={phase}
+          reducedMotion={reducedMotion}
+          layer="front"
+        />
       </div>
     </div>
   );
@@ -329,7 +412,12 @@ export default function Hero() {
             ? undefined
             : { scale: [1, 1.12, 1], opacity: [0.4, 0.7, 0.4] }
         }
-        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
+        transition={{
+          duration: 10,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: 1.5,
+        }}
         aria-hidden
       />
 
@@ -337,7 +425,11 @@ export default function Hero() {
         <motion.div
           initial={reducedMotion ? false : { opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: "easeOut", delay: reducedMotion ? 0 : 0.3 }}
+          transition={{
+            duration: 0.7,
+            ease: "easeOut",
+            delay: reducedMotion ? 0 : 0.3,
+          }}
           className="flex w-full flex-col items-center text-center"
         >
           <span className="mb-5 inline-flex w-fit items-center gap-2 rounded-full border-2 border-black bg-white px-4 py-1.5 text-sm font-semibold shadow-[3px_3px_0_#FFBC42]">
@@ -364,7 +456,11 @@ export default function Hero() {
           <motion.p
             initial={reducedMotion ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, ease: "easeOut", delay: reducedMotion ? 0 : 0.45 }}
+            transition={{
+              duration: 0.8,
+              ease: "easeOut",
+              delay: reducedMotion ? 0 : 0.45,
+            }}
             className="mt-4 max-w-md text-base leading-relaxed text-primary-dark sm:text-lg"
           >
             Making decisions has never been more fun and easy!
@@ -373,11 +469,17 @@ export default function Hero() {
           <motion.div
             initial={reducedMotion ? false : { opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: "easeOut", delay: reducedMotion ? 0 : 0.55 }}
+            transition={{
+              duration: 0.5,
+              ease: "easeOut",
+              delay: reducedMotion ? 0 : 0.55,
+            }}
             className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-center"
           >
             <motion.button
-              whileHover={reducedMotion ? undefined : { rotate: -2, scale: 1.03 }}
+              whileHover={
+                reducedMotion ? undefined : { rotate: -2, scale: 1.03 }
+              }
               whileTap={reducedMotion ? undefined : { scale: 0.98 }}
               transition={{ duration: 0.2 }}
               onClick={() => navigate("/login")}
@@ -386,10 +488,14 @@ export default function Hero() {
               Get started
             </motion.button>
             <motion.button
-              whileHover={reducedMotion ? undefined : { rotate: 2, scale: 1.03 }}
+              whileHover={
+                reducedMotion ? undefined : { rotate: 2, scale: 1.03 }
+              }
               whileTap={reducedMotion ? undefined : { scale: 0.98 }}
               transition={{ duration: 0.2 }}
-              onClick={() => window.open(EXTENSION_URL, "_blank", "noopener,noreferrer")}
+              onClick={() =>
+                window.open(EXTENSION_URL, "_blank", "noopener,noreferrer")
+              }
               className="rounded-full border-2 border-black bg-black px-8 py-3.5 text-base font-bold text-white shadow-[4px_4px_0_#FFBC42] transition-shadow hover:shadow-[2px_2px_0_#FFBC42] active:shadow-none sm:px-10"
             >
               Extension link

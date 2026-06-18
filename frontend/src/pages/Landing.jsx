@@ -13,8 +13,8 @@ export default function Landing() {
             <NavBar isLanding={true} />
             <main className="md:mt-0">
                 <Hero />
-                <Features />    {/* Renamed to "Save" in nav */}
-                <HowItWorks />  {/* Renamed to "Organize" in nav */}
+                <Features />
+                <HowItWorks />
                 <LandingEnd />
             </main>
             <Footer />

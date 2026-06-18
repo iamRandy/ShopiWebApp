@@ -42,6 +42,40 @@ async function init() {
   app.listen(PORT, () => console.log("API ready on", PORT));
 }
 
+const MAX_PROFILE_FIELD_LENGTH = 50;
+
+const buildDisplayName = ({ username, firstName, lastName, name }) => {
+  if (username && String(username).trim()) return String(username).trim();
+  const full = [firstName, lastName]
+    .filter((part) => part && String(part).trim())
+    .join(" ")
+    .trim();
+  if (full) return full;
+  return name || "";
+};
+
+const toPublicProfile = (user) => ({
+  sub: user.sub,
+  email: user.email || "",
+  username: user.username || user.name || "",
+  firstName: user.firstName || "",
+  lastName: user.lastName || "",
+  name: user.name || "",
+  picture: user.picture || "",
+});
+
+const sanitizeProfileField = (value, fieldName) => {
+  if (value === undefined) return undefined;
+  if (typeof value !== "string") {
+    throw new Error(`${fieldName} must be a string`);
+  }
+  const trimmed = value.trim();
+  if (trimmed.length > MAX_PROFILE_FIELD_LENGTH) {
+    throw new Error(`${fieldName} must be at most ${MAX_PROFILE_FIELD_LENGTH} characters`);
+  }
+  return trimmed;
+};
+
 // Generate tokens
 const generateTokens = (user) => {
   const payload = {
@@ -110,19 +144,26 @@ app.post("/api/login/google", async (req, res) => {
     const update = {
       $set: {
         email: payload.email,
-        name: payload.name,
         picture: payload.picture,
-        sub: payload.sub,
         lastLogin: new Date(),
         refreshToken: refreshTokenValue,
       },
-      $setOnInsert: { carts: [] }, // Initialize with empty carts array, no products array
+      $setOnInsert: {
+        carts: [],
+        sub: payload.sub,
+        name: payload.name,
+        username: payload.name,
+        firstName: "",
+        lastName: "",
+      },
     };
     const options = { upsert: true };
     await usersCollection.updateOne(filter, update, options);
 
+    const user = await usersCollection.findOne({ sub: payload.sub });
+
     // Generate our own JWT tokens
-    const { accessToken, refreshToken } = generateTokens(payload);
+    const { accessToken, refreshToken } = generateTokens(user);
 
     res.status(200).json({
       message: "Login successful",
@@ -315,11 +356,11 @@ app.delete("/api/carts/:cartId", verifyToken, async (req, res) => {
 // No longer need separate products array or batch fetching
 // Products are automatically deleted when their cart is deleted
 
-// Update a product in a specific cart (nickname, favorite)
+// Update a product in a specific cart (nickname, favorite, note)
 app.patch("/api/carts/:cartId/products/:productId", verifyToken, async (req, res) => {
   try {
     const { cartId, productId } = req.params;
-    const { nickname, isFavorite } = req.body;
+    const { nickname, isFavorite, note } = req.body;
 
     if (!cartId || !productId) {
       return res.status(400).json({ error: "Cart ID and Product ID are required" });
@@ -333,8 +374,13 @@ app.patch("/api/carts/:cartId/products/:productId", verifyToken, async (req, res
       return res.status(400).json({ error: "isFavorite must be a boolean" });
     }
 
+    if (note !== undefined && typeof note !== "string") {
+      return res.status(400).json({ error: "Note must be a string" });
+    }
+
     const trimmedNickname =
       typeof nickname === "string" ? nickname.trim() : undefined;
+    const trimmedNote = typeof note === "string" ? note.trim() : undefined;
 
     const $set = {};
     const $unset = {};
@@ -349,6 +395,14 @@ app.patch("/api/carts/:cartId/products/:productId", verifyToken, async (req, res
 
     if (isFavorite !== undefined) {
       $set["carts.$[c].products.$[p].isFavorite"] = isFavorite;
+    }
+
+    if (trimmedNote !== undefined) {
+      if (trimmedNote) {
+        $set["carts.$[c].products.$[p].note"] = trimmedNote;
+      } else {
+        $unset["carts.$[c].products.$[p].note"] = "";
+      }
     }
 
     if (Object.keys($set).length === 0 && Object.keys($unset).length === 0) {
@@ -410,6 +464,131 @@ app.delete("/api/carts/:cartId/products/:productId", verifyToken, async (req, re
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Failed to delete product" });
+  }
+});
+
+app.get("/api/account", verifyToken, async (req, res) => {
+  try {
+    const user = await usersCollection.findOne({ sub: req.user.sub });
+    if (!user) {
+      return res.status(404).json({ error: "Account not found" });
+    }
+    res.json(toPublicProfile(user));
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Failed to fetch account" });
+  }
+});
+
+app.patch("/api/account", verifyToken, async (req, res) => {
+  try {
+    const user = await usersCollection.findOne({ sub: req.user.sub });
+    if (!user) {
+      return res.status(404).json({ error: "Account not found" });
+    }
+
+    const { username, firstName, lastName } = req.body || {};
+    const updates = {};
+
+    try {
+      const nextUsername = sanitizeProfileField(username, "username");
+      const nextFirstName = sanitizeProfileField(firstName, "firstName");
+      const nextLastName = sanitizeProfileField(lastName, "lastName");
+
+      if (nextUsername !== undefined) updates.username = nextUsername;
+      if (nextFirstName !== undefined) updates.firstName = nextFirstName;
+      if (nextLastName !== undefined) updates.lastName = nextLastName;
+    } catch (validationError) {
+      return res.status(400).json({ error: validationError.message });
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: "No profile fields to update" });
+    }
+
+    const merged = { ...user, ...updates };
+    updates.name = buildDisplayName(merged);
+
+    await usersCollection.updateOne({ sub: req.user.sub }, { $set: updates });
+    const updatedUser = await usersCollection.findOne({ sub: req.user.sub });
+    const { accessToken } = generateTokens(updatedUser);
+
+    res.json({
+      ...toPublicProfile(updatedUser),
+      accessToken,
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Failed to update account" });
+  }
+});
+
+app.post("/api/account/link-google", verifyToken, async (req, res) => {
+  try {
+    const { token } = req.body;
+    if (!token) {
+      return res.status(400).json({ error: "Google token is required" });
+    }
+
+    const ticket = await oauth_client.verifyIdToken({
+      idToken: token,
+      audience: client_id,
+    });
+    const payload = ticket.getPayload();
+
+    if (!payload) {
+      return res.status(400).json({ error: "Invalid Google token" });
+    }
+
+    if (payload.sub !== req.user.sub) {
+      return res.status(403).json({
+        error:
+          "This Google account does not match your current login. Sign out and sign in with the other account instead.",
+      });
+    }
+
+    await usersCollection.updateOne(
+      { sub: req.user.sub },
+      {
+        $set: {
+          email: payload.email,
+          picture: payload.picture,
+        },
+      }
+    );
+
+    const updatedUser = await usersCollection.findOne({ sub: req.user.sub });
+    const { accessToken } = generateTokens(updatedUser);
+
+    res.json({
+      ...toPublicProfile(updatedUser),
+      accessToken,
+      message: "Google account updated",
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Failed to link Google account" });
+  }
+});
+
+app.delete("/api/account", verifyToken, async (req, res) => {
+  try {
+    const { confirmation } = req.body || {};
+    if (confirmation !== "DELETE") {
+      return res.status(400).json({
+        error: 'Type "DELETE" to confirm account deletion',
+      });
+    }
+
+    const result = await usersCollection.deleteOne({ sub: req.user.sub });
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: "Account not found" });
+    }
+
+    res.json({ success: true, message: "Account deleted" });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Failed to delete account" });
   }
 });
 

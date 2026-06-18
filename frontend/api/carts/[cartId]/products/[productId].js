@@ -33,7 +33,7 @@ module.exports = async function handler(req, res) {
     const { usersCollection } = await connectToDatabase();
 
     if (req.method === "PATCH") {
-      const { nickname, isFavorite } = req.body;
+      const { nickname, isFavorite, note } = req.body;
 
       if (nickname !== undefined && typeof nickname !== "string") {
         return res.status(400).json({ error: "Nickname must be a string" });
@@ -43,8 +43,13 @@ module.exports = async function handler(req, res) {
         return res.status(400).json({ error: "isFavorite must be a boolean" });
       }
 
+      if (note !== undefined && typeof note !== "string") {
+        return res.status(400).json({ error: "Note must be a string" });
+      }
+
       const trimmedNickname =
         typeof nickname === "string" ? nickname.trim() : undefined;
+      const trimmedNote = typeof note === "string" ? note.trim() : undefined;
 
       const $set = {};
       const $unset = {};
@@ -59,6 +64,14 @@ module.exports = async function handler(req, res) {
 
       if (isFavorite !== undefined) {
         $set["carts.$[c].products.$[p].isFavorite"] = isFavorite;
+      }
+
+      if (trimmedNote !== undefined) {
+        if (trimmedNote) {
+          $set["carts.$[c].products.$[p].note"] = trimmedNote;
+        } else {
+          $unset["carts.$[c].products.$[p].note"] = "";
+        }
       }
 
       if (Object.keys($set).length === 0 && Object.keys($unset).length === 0) {
