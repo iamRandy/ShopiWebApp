@@ -60,7 +60,7 @@ export default function Features() {
       className="relative z-0 -mt-24 flex min-h-screen items-center justify-center overflow-hidden px-5 pb-16 pt-36 md:px-8 md:pb-20 md:pt-44"
     >
       <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-[75%] bg-gradient-to-b from-transparent via-[#fff8ee]/60 to-[rgba(255,234,207,1)]"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-[75%] bg-gradient-to-b from-transparent via-[#ffeacf]/70 to-[#f8f6f0]"
         aria-hidden
       />
       <div
