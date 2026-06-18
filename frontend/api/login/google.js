@@ -52,8 +52,6 @@ module.exports = async function handler(req, res) {
         sub: payload.sub,
         name: payload.name,
         username: payload.name,
-        firstName: "",
-        lastName: "",
       },
     };
     const options = { upsert: true };

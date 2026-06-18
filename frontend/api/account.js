@@ -1,10 +1,56 @@
-const { connectToDatabase } = require("./_lib/db");
-const { verifyToken, generateTokens } = require("./_lib/auth");
 const {
   buildDisplayName,
   toPublicProfile,
   sanitizeProfileField,
+  sanitizeCustomPicture,
 } = require("./_lib/user");
+const { connectToDatabase } = require("./_lib/db");
+const { verifyToken, generateTokens } = require("./_lib/auth");
+
+async function applyAccountPatch(usersCollection, user, body) {
+  const { username, customPicture } = body || {};
+  const updates = {};
+  const unsets = {};
+
+  try {
+    const nextUsername = sanitizeProfileField(username, "username");
+    if (nextUsername !== undefined) updates.username = nextUsername;
+
+    if (customPicture !== undefined) {
+      const nextPicture = sanitizeCustomPicture(customPicture);
+      if (nextPicture === null) {
+        unsets.customPicture = "";
+      } else {
+        updates.customPicture = nextPicture;
+      }
+    }
+  } catch (validationError) {
+    return { error: validationError.message, status: 400 };
+  }
+
+  if (Object.keys(updates).length === 0 && Object.keys(unsets).length === 0) {
+    return { error: "No profile fields to update", status: 400 };
+  }
+
+  if (updates.username !== undefined) {
+    updates.name = buildDisplayName({ ...user, ...updates });
+  }
+
+  const updateOp = {};
+  if (Object.keys(updates).length > 0) updateOp.$set = updates;
+  if (Object.keys(unsets).length > 0) updateOp.$unset = unsets;
+
+  await usersCollection.updateOne({ sub: user.sub }, updateOp);
+  const updatedUser = await usersCollection.findOne({ sub: user.sub });
+  const { accessToken } = generateTokens(updatedUser);
+
+  return {
+    body: {
+      ...toPublicProfile(updatedUser),
+      accessToken,
+    },
+  };
+}
 
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -50,36 +96,12 @@ module.exports = async function handler(req, res) {
         return res.status(404).json({ error: "Account not found" });
       }
 
-      const { username, firstName, lastName } = req.body || {};
-      const updates = {};
-
-      try {
-        const nextUsername = sanitizeProfileField(username, "username");
-        const nextFirstName = sanitizeProfileField(firstName, "firstName");
-        const nextLastName = sanitizeProfileField(lastName, "lastName");
-
-        if (nextUsername !== undefined) updates.username = nextUsername;
-        if (nextFirstName !== undefined) updates.firstName = nextFirstName;
-        if (nextLastName !== undefined) updates.lastName = nextLastName;
-      } catch (validationError) {
-        return res.status(400).json({ error: validationError.message });
+      const result = await applyAccountPatch(usersCollection, user, req.body);
+      if (result.error) {
+        return res.status(result.status).json({ error: result.error });
       }
 
-      if (Object.keys(updates).length === 0) {
-        return res.status(400).json({ error: "No profile fields to update" });
-      }
-
-      const merged = { ...user, ...updates };
-      updates.name = buildDisplayName(merged);
-
-      await usersCollection.updateOne({ sub: req.user.sub }, { $set: updates });
-      const updatedUser = await usersCollection.findOne({ sub: req.user.sub });
-      const { accessToken } = generateTokens(updatedUser);
-
-      return res.json({
-        ...toPublicProfile(updatedUser),
-        accessToken,
-      });
+      return res.json(result.body);
     } catch (e) {
       console.error(e);
       return res.status(500).json({ error: "Failed to update account" });

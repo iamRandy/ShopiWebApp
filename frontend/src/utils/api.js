@@ -24,12 +24,27 @@ export const clearAuthStorage = () => {
   localStorage.removeItem("userSub");
   localStorage.removeItem("userEmail");
   localStorage.removeItem("userName");
+  localStorage.removeItem("userPicture");
 };
 
 const isAccessTokenValid = (token) => {
   const decoded = jwtDecode(token);
   const currentTime = Math.floor(Date.now() / 1000);
   return decoded.exp > currentTime;
+};
+
+/** Custom avatars were briefly embedded in JWTs, blowing past header limits. */
+const isOversizedAccessToken = (token) => {
+  if (!token) return false;
+  if (token.length > 4096) return true;
+  try {
+    const decoded = jwtDecode(token);
+    return (
+      typeof decoded.picture === "string" && decoded.picture.startsWith("data:")
+    );
+  } catch {
+    return false;
+  }
 };
 
 /** Refresh tokens; optionally redirect to login when refresh fails. */
@@ -77,6 +92,11 @@ export const ensureValidSession = async () => {
   }
 
   try {
+    if (isOversizedAccessToken(token)) {
+      await refreshAccessToken({ redirectOnFailure: false });
+      return true;
+    }
+
     if (isAccessTokenValid(token)) {
       return true;
     }

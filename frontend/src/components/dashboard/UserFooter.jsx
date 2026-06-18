@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { logout } from "../../utils/api";
 import { clearExtensionStorage } from "../../utils/extension";
+import { getStoredAvatarUrl } from "../../utils/userProfile";
 import { APP_VERSION } from "./constants";
+import UserAvatar from "../UserAvatar";
 
 export default function UserFooter({ collapsed = false }) {
   const navigate = useNavigate();
@@ -12,13 +14,15 @@ export default function UserFooter({ collapsed = false }) {
   const [userName, setUserName] = useState(
     () => localStorage.getItem("userName") || "Username"
   );
+  const [avatarUrl, setAvatarUrl] = useState(() => getStoredAvatarUrl());
 
   useEffect(() => {
-    const syncName = () => {
+    const syncProfile = () => {
       setUserName(localStorage.getItem("userName") || "Username");
+      setAvatarUrl(getStoredAvatarUrl());
     };
-    window.addEventListener("profile-updated", syncName);
-    return () => window.removeEventListener("profile-updated", syncName);
+    window.addEventListener("profile-updated", syncProfile);
+    return () => window.removeEventListener("profile-updated", syncProfile);
   }, []);
 
   useEffect(() => {
@@ -58,7 +62,7 @@ export default function UserFooter({ collapsed = false }) {
           collapsed ? "justify-center px-2" : "w-full gap-2 px-2"
         }`}
       >
-        <User className="h-5 w-5 shrink-0 text-stone-600" strokeWidth={2} />
+        <UserAvatar src={avatarUrl} size="sm" />
         {!collapsed && (
           <span className="truncate text-sm font-semibold text-black">{userName}</span>
         )}

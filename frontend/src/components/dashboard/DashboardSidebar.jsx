@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Cog, PanelLeftClose, PanelLeftOpen, Plus } from "lucide-react";
+import { Cog, PanelLeftClose, PanelLeftOpen, Plus, X } from "lucide-react";
 import CartSidebarItem from "./CartSidebarItem";
 import UserFooter from "./UserFooter";
 import CartModal from "../CartModal";
@@ -12,6 +12,8 @@ export default function DashboardSidebar({
   onCartsChanged,
   collapsed = false,
   onToggleCollapse,
+  isMobileDrawer = false,
+  onMobileClose,
 }) {
   const navigate = useNavigate();
   const [isCartModalOpen, setIsCartModalOpen] = useState(false);
@@ -73,25 +75,40 @@ export default function DashboardSidebar({
           <button
             type="button"
             title="Settings"
-            onClick={() => navigate("/home/settings")}
+            onClick={() => {
+              onMobileClose?.();
+              navigate("/home/settings");
+            }}
             className="flex h-9 w-9 items-center justify-center rounded-lg border-2 border-black bg-white text-black shadow-[2px_2px_0_#000] transition-transform hover:-translate-y-0.5"
           >
             <Cog className="h-4 w-4" strokeWidth={2.25} />
           </button>
-          {onToggleCollapse && (
+          {isMobileDrawer ? (
             <button
               type="button"
-              onClick={onToggleCollapse}
-              title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              onClick={onMobileClose}
+              title="Close menu"
+              aria-label="Close menu"
               className="flex h-9 w-9 items-center justify-center rounded-lg border-2 border-black bg-white text-black shadow-[2px_2px_0_#000] transition-transform hover:-translate-y-0.5"
             >
-              {collapsed ? (
-                <PanelLeftOpen className="h-4 w-4" strokeWidth={2.25} />
-              ) : (
-                <PanelLeftClose className="h-4 w-4" strokeWidth={2.25} />
-              )}
+              <X className="h-4 w-4" strokeWidth={2.25} />
             </button>
+          ) : (
+            onToggleCollapse && (
+              <button
+                type="button"
+                onClick={onToggleCollapse}
+                title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+                aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+                className="flex h-9 w-9 items-center justify-center rounded-lg border-2 border-black bg-white text-black shadow-[2px_2px_0_#000] transition-transform hover:-translate-y-0.5"
+              >
+                {collapsed ? (
+                  <PanelLeftOpen className="h-4 w-4" strokeWidth={2.25} />
+                ) : (
+                  <PanelLeftClose className="h-4 w-4" strokeWidth={2.25} />
+                )}
+              </button>
+            )
           )}
         </div>
       </div>

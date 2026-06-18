@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const { OAuth2Client } = require("google-auth-library");
+const { getJwtPicture } = require("./user");
 
 const client_id = process.env.VITE_CLIENT_ID;
 const oauth_client = new OAuth2Client(client_id);
@@ -18,7 +19,7 @@ const generateTokens = (user) => {
     sub: user.sub,
     email: user.email,
     name: user.name,
-    picture: user.picture,
+    picture: getJwtPicture(user),
   };
 
   const accessToken = jwt.sign(payload, JWT_SECRET, {

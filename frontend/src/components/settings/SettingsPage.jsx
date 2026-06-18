@@ -1,11 +1,13 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
-import { ArrowLeft, Mail, Trash2 } from "lucide-react";
+import { ArrowLeft, Mail, Trash2, Upload } from "lucide-react";
 import { authenticatedFetch, clearAuthStorage } from "../../utils/api";
 import { applyAccessToken, syncProfileToStorage } from "../../utils/userProfile";
 import { clearExtensionStorage } from "../../utils/extension";
+import { readAvatarFile } from "../../utils/avatarImage";
 import AveeLoader from "../AveeLoader";
+import UserAvatar from "../UserAvatar";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -79,20 +81,30 @@ function SettingsField({ id, label, value, onChange, placeholder }) {
 
 export default function SettingsPage() {
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [linkingGoogle, setLinkingGoogle] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
   const [username, setUsername] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [hasCustomPicture, setHasCustomPicture] = useState(false);
   const [initialProfile, setInitialProfile] = useState(null);
 
   const [deleteConfirm, setDeleteConfirm] = useState("");
+
+  const applyProfileResponse = (data) => {
+    applyAccessToken(data.accessToken);
+    syncProfileToStorage(data);
+    setAvatarUrl(data.avatarUrl || "");
+    setHasCustomPicture(Boolean(data.hasCustomPicture));
+    setInitialProfile(data);
+  };
 
   const loadProfile = useCallback(async () => {
     setLoading(true);
@@ -105,9 +117,9 @@ export default function SettingsPage() {
       }
       const data = await response.json();
       setUsername(data.username || "");
-      setFirstName(data.firstName || "");
-      setLastName(data.lastName || "");
       setEmail(data.email || "");
+      setAvatarUrl(data.avatarUrl || "");
+      setHasCustomPicture(Boolean(data.hasCustomPicture));
       setInitialProfile(data);
       syncProfileToStorage(data);
     } catch (err) {
@@ -122,10 +134,7 @@ export default function SettingsPage() {
   }, [loadProfile]);
 
   const profileDirty =
-    initialProfile &&
-    (username !== (initialProfile.username || "") ||
-      firstName !== (initialProfile.firstName || "") ||
-      lastName !== (initialProfile.lastName || ""));
+    initialProfile && username !== (initialProfile.username || "");
 
   const handleSaveProfile = async (e) => {
     e.preventDefault();
@@ -137,21 +146,72 @@ export default function SettingsPage() {
     try {
       const response = await authenticatedFetch(`${API_URL}/api/account`, {
         method: "PATCH",
-        body: JSON.stringify({ username, firstName, lastName }),
+        body: JSON.stringify({ username }),
       });
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.error || "Failed to save profile");
       }
 
-      applyAccessToken(data.accessToken);
-      syncProfileToStorage(data);
-      setInitialProfile(data);
+      applyProfileResponse(data);
       setSuccess("Profile saved.");
     } catch (err) {
       setError(err.message || "Failed to save profile");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handlePhotoSelect = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file || uploadingPhoto) return;
+
+    setUploadingPhoto(true);
+    setError("");
+    setSuccess("");
+    try {
+      const customPicture = await readAvatarFile(file);
+      const response = await authenticatedFetch(`${API_URL}/api/account`, {
+        method: "PATCH",
+        body: JSON.stringify({ customPicture }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to upload photo");
+      }
+
+      applyProfileResponse(data);
+      setSuccess("Profile photo updated.");
+    } catch (err) {
+      setError(err.message || "Failed to upload photo");
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  const handleRemovePhoto = async () => {
+    if (!hasCustomPicture || uploadingPhoto) return;
+
+    setUploadingPhoto(true);
+    setError("");
+    setSuccess("");
+    try {
+      const response = await authenticatedFetch(`${API_URL}/api/account`, {
+        method: "PATCH",
+        body: JSON.stringify({ customPicture: null }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to remove photo");
+      }
+
+      applyProfileResponse(data);
+      setSuccess("Custom photo removed.");
+    } catch (err) {
+      setError(err.message || "Failed to remove photo");
+    } finally {
+      setUploadingPhoto(false);
     }
   };
 
@@ -171,10 +231,8 @@ export default function SettingsPage() {
         throw new Error(data.error || "Failed to update Google account");
       }
 
-      applyAccessToken(data.accessToken);
-      syncProfileToStorage(data);
+      applyProfileResponse(data);
       setEmail(data.email || "");
-      setInitialProfile((prev) => (prev ? { ...prev, email: data.email } : prev));
       setSuccess("Google account updated.");
     } catch (err) {
       setError(err.message || "Failed to update Google account");
@@ -240,8 +298,44 @@ export default function SettingsPage() {
       <section className="mt-8 rounded-2xl border-2 border-stone-200 bg-white p-5 sm:p-6">
         <h2 className="text-lg font-bold text-black">Profile</h2>
         <p className="mt-1 text-sm text-stone-500">
-          Your username is shown in the app. First and last name help personalize your account.
+          Your username is shown in the app. Your photo comes from Google unless you upload
+          your own.
         </p>
+
+        <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-center">
+          <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-2 border-black bg-[#faf8f4] shadow-[2px_2px_0_#FFBC42]">
+            <UserAvatar src={avatarUrl} size="lg" />
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handlePhotoSelect}
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingPhoto}
+              className="inline-flex items-center gap-2 rounded-lg border-2 border-black bg-white px-4 py-2.5 text-sm font-bold text-black shadow-[2px_2px_0_#000] transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Upload className="h-4 w-4" strokeWidth={2.25} />
+              {uploadingPhoto ? "Uploading…" : "Upload photo"}
+            </button>
+            {hasCustomPicture && (
+              <button
+                type="button"
+                onClick={handleRemovePhoto}
+                disabled={uploadingPhoto}
+                className="rounded-lg border-2 border-stone-300 bg-white px-4 py-2.5 text-sm font-semibold text-stone-700 transition-colors hover:border-black hover:text-black disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Use Google photo
+              </button>
+            )}
+          </div>
+        </div>
 
         <form onSubmit={handleSaveProfile} className="mt-5 space-y-4">
           <SettingsField
@@ -251,22 +345,6 @@ export default function SettingsPage() {
             onChange={setUsername}
             placeholder="How you appear in Chaos"
           />
-          <div className="grid gap-4 sm:grid-cols-2">
-            <SettingsField
-              id="firstName"
-              label="First name"
-              value={firstName}
-              onChange={setFirstName}
-              placeholder="First name"
-            />
-            <SettingsField
-              id="lastName"
-              label="Last name"
-              value={lastName}
-              onChange={setLastName}
-              placeholder="Last name"
-            />
-          </div>
 
           <button
             type="submit"
@@ -302,8 +380,8 @@ export default function SettingsPage() {
           />
         </div>
         <p className="mt-3 text-xs text-stone-500">
-          Updating your Google account refreshes your linked email if it changed on Google. You must
-          sign in with the same Google account you originally used.
+          Updating your Google account refreshes your linked email and default photo if you
+          haven&apos;t uploaded a custom one.
         </p>
       </section>
 

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu } from "lucide-react";
 import DashboardSidebar from "./DashboardSidebar";
 import { SIDEBAR_COLLAPSED_KEY } from "./constants";
 
@@ -55,19 +55,13 @@ export default function AppShell({ children, sidebarProps }) {
             <DashboardSidebar
               {...sidebarProps}
               collapsed={false}
+              isMobileDrawer
+              onMobileClose={() => setDrawerOpen(false)}
               onCartsChanged={() => {
                 sidebarProps.onCartsChanged?.();
                 setDrawerOpen(false);
               }}
             />
-            <button
-              type="button"
-              onClick={() => setDrawerOpen(false)}
-              className="absolute right-3 top-4 flex h-8 w-8 items-center justify-center rounded-lg border-2 border-black bg-white text-black shadow-[2px_2px_0_#000]"
-              aria-label="Close sidebar"
-            >
-              <X className="h-4 w-4" />
-            </button>
           </div>
         </div>
       )}

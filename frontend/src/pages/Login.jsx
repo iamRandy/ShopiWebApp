@@ -121,6 +121,9 @@ const Login = () => {
       localStorage.setItem("userSub", decoded.sub);
       localStorage.setItem("userEmail", decoded.email);
       localStorage.setItem("userName", decoded.name);
+      if (decoded.picture) {
+        localStorage.setItem("userPicture", decoded.picture);
+      }
 
       loginSuccess(credentialResponse, decoded.sub, decoded.name);
     } catch (error) {
@@ -142,6 +145,15 @@ const Login = () => {
           if (data.accessToken && data.refreshToken) {
             localStorage.setItem("authToken", data.accessToken);
             localStorage.setItem("refreshToken", data.refreshToken);
+
+            try {
+              const tokenUser = jwtDecode(data.accessToken);
+              if (tokenUser.picture) {
+                localStorage.setItem("userPicture", tokenUser.picture);
+              }
+            } catch {
+              /* ignore */
+            }
 
             await sendUserInfoToExtension(
               sub,

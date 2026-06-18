@@ -3,7 +3,10 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import Dashboard from "../components/Dashboard";
-import { ensureValidSession } from "../utils/api";
+import { ensureValidSession, authenticatedFetch } from "../utils/api";
+import { syncProfileToStorage } from "../utils/userProfile";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 // Support both Firefox and Chrome extension IDs
 const FIREFOX_EXT_ID = "{a8f4c9e2-7b3d-4e1a-9c5f-2d8b6e4a1c7f}";
@@ -45,9 +48,26 @@ const Home = () => {
           if (sub && name) {
             localStorage.setItem("userSub", sub);
             localStorage.setItem("userName", name);
+            syncProfileToStorage({
+              sub,
+              name,
+              email: decoded.email,
+              avatarUrl: decoded.picture,
+            });
             await sendUserInfoToExtension(sub, name, authToken, refreshToken);
           }
         } else {
+          try {
+            const decoded = jwtDecode(authToken);
+            syncProfileToStorage({
+              sub: userSub,
+              name: userName,
+              email: localStorage.getItem("userEmail"),
+              avatarUrl: decoded.picture,
+            });
+          } catch {
+            /* ignore token decode errors */
+          }
           await sendUserInfoToExtension(
             userSub,
             userName,
@@ -60,6 +80,17 @@ const Home = () => {
       }
     };
 
+    const syncAccountProfile = async () => {
+      try {
+        const response = await authenticatedFetch(`${API_URL}/api/account`);
+        if (!response.ok) return;
+        const data = await response.json();
+        syncProfileToStorage(data);
+      } catch (error) {
+        console.error("Error syncing account profile:", error);
+      }
+    };
+
     (async () => {
       const hasSession = await ensureValidSession();
       if (cancelled) return;
@@ -69,6 +100,7 @@ const Home = () => {
         return;
       }
 
+      await syncAccountProfile();
       await syncToExtension();
       if (!cancelled) setSessionReady(true);
     })();

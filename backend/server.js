@@ -32,7 +32,7 @@ app.use(
     // credentials: true,
   })
 );
-app.use(express.json());
+app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 async function init() {
@@ -43,25 +43,42 @@ async function init() {
 }
 
 const MAX_PROFILE_FIELD_LENGTH = 50;
+const MAX_PICTURE_BYTES = 512 * 1024;
+const ALLOWED_IMAGE_PREFIXES = [
+  "data:image/jpeg",
+  "data:image/png",
+  "data:image/webp",
+  "data:image/gif",
+];
 
-const buildDisplayName = ({ username, firstName, lastName, name }) => {
+const buildDisplayName = ({ username, name }) => {
   if (username && String(username).trim()) return String(username).trim();
-  const full = [firstName, lastName]
-    .filter((part) => part && String(part).trim())
-    .join(" ")
-    .trim();
-  if (full) return full;
   return name || "";
+};
+
+const getDisplayPicture = (user) => {
+  if (!user) return "";
+  if (user.customPicture) return user.customPicture;
+  if (user.picture) return user.picture;
+  return "";
+};
+
+/** Only short URLs belong in JWT — never embed base64 custom avatars. */
+const getJwtPicture = (user) => {
+  const picture = user?.picture || "";
+  if (!picture || picture.startsWith("data:")) return "";
+  return picture;
 };
 
 const toPublicProfile = (user) => ({
   sub: user.sub,
   email: user.email || "",
   username: user.username || user.name || "",
-  firstName: user.firstName || "",
-  lastName: user.lastName || "",
   name: user.name || "",
   picture: user.picture || "",
+  customPicture: user.customPicture || "",
+  avatarUrl: getDisplayPicture(user),
+  hasCustomPicture: Boolean(user.customPicture),
 });
 
 const sanitizeProfileField = (value, fieldName) => {
@@ -76,13 +93,30 @@ const sanitizeProfileField = (value, fieldName) => {
   return trimmed;
 };
 
+const sanitizeCustomPicture = (value) => {
+  if (value === null) return null;
+  if (value === undefined) return undefined;
+  if (typeof value !== "string") {
+    throw new Error("Picture must be a data URL string");
+  }
+  if (!ALLOWED_IMAGE_PREFIXES.some((prefix) => value.startsWith(prefix))) {
+    throw new Error("Picture must be JPEG, PNG, WebP, or GIF");
+  }
+  const base64 = value.split(",")[1] || "";
+  const bytes = Math.ceil((base64.length * 3) / 4);
+  if (bytes > MAX_PICTURE_BYTES) {
+    throw new Error("Picture must be under 512KB");
+  }
+  return value;
+};
+
 // Generate tokens
 const generateTokens = (user) => {
   const payload = {
     sub: user.sub,
     email: user.email,
     name: user.name,
-    picture: user.picture,
+    picture: getJwtPicture(user),
   };
 
   const accessToken = jwt.sign(payload, JWT_SECRET, {
@@ -153,8 +187,6 @@ app.post("/api/login/google", async (req, res) => {
         sub: payload.sub,
         name: payload.name,
         username: payload.name,
-        firstName: "",
-        lastName: "",
       },
     };
     const options = { upsert: true };
@@ -487,29 +519,39 @@ app.patch("/api/account", verifyToken, async (req, res) => {
       return res.status(404).json({ error: "Account not found" });
     }
 
-    const { username, firstName, lastName } = req.body || {};
+    const { username, customPicture } = req.body || {};
     const updates = {};
+    const unsets = {};
 
     try {
       const nextUsername = sanitizeProfileField(username, "username");
-      const nextFirstName = sanitizeProfileField(firstName, "firstName");
-      const nextLastName = sanitizeProfileField(lastName, "lastName");
-
       if (nextUsername !== undefined) updates.username = nextUsername;
-      if (nextFirstName !== undefined) updates.firstName = nextFirstName;
-      if (nextLastName !== undefined) updates.lastName = nextLastName;
+
+      if (customPicture !== undefined) {
+        const nextPicture = sanitizeCustomPicture(customPicture);
+        if (nextPicture === null) {
+          unsets.customPicture = "";
+        } else {
+          updates.customPicture = nextPicture;
+        }
+      }
     } catch (validationError) {
       return res.status(400).json({ error: validationError.message });
     }
 
-    if (Object.keys(updates).length === 0) {
+    if (Object.keys(updates).length === 0 && Object.keys(unsets).length === 0) {
       return res.status(400).json({ error: "No profile fields to update" });
     }
 
-    const merged = { ...user, ...updates };
-    updates.name = buildDisplayName(merged);
+    if (updates.username !== undefined) {
+      updates.name = buildDisplayName({ ...user, ...updates });
+    }
 
-    await usersCollection.updateOne({ sub: req.user.sub }, { $set: updates });
+    const updateOp = {};
+    if (Object.keys(updates).length > 0) updateOp.$set = updates;
+    if (Object.keys(unsets).length > 0) updateOp.$unset = unsets;
+
+    await usersCollection.updateOne({ sub: req.user.sub }, updateOp);
     const updatedUser = await usersCollection.findOne({ sub: req.user.sub });
     const { accessToken } = generateTokens(updatedUser);
 
