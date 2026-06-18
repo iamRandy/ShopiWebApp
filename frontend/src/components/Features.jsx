@@ -90,10 +90,9 @@ export default function Features() {
             <Bookmark className="h-4 w-4 text-[#b45309]" strokeWidth={2.25} />
             See it in action
           </span>
-          <h2 className="text-4xl font-bold md:text-5xl">One click to save</h2>
+          <h2 className="text-4xl font-bold md:text-5xl">Save first, think later</h2>
           <p className="text-primary-dark mx-auto mt-4 max-w-md text-lg leading-relaxed md:mx-0">
-            Spot something while you browse? Hit the Chaos extension and it lands in
-            your dashboard — price, image, and link included.
+            Spot something while you browse? Save it! Leave the hard-thinking for later while you browse.
           </p>
         </motion.div>
 
