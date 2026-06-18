@@ -3,8 +3,13 @@ import ProductCard from "./ProductCard";
 import ProductModal from "./productModal/ProductModal";
 import {
   getProductDisplayName,
+  getProductDescription,
   getFormattedProductPrice,
+  getProductImageUrl,
+  stripHtml,
 } from "../utils/product";
+
+const PLACEHOLDER_IMAGE = "https://via.placeholder.com/300x300?text=No+Image";
 
 const ProductArea = ({ products = [], cartId, hideSidebar, onProductUpdated }) => {
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -18,15 +23,14 @@ const ProductArea = ({ products = [], cartId, hideSidebar, onProductUpdated }) =
   const handleProductClick = (product) => {
     setSelectedProduct({
       productName: getProductDisplayName(product),
-      productImg:
-        product.image || "https://via.placeholder.com/300x300?text=No+Image",
+      productImg: getProductImageUrl(product, PLACEHOLDER_IMAGE),
       productPrice: getFormattedProductPrice(product),
       productId: product.id,
       productUrl: product.url,
-      productDescription: product.description,
+      productDescription: getProductDescription(product),
       productNote: product.note,
       productNickname: product.nickname,
-      originalTitle: product.title || "Unknown Product",
+      originalTitle: stripHtml(product.title) || "Unknown Product",
       productHostname: product.hostname,
     });
     setIsModalOpen(true);
@@ -86,14 +90,11 @@ const ProductArea = ({ products = [], cartId, hideSidebar, onProductUpdated }) =
               <ProductCard
                 key={product.id}
                 productName={getProductDisplayName(product)}
-                productImg={
-                  product.image ||
-                  "https://via.placeholder.com/300x300?text=No+Image"
-                }
+                productImg={getProductImageUrl(product, PLACEHOLDER_IMAGE)}
                 productPrice={getFormattedProductPrice(product)}
                 productId={product.id}
                 productUrl={product.url}
-                productDescription={product.description}
+                productDescription={getProductDescription(product)}
                 cartId={cartId}
                 onDelete={handleProductDelete}
                 onProductClick={() => handleProductClick(product)}
