@@ -36,7 +36,7 @@ export default function AppShell({ children, sidebarProps }) {
   return (
     <div className="flex min-h-[100dvh] w-full bg-[#f8f6f0]">
       <div
-        className={`hidden shrink-0 transition-[width] duration-200 ease-out md:sticky md:top-0 md:block md:h-[100dvh] ${
+        className={`relative z-10 hidden shrink-0 transition-[width] duration-200 ease-out md:sticky md:top-0 md:block md:h-[100dvh] ${
           sidebarCollapsed ? "md:w-16" : "md:w-64 lg:w-72"
         }`}
       >

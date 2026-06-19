@@ -4,6 +4,7 @@ import {
   getFormattedProductPrice,
 } from "../../utils/product";
 import { getAffiliateLink } from "../../utils/affiliate";
+import ProductImage from "../ProductImage";
 
 export default function GridProductCard({
   product,
@@ -44,10 +45,10 @@ export default function GridProductCard({
         }
       }}
     >
-      <img
+      <ProductImage
         src={image}
         alt={name}
-        className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+        className="absolute inset-0 h-full w-full transition-transform duration-300 group-hover:scale-[1.03]"
         loading="lazy"
       />
 
@@ -64,12 +65,10 @@ export default function GridProductCard({
         onClick={handleFavorite}
         disabled={isFavoriteLoading}
         aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-        className={`absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full bg-white/85 backdrop-blur-sm transition-colors ${
-          isFavorite ? "text-red-500" : "text-stone-400 hover:text-red-400"
-        }`}
+        className="absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-[#FFBC42] backdrop-blur-sm transition-colors hover:bg-black/55"
       >
         <Heart
-          className="h-3.5 w-3.5"
+          className={`transition-all duration-200 ${isFavorite ? "h-[18px] w-[18px]" : "h-3.5 w-3.5"}`}
           fill={isFavorite ? "currentColor" : "none"}
           strokeWidth={2}
         />

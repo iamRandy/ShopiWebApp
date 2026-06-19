@@ -62,13 +62,11 @@ function FavoritesNotesStatic() {
             >
               <button
                 type="button"
-                className={`absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-white/90 ${
-                  row.favorite ? "text-red-500" : "text-stone-300"
-                }`}
+                className="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-black/40 text-[#FFBC42]"
                 aria-hidden
               >
                 <Heart
-                  className="h-2.5 w-2.5"
+                  className={row.favorite ? "h-3 w-3" : "h-2.5 w-2.5"}
                   fill={row.favorite ? "currentColor" : "none"}
                   strokeWidth={2}
                 />

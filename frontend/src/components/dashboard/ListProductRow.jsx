@@ -5,6 +5,7 @@ import {
   formatRelativeAdded,
   getProductDisplayDescription,
 } from "../../utils/product";
+import ProductImage from "../ProductImage";
 
 export default function ListProductRow({
   product,
@@ -35,10 +36,10 @@ export default function ListProductRow({
     >
       <div className="flex min-w-0 items-center gap-3">
         <div className="relative aspect-square h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-stone-100 sm:h-14 sm:w-14">
-          <img
+          <ProductImage
             src={image}
             alt=""
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+            className="h-full w-full transition-transform duration-300 group-hover:scale-[1.03]"
             loading="lazy"
           />
           <button
@@ -48,13 +49,11 @@ export default function ListProductRow({
               if (!isFavoriteLoading) onFavoriteToggle(product, !isFavorite);
             }}
             disabled={isFavoriteLoading}
-            className={`absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-white/85 backdrop-blur-sm transition-colors ${
-              isFavorite ? "text-red-500" : "text-stone-400 hover:text-red-400"
-            }`}
+            className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/40 text-[#FFBC42] backdrop-blur-sm transition-colors hover:bg-black/55"
             aria-label={isFavorite ? "Remove favorite" : "Add favorite"}
           >
             <Heart
-              className="h-3 w-3"
+              className={`transition-all duration-200 ${isFavorite ? "h-4 w-4" : "h-3 w-3"}`}
               fill={isFavorite ? "currentColor" : "none"}
               strokeWidth={2}
             />

@@ -209,7 +209,7 @@ const Dashboard = () => {
     () => sortProducts(filteredProducts),
     [filteredProducts]
   );
-  const { page, setPage, totalPages, pageItems, hasNext } =
+  const { page, setPage, totalPages, pageItems, hasNext, hasPrev } =
     usePagination(sortedProducts, pageSize);
 
   const storeOptions = useMemo(() => {
@@ -283,6 +283,7 @@ const Dashboard = () => {
                 totalPages={totalPages}
                 onPageChange={setPage}
                 hasNext={hasNext}
+                hasPrev={hasPrev}
               />
             )}
           </>

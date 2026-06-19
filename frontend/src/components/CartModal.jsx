@@ -1,13 +1,33 @@
-import { useState, useEffect } from "react";
-import { X, Trash2 } from "lucide-react";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { X, Trash2, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { authenticatedFetch } from "../utils/api";
 import { useNavigate } from "react-router-dom";
 import ModalPortal from "./ModalPortal";
 import {
-  CART_ICON_OPTIONS,
+  POPULAR_CART_ICONS,
   getCartIcon,
   formatCartIconLabel,
+  searchCartIcons,
 } from "../utils/cartIcons";
+
+function IconOptionButton({ iconName, selected, onSelect, className = "" }) {
+  return (
+    <button
+      type="button"
+      className={`flex aspect-square items-center justify-center rounded-xl border transition-all ${
+        selected
+          ? "border-[#FFBC42] bg-[#FFBC42]/15 text-stone-900"
+          : "border-stone-200 bg-stone-50 text-stone-600 hover:border-stone-300 hover:bg-white"
+      } ${className}`}
+      onClick={onSelect}
+      aria-label={formatCartIconLabel(iconName)}
+      aria-pressed={selected}
+      title={formatCartIconLabel(iconName)}
+    >
+      {getCartIcon(iconName, { className: "h-5 w-5" })}
+    </button>
+  );
+}
 
 function CartSidebarRow({
   icon,
@@ -54,6 +74,22 @@ const CartModal = ({
   const [cartName, setCartName] = useState("");
   const [cartIcon, setCartIcon] = useState("ShoppingCart");
   const [cartColor, setCartColor] = useState("#000000");
+  const [iconQuery, setIconQuery] = useState("");
+  const carouselRef = useRef(null);
+
+  const trimmedQuery = iconQuery.trim();
+  const searchResults = trimmedQuery ? searchCartIcons(iconQuery) : null;
+  const popularIcons = useMemo(
+    () =>
+      POPULAR_CART_ICONS.includes(cartIcon)
+        ? POPULAR_CART_ICONS
+        : [cartIcon, ...POPULAR_CART_ICONS],
+    [cartIcon]
+  );
+
+  const scrollCarousel = (direction) => {
+    carouselRef.current?.scrollBy({ left: direction * 168, behavior: "smooth" });
+  };
 
   const originalName = cartData?.name?.trim() || "";
   const itemCount = isEditMode ? (cartData?.products?.length ?? 0) : 0;
@@ -64,6 +100,7 @@ const CartModal = ({
   useEffect(() => {
     if (!isOpen) return;
     setStatus(null);
+    setIconQuery("");
     if (isEditMode && cartData) {
       setCartName("");
       setCartIcon(cartData.icon || "ShoppingCart");
@@ -231,28 +268,74 @@ const CartModal = ({
                 <span className="mb-2 block text-sm font-medium text-stone-700">
                   Icon
                 </span>
-                <div className="grid grid-cols-6 gap-2">
-                  {CART_ICON_OPTIONS.map((iconName) => {
-                    const selected = cartIcon === iconName;
-                    return (
+                <div className="relative mb-3">
+                  <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
+                  <input
+                    type="text"
+                    value={iconQuery}
+                    onChange={(e) => setIconQuery(e.target.value)}
+                    placeholder="Search 1,600+ icons…"
+                    autoComplete="off"
+                    className="w-full rounded-xl border border-stone-200 bg-[#faf8f4] py-2 pl-8 pr-3 text-sm text-stone-800 outline-none placeholder:text-stone-400 focus:border-[#FFBC42] focus:ring-2 focus:ring-[#FFBC42]/25"
+                  />
+                </div>
+
+                {searchResults === null ? (
+                  <div>
+                    <p className="mb-1.5 text-xs text-stone-400">
+                      Preset Icons
+                    </p>
+                    <div className="flex items-center gap-1">
                       <button
                         type="button"
-                        key={iconName}
-                        className={`flex aspect-square items-center justify-center rounded-xl border transition-all ${
-                          selected
-                            ? "border-[#FFBC42] bg-[#FFBC42]/15 text-stone-900"
-                            : "border-stone-200 bg-stone-50 text-stone-600 hover:border-stone-300 hover:bg-white"
-                        }`}
-                        onClick={() => setCartIcon(iconName)}
-                        aria-label={formatCartIconLabel(iconName)}
-                        aria-pressed={selected}
-                        title={formatCartIconLabel(iconName)}
+                        onClick={() => scrollCarousel(-1)}
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-stone-200 text-stone-500 transition-colors hover:border-stone-300 hover:text-stone-800"
+                        aria-label="Scroll icons left"
                       >
-                        {getCartIcon(iconName, { className: "h-5 w-5" })}
+                        <ChevronLeft className="h-4 w-4" />
                       </button>
-                    );
-                  })}
-                </div>
+                      <div
+                        ref={carouselRef}
+                        className="flex min-w-0 flex-1 gap-2 overflow-x-auto scroll-smooth py-1 [&::-webkit-scrollbar]:hidden"
+                        style={{ scrollbarWidth: "none" }}
+                      >
+                        {popularIcons.map((iconName) => (
+                          <IconOptionButton
+                            key={iconName}
+                            iconName={iconName}
+                            selected={cartIcon === iconName}
+                            onSelect={() => setCartIcon(iconName)}
+                            className="h-12 w-12 shrink-0"
+                          />
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => scrollCarousel(1)}
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-stone-200 text-stone-500 transition-colors hover:border-stone-300 hover:text-stone-800"
+                        aria-label="Scroll icons right"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-6 gap-2">
+                    {searchResults.map((iconName) => (
+                      <IconOptionButton
+                        key={iconName}
+                        iconName={iconName}
+                        selected={cartIcon === iconName}
+                        onSelect={() => setCartIcon(iconName)}
+                      />
+                    ))}
+                    {searchResults.length === 0 && (
+                      <p className="col-span-6 py-6 text-center text-sm text-stone-400">
+                        No icons found for &ldquo;{trimmedQuery}&rdquo;
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
 
               {status && (
