@@ -4,6 +4,16 @@ Notable changes to the ShopiWebApp frontend and backend. This project ships cont
 
 ## Unreleased
 
+- Redesigned the product details modal: a full-bleed hero photo replaces the small thumbnail, with the favorite-heart and store-hostname chip overlaid on it (matching the grid/list cards); wider modal, bigger type, and an internally scrollable body so it no longer overflows the screen on short viewports.
+- The product details modal now has its own favorite toggle and shows a "Saved Xd ago" timestamp — previously favoriting was only possible from the grid/list cards.
+- Removed the now-unused `ProductModalImage` component now that the product modal builds its own hero image block directly.
+- Grid view now shows 4 columns on screens ≥1024px wide (was 3), so a full page of 6 products fits without scrolling to reach pagination.
+- Pagination is now pinned to the bottom of the dashboard regardless of how many products are on the current page — it used to ride up directly under a short last page (e.g. 1 product) instead of staying put.
+- Added a site-wide dark mode. Switch between Light, Dark, and System in Settings → Appearance (`SettingsPage.jsx`); the choice persists per-device and applies everywhere — landing, login, privacy, dashboard, and settings.
+- Fixed a global `a { color: black }` rule in `App.css` that forced every link — most visibly the "Chaos" logo wordmark in the NavBar — to render black regardless of theme, making them unreadable against dark-mode backgrounds.
+
+## 2026-06-18
+
 - Cart icon picker now searches lucide-react's full ~1600-icon library (`frontend/src/utils/cartIcons.js`, `CartModal.jsx`), with a horizontally scrollable "popular for shopping" carousel as the default view, replacing the old fixed 30-icon grid.
 - Product images that aren't roughly square (noticeably tall or wide) now render with `object-contain` so the whole product stays visible, instead of being cropped by `object-cover`; near-square photos still crop to fill (new `ProductImage` component, used in the grid/list dashboard views and the product detail modal).
 - Redesigned the favorite-heart toggle on grid/list cart cards and the marketing "How It Works" demo: a dark semi-transparent circle instead of the white/grey one, with the heart always in the brand accent color (`#FFBC42`), growing and filling in when favorited.
@@ -11,8 +21,6 @@ Notable changes to the ShopiWebApp frontend and backend. This project ships cont
 - Added `CLAUDE.md` with build/run commands and architecture notes for future work in this repo.
 - Fixed the collapsed sidebar's account menu (sign out) rendering behind the product grid instead of on top of it (`AppShell.jsx`).
 - Added the missing "previous page" button to dashboard pagination — only "next" existed, even though `usePagination` already tracked `hasPrev` (`Pagination.jsx`, `Dashboard.jsx`).
-
-## 2026-06-18
 - Reworked the "one-click save" flow.
 - Fixed one-click save and resolved a background clash with the chaos theme.
 

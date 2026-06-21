@@ -387,7 +387,7 @@ export default function Hero() {
   return (
     <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-5 pt-24 pb-20 md:px-8 md:pt-28">
       <div
-        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#f8f6f0] via-[#fef6eb] to-[#f8f6f0]"
+        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#f8f6f0] via-[#fef6eb] to-[#f8f6f0] dark:from-[#18181b] dark:via-[#241f1a] dark:to-[#18181b]"
         aria-hidden
       />
       <div
@@ -432,12 +432,12 @@ export default function Hero() {
           }}
           className="flex w-full flex-col items-center text-center"
         >
-          <span className="mb-5 inline-flex w-fit items-center gap-2 rounded-full border-2 border-black bg-white px-4 py-1.5 text-sm font-semibold shadow-[3px_3px_0_#FFBC42]">
+          <span className="mb-5 inline-flex w-fit items-center gap-2 rounded-full border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-surface)] px-4 py-1.5 text-sm font-semibold shadow-[3px_3px_0_#FFBC42]">
             <Sparkles className="h-4 w-4 text-[#b45309]" strokeWidth={2.25} />
             Chrome extension turned buddy
           </span>
 
-          <h1 className="text-3xl font-bold leading-[1.1] tracking-tight sm:text-4xl md:text-5xl lg:text-[3.4rem]">
+          <h1 className="text-3xl font-bold leading-[1.1] tracking-tight text-[var(--color-text-primary)] sm:text-4xl md:text-5xl lg:text-[3.4rem]">
             Meet{" "}
             <span className="relative inline-block">
               <span className="relative z-10 font-extrabold underline decoration-[#FFBC42] decoration-[6px] underline-offset-4">
@@ -461,7 +461,7 @@ export default function Hero() {
               ease: "easeOut",
               delay: reducedMotion ? 0 : 0.45,
             }}
-            className="mt-4 max-w-md text-base leading-relaxed text-primary-dark sm:text-lg"
+            className="mt-4 max-w-md text-base leading-relaxed text-primary-dark dark:text-stone-400 sm:text-lg"
           >
             Making decisions has never been more fun and easy!
           </motion.p>
@@ -483,7 +483,7 @@ export default function Hero() {
               whileTap={reducedMotion ? undefined : { scale: 0.98 }}
               transition={{ duration: 0.2 }}
               onClick={() => navigate("/login")}
-              className="rounded-full border-2 border-black bg-[var(--primary-btncolor)] px-8 py-3.5 text-base font-bold text-black shadow-[4px_4px_0_#000] transition-shadow hover:shadow-[2px_2px_0_#000] active:shadow-none sm:px-10"
+              className="rounded-full border-2 border-[var(--color-border-strong)] bg-[var(--primary-btncolor)] px-8 py-3.5 text-base font-bold text-black shadow-[4px_4px_0_var(--color-shadow)] transition-shadow hover:shadow-[2px_2px_0_var(--color-shadow)] active:shadow-none sm:px-10"
             >
               Get started
             </motion.button>
@@ -496,7 +496,7 @@ export default function Hero() {
               onClick={() =>
                 window.open(EXTENSION_URL, "_blank", "noopener,noreferrer")
               }
-              className="rounded-full border-2 border-black bg-black px-8 py-3.5 text-base font-bold text-white shadow-[4px_4px_0_#FFBC42] transition-shadow hover:shadow-[2px_2px_0_#FFBC42] active:shadow-none sm:px-10"
+              className="rounded-full border-2 border-[var(--color-border-strong)] bg-black px-8 py-3.5 text-base font-bold text-white shadow-[4px_4px_0_#FFBC42] transition-shadow hover:shadow-[2px_2px_0_#FFBC42] active:shadow-none sm:px-10"
             >
               Extension link
             </motion.button>
@@ -535,9 +535,9 @@ export default function Hero() {
                 repeatType: "loop",
               },
             }}
-            className="pointer-events-none absolute bottom-8 left-1/2 flex -translate-x-1/2 flex-col items-center gap-1 text-primary-dark"
+            className="pointer-events-none absolute bottom-8 left-1/2 flex -translate-x-1/2 flex-col items-center gap-1 text-primary-dark dark:text-stone-400"
           >
-            <span className="rounded-full border border-stone-300/80 bg-white/70 px-3 py-1 text-xs font-semibold tracking-wide backdrop-blur-sm">
+            <span className="rounded-full border border-stone-300/80 dark:border-stone-600/80 bg-white/70 dark:bg-[var(--color-bg-surface)]/70 px-3 py-1 text-xs font-semibold tracking-wide backdrop-blur-sm">
               Cool stuff below!!
             </span>
             <ChevronsDown className="h-6 w-6 opacity-80" strokeWidth={2.5} />

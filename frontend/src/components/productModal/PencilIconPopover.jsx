@@ -7,7 +7,7 @@ export default function PencilIconPopover({ label, onClick }) {
         type="button"
         onClick={onClick}
         aria-label={label}
-        className="flex h-6 w-6 items-center justify-center rounded-md text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-700"
+        className="flex h-6 w-6 items-center justify-center rounded-md text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-700 dark:hover:bg-white/10 dark:hover:text-stone-200"
       >
         <Pencil className="h-3.5 w-3.5" strokeWidth={2} />
       </button>

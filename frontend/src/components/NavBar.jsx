@@ -198,7 +198,7 @@ const NavBar = ({ isLanding }) => {
     <>
       <nav
         className={`
-          left-0 right-0 text-black fixed ${
+          left-0 right-0 text-[var(--color-text-primary)] fixed ${
             isLanding ? "top-3 px-4" : "top-0 mx-0 w-full"
           } ${isMobileMenuOpen ? "z-30" : "z-50"} h-fit
         `}
@@ -209,8 +209,8 @@ const NavBar = ({ isLanding }) => {
         <div
           className={`${
             isLanding
-              ? "mx-auto max-w-6xl rounded-2xl border-2 border-black bg-[#faf8f4]/95 shadow-[4px_4px_0_#FFBC42] backdrop-blur-sm"
-              : "border-b border-stone-200/90 bg-white/95 shadow-sm backdrop-blur-md"
+              ? "mx-auto max-w-6xl rounded-2xl border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-app-alt)]/95 shadow-[4px_4px_0_var(--color-shadow)] backdrop-blur-sm"
+              : "border-b border-[var(--color-border-subtle)]/90 bg-[var(--color-bg-surface)]/95 shadow-sm backdrop-blur-md"
           } relative flex items-center justify-between gap-3 sm:gap-4 px-4 sm:px-5 md:px-6 py-3 min-h-[3.75rem]
         `}>
           {/* Left side: Logo */}
@@ -256,7 +256,7 @@ const NavBar = ({ isLanding }) => {
                         <a
                           key={id}
                           href={`/#${id}`}
-                          className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-stone-700 transition-colors hover:bg-white hover:text-black lg:px-4 lg:text-[0.95rem]"
+                          className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-stone-700 transition-colors hover:bg-[var(--color-bg-surface)] hover:text-[var(--color-text-primary)] dark:text-stone-300 lg:px-4 lg:text-[0.95rem]"
                           onClick={handleLandingSectionClick(id)}
                         >
                           <Icon className="h-4 w-4 text-[#b45309]" strokeWidth={2.25} />
@@ -273,7 +273,7 @@ const NavBar = ({ isLanding }) => {
                         <button
                           type="button"
                           onClick={handleDashboard}
-                          className="rounded-lg border-2 border-black bg-[#FFBC42] px-4 py-2 text-sm font-bold text-black shadow-[2px_2px_0_#000] transition-transform hover:-translate-y-0.5"
+                          className="rounded-lg border-2 border-[var(--color-border-strong)] bg-[#FFBC42] px-4 py-2 text-sm font-bold text-black shadow-[2px_2px_0_var(--color-shadow)] transition-transform hover:-translate-y-0.5"
                         >
                           Dashboard
                         </button>
@@ -281,7 +281,7 @@ const NavBar = ({ isLanding }) => {
                         <button
                           type="button"
                           onClick={handleLogin}
-                          className="rounded-lg border-2 border-black bg-[#FFBC42] px-4 py-2 text-sm font-bold text-black shadow-[2px_2px_0_#000] transition-transform hover:-translate-y-0.5"
+                          className="rounded-lg border-2 border-[var(--color-border-strong)] bg-[#FFBC42] px-4 py-2 text-sm font-bold text-black shadow-[2px_2px_0_var(--color-shadow)] transition-transform hover:-translate-y-0.5"
                         >
                           Sign in
                         </button>
@@ -330,7 +330,7 @@ const NavBar = ({ isLanding }) => {
                               }
                             >
                               <div className="font-medium">{userName}</div>
-                              <div className="text-xs text-gray-500">
+                              <div className="text-xs text-stone-500 dark:text-stone-400">
                                 {userEmail}
                               </div>
                             </motion.div>
@@ -366,7 +366,7 @@ const NavBar = ({ isLanding }) => {
           {isMobile && (
             <motion.button
               onClick={handleMobileMenuToggle}
-              className="shrink-0 p-2 rounded-lg hover:bg-stone-100/80 transition-colors"
+              className="shrink-0 p-2 rounded-lg hover:bg-stone-100/80 dark:hover:bg-white/10 transition-colors"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -402,7 +402,7 @@ const NavBar = ({ isLanding }) => {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed top-0 right-0 z-50 h-full w-full max-w-sm border-l-2 border-black bg-[#faf8f4] shadow-2xl p-6 pb-10"
+            className="fixed top-0 right-0 z-50 h-full w-full max-w-sm border-l-2 border-[var(--color-border-strong)] bg-[var(--color-bg-app-alt)] shadow-2xl p-6 pb-10 text-[var(--color-text-primary)]"
           >
             {/* Mobile Menu Header */}
             <div className="flex items-center justify-between mb-8">
@@ -416,7 +416,7 @@ const NavBar = ({ isLanding }) => {
               </div>
               <button
                 onClick={handleMobileMenuToggle}
-                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -431,21 +431,21 @@ const NavBar = ({ isLanding }) => {
                     <a
                       key={id}
                       href={`/#${id}`}
-                      className="flex items-center gap-3 rounded-xl border-2 border-transparent p-3 text-lg font-semibold transition-colors hover:border-black hover:bg-white"
+                      className="flex items-center gap-3 rounded-xl border-2 border-transparent p-3 text-lg font-semibold transition-colors hover:border-[var(--color-border-strong)] hover:bg-[var(--color-bg-surface)]"
                       onClick={handleLandingSectionClick(id)}
                     >
-                      <span className="flex h-9 w-9 items-center justify-center rounded-lg border-2 border-black bg-white shadow-[2px_2px_0_#FFBC42]">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-lg border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-surface)] shadow-[2px_2px_0_#FFBC42]">
                         <Icon className="h-4 w-4 text-[#b45309]" strokeWidth={2.25} />
                       </span>
                       {label}
                     </a>
                   ))}
-                  <div className="mt-4 border-t-2 border-stone-200 pt-4">
+                  <div className="mt-4 border-t-2 border-stone-200 dark:border-stone-700 pt-4">
                     {isAuthenticated ? (
                       <button
                         type="button"
                         onClick={handleDashboard}
-                        className="w-full rounded-xl border-2 border-black bg-[#FFBC42] px-4 py-3 text-lg font-bold text-black shadow-[3px_3px_0_#000]"
+                        className="w-full rounded-xl border-2 border-[var(--color-border-strong)] bg-[#FFBC42] px-4 py-3 text-lg font-bold text-black shadow-[3px_3px_0_var(--color-shadow)]"
                       >
                         Go to dashboard
                       </button>
@@ -453,7 +453,7 @@ const NavBar = ({ isLanding }) => {
                       <button
                         type="button"
                         onClick={handleLogin}
-                        className="w-full rounded-xl border-2 border-black bg-[#FFBC42] px-4 py-3 text-lg font-bold text-black shadow-[3px_3px_0_#000]"
+                        className="w-full rounded-xl border-2 border-[var(--color-border-strong)] bg-[#FFBC42] px-4 py-3 text-lg font-bold text-black shadow-[3px_3px_0_var(--color-shadow)]"
                       >
                         Sign in
                       </button>
@@ -464,13 +464,13 @@ const NavBar = ({ isLanding }) => {
 
               {/* User Info and Actions */}
               {!isLanding && (
-                <div className="border-t pt-6">
+                <div className="border-t border-[var(--color-border-subtle)] pt-6">
                   {isAuthenticated && (
-                    <div className="flex gap-3 items-center p-3 rounded-lg bg-gray-50 mb-4">
+                    <div className="flex gap-3 items-center p-3 rounded-lg bg-stone-50 dark:bg-white/5 mb-4">
                       <User className="w-5 h-5" />
                       <div>
                         <div className="font-medium">{userName}</div>
-                        <div className="text-sm text-gray-500">{userEmail}</div>
+                        <div className="text-sm text-stone-500 dark:text-stone-400">{userEmail}</div>
                       </div>
                     </div>
                   )}

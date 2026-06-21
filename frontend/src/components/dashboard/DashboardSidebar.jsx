@@ -41,7 +41,7 @@ export default function DashboardSidebar({
 
   return (
     <aside
-      className={`flex h-full min-h-[100dvh] w-full flex-col border-r-2 border-stone-200 bg-[#faf8f4] py-5 transition-[padding] duration-200 ${
+      className={`flex h-full min-h-[100dvh] w-full flex-col border-r-2 border-[var(--color-border-subtle)] bg-[var(--color-bg-app-alt)] py-5 transition-[padding] duration-200 ${
         collapsed ? "items-center px-2" : "px-4"
       }`}
     >
@@ -61,7 +61,7 @@ export default function DashboardSidebar({
             className="h-8 w-8 shrink-0 object-contain"
           />
           {!collapsed && (
-            <span className="truncate text-lg font-extrabold tracking-tight text-black">
+            <span className="truncate text-lg font-extrabold tracking-tight text-[var(--color-text-primary)]">
               Chaos
             </span>
           )}
@@ -79,7 +79,7 @@ export default function DashboardSidebar({
               onMobileClose?.();
               navigate("/home/settings");
             }}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border-2 border-black bg-white text-black shadow-[2px_2px_0_#000] transition-transform hover:-translate-y-0.5"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-surface)] text-[var(--color-text-primary)] shadow-[2px_2px_0_var(--color-shadow)] transition-transform hover:-translate-y-0.5"
           >
             <Cog className="h-4 w-4" strokeWidth={2.25} />
           </button>
@@ -89,7 +89,7 @@ export default function DashboardSidebar({
               onClick={onMobileClose}
               title="Close menu"
               aria-label="Close menu"
-              className="flex h-9 w-9 items-center justify-center rounded-lg border-2 border-black bg-white text-black shadow-[2px_2px_0_#000] transition-transform hover:-translate-y-0.5"
+              className="flex h-9 w-9 items-center justify-center rounded-lg border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-surface)] text-[var(--color-text-primary)] shadow-[2px_2px_0_var(--color-shadow)] transition-transform hover:-translate-y-0.5"
             >
               <X className="h-4 w-4" strokeWidth={2.25} />
             </button>
@@ -100,7 +100,7 @@ export default function DashboardSidebar({
                 onClick={onToggleCollapse}
                 title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
                 aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-                className="flex h-9 w-9 items-center justify-center rounded-lg border-2 border-black bg-white text-black shadow-[2px_2px_0_#000] transition-transform hover:-translate-y-0.5"
+                className="flex h-9 w-9 items-center justify-center rounded-lg border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-surface)] text-[var(--color-text-primary)] shadow-[2px_2px_0_var(--color-shadow)] transition-transform hover:-translate-y-0.5"
               >
                 {collapsed ? (
                   <PanelLeftOpen className="h-4 w-4" strokeWidth={2.25} />
@@ -119,13 +119,13 @@ export default function DashboardSidebar({
         }`}
       >
         {!collapsed && (
-          <h2 className="text-sm font-bold text-stone-600">Your Carts</h2>
+          <h2 className="text-sm font-bold text-stone-600 dark:text-stone-400">Your Carts</h2>
         )}
         <button
           type="button"
           onClick={handleAddCart}
           title="Add cart"
-          className="flex h-7 w-7 items-center justify-center rounded-lg border-2 border-black bg-white text-black shadow-[2px_2px_0_#000] transition-transform hover:-translate-y-0.5"
+          className="flex h-7 w-7 items-center justify-center rounded-lg border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-surface)] text-[var(--color-text-primary)] shadow-[2px_2px_0_var(--color-shadow)] transition-transform hover:-translate-y-0.5"
         >
           <Plus className="h-4 w-4" strokeWidth={2.5} />
         </button>

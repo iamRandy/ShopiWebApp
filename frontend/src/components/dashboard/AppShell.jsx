@@ -34,7 +34,7 @@ export default function AppShell({ children, sidebarProps }) {
   };
 
   return (
-    <div className="flex min-h-[100dvh] w-full bg-[#f8f6f0]">
+    <div className="flex min-h-[100dvh] w-full bg-[var(--color-bg-app)]">
       <div
         className={`relative z-10 hidden shrink-0 transition-[width] duration-200 ease-out md:sticky md:top-0 md:block md:h-[100dvh] ${
           sidebarCollapsed ? "md:w-16" : "md:w-64 lg:w-72"
@@ -67,17 +67,17 @@ export default function AppShell({ children, sidebarProps }) {
       )}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <div className="flex items-center border-b-2 border-stone-200 bg-[#faf8f4] px-4 py-3 md:hidden">
+        <div className="flex items-center border-b-2 border-[var(--color-border-subtle)] bg-[var(--color-bg-app-alt)] px-4 py-3 md:hidden">
           <button
             type="button"
             onClick={() => setDrawerOpen(true)}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border-2 border-black bg-white text-black shadow-[2px_2px_0_#000]"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-surface)] text-[var(--color-text-primary)] shadow-[2px_2px_0_var(--color-shadow)]"
             aria-label="Open menu"
           >
             <Menu className="h-5 w-5" />
           </button>
         </div>
-        <main className="min-w-0 flex-1">{children}</main>
+        <main className="flex min-w-0 flex-1 flex-col">{children}</main>
       </div>
     </div>
   );

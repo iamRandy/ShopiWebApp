@@ -23,18 +23,18 @@ const SellingPointCard = memo(function SellingPointCard({
 
   const card = (
     <div
-      className={`relative overflow-hidden rounded-2xl border-2 border-black bg-gradient-to-br ${point.accent} p-3 shadow-[6px_6px_0_#FFBC42] transition-shadow duration-300 group-hover:shadow-[8px_10px_0_#FFBC42]`}
+      className={`relative overflow-hidden rounded-2xl border-2 border-[var(--color-border-strong)] bg-gradient-to-br ${point.accent} p-3 shadow-[6px_6px_0_#FFBC42] transition-shadow duration-300 group-hover:shadow-[8px_10px_0_#FFBC42]`}
     >
       <div className="mb-3 flex items-center justify-between gap-2">
-        <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg border-2 border-black bg-white shadow-[2px_2px_0_#000]">
+        <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-surface)] shadow-[2px_2px_0_var(--color-shadow)]">
           <Icon className="h-4 w-4 text-[#b45309]" strokeWidth={2.25} />
         </span>
-        <span className="rounded-full border-2 border-black bg-[#FFBC42] px-2.5 py-0.5 text-xs font-extrabold tabular-nums">
+        <span className="rounded-full border-2 border-[var(--color-border-strong)] bg-[#FFBC42] px-2.5 py-0.5 text-xs font-extrabold tabular-nums text-black">
           {String(index + 1).padStart(2, "0")}
         </span>
       </div>
 
-      <div className="overflow-hidden rounded-xl border-2 border-black bg-white shadow-[3px_3px_0_rgba(0,0,0,0.15)]">
+      <div className="overflow-hidden rounded-xl border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-surface)] shadow-[3px_3px_0_rgba(0,0,0,0.15)] dark:shadow-[3px_3px_0_rgba(251,188,66,0.15)]">
         <div className="relative aspect-[4/5] w-full overflow-hidden bg-stone-50 [contain:paint]">
           <div className="absolute inset-0 overflow-hidden">
             <Demo />
@@ -42,9 +42,9 @@ const SellingPointCard = memo(function SellingPointCard({
         </div>
       </div>
 
-      <div className="mt-3 rounded-xl border-2 border-black bg-white/95 px-3 py-2.5 text-center">
-        <h3 className="text-base font-bold tracking-tight">{point.title}</h3>
-        <p className="mt-0.5 text-sm font-medium text-primary-dark">
+      <div className="mt-3 rounded-xl border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-surface)]/95 px-3 py-2.5 text-center">
+        <h3 className="text-base font-bold tracking-tight text-[var(--color-text-primary)]">{point.title}</h3>
+        <p className="mt-0.5 text-sm font-medium text-primary-dark dark:text-stone-400">
           {point.subtitle}
         </p>
       </div>
@@ -89,7 +89,7 @@ function MobileHowItWorks() {
   return (
     <section
       id="how-it-works"
-      className="relative overflow-hidden bg-gradient-to-b from-[#f8f6f0] via-[#faf8f4] to-[#f8f6f0] px-5 py-20"
+      className="relative overflow-hidden bg-gradient-to-b from-[var(--color-bg-app)] via-[var(--color-bg-app-alt)] to-[var(--color-bg-app)] px-5 py-20"
     >
       <SectionBackground />
       <div className="relative z-10 mx-auto w-full max-w-6xl">
@@ -169,7 +169,7 @@ function DesktopHowItWorks() {
     <section
       ref={sectionRef}
       id="how-it-works"
-      className="relative h-[160vh] overflow-hidden bg-gradient-to-b from-[#f8f6f0] via-[#faf8f4] to-[#f8f6f0] pt-52 [content-visibility:auto] md:pt-64"
+      className="relative h-[160vh] overflow-hidden bg-gradient-to-b from-[var(--color-bg-app)] via-[var(--color-bg-app-alt)] to-[var(--color-bg-app)] pt-52 [content-visibility:auto] md:pt-64"
     >
       <SectionBackground />
 

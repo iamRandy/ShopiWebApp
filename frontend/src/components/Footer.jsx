@@ -28,7 +28,7 @@ const CTA_LINKS = [
 
 function FooterLink({ link }) {
   const className =
-    "group inline-flex items-center gap-2 text-sm font-medium text-stone-700 transition-colors hover:text-black";
+    "group inline-flex items-center gap-2 text-sm font-medium text-stone-700 transition-colors hover:text-[var(--color-text-primary)] dark:text-stone-300";
   const icon = (
     <link.icon
       className="h-4 w-4 text-[#b45309] transition-transform group-hover:scale-110"
@@ -63,7 +63,7 @@ export default function Footer() {
   return (
     <footer
       id="footer"
-      className="relative border-t-2 border-black bg-gradient-to-b from-[#f5ebe0] to-[#ebe3d6]"
+      className="relative border-t-2 border-[var(--color-border-strong)] bg-gradient-to-b from-[#f5ebe0] to-[#ebe3d6] dark:from-[#241f1a] dark:to-[#18181b]"
     >
       <div className="mx-auto max-w-6xl px-5 py-10 md:px-8 md:py-12">
         <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-[1.4fr_1fr_1fr] md:gap-10">
@@ -79,7 +79,7 @@ export default function Footer() {
               />
               <span
                 id="logo_text"
-                className="text-2xl font-bold tracking-tight text-black"
+                className="text-2xl font-bold tracking-tight text-[var(--color-text-primary)]"
               >
                 Chaos
               </span>
@@ -88,13 +88,13 @@ export default function Footer() {
               Your playful shopping buddy — save anything, organize everything,
               decide later.
             </p>
-            <span className="mt-3 inline-flex items-center rounded-full border-2 border-black bg-[#FFBC42] px-3 py-1 text-xs font-bold uppercase tracking-wide text-black shadow-[2px_2px_0_#000]">
+            <span className="mt-3 inline-flex items-center rounded-full border-2 border-[var(--color-border-strong)] bg-[#FFBC42] px-3 py-1 text-xs font-bold uppercase tracking-wide text-black shadow-[2px_2px_0_var(--color-shadow)]">
               Free to use
             </span>
           </div>
 
           <div>
-            <h3 className="mb-3 text-xs font-bold uppercase tracking-widest text-stone-500">
+            <h3 className="mb-3 text-xs font-bold uppercase tracking-widest text-stone-500 dark:text-stone-400">
               Explore
             </h3>
             <ul className="flex flex-col gap-2.5">
@@ -107,7 +107,7 @@ export default function Footer() {
           </div>
 
           <div>
-            <h3 className="mb-3 text-xs font-bold uppercase tracking-widest text-stone-500">
+            <h3 className="mb-3 text-xs font-bold uppercase tracking-widest text-stone-500 dark:text-stone-400">
               Get started
             </h3>
             <ul className="flex flex-col gap-2.5">
@@ -120,11 +120,11 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-8 flex flex-col items-center justify-between gap-2 border-t border-black/10 pt-6 text-center sm:flex-row sm:text-left">
-          <p className="text-sm text-stone-500">
+        <div className="mt-8 flex flex-col items-center justify-between gap-2 border-t border-black/10 dark:border-white/10 pt-6 text-center sm:flex-row sm:text-left">
+          <p className="text-sm text-stone-500 dark:text-stone-400">
             &copy; {new Date().getFullYear()} Chaos. All rights reserved.
           </p>
-          <p className="text-xs font-medium text-stone-400">
+          <p className="text-xs font-medium text-stone-400 dark:text-stone-500">
             Made for shoppers who hate losing great finds.
           </p>
         </div>

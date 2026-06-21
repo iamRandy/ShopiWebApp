@@ -34,7 +34,7 @@ export default function GridProductCard({
 
   return (
     <article
-      className="group relative aspect-square cursor-pointer overflow-hidden rounded-xl bg-stone-100 transition-shadow hover:shadow-md"
+      className="group relative aspect-square cursor-pointer overflow-hidden rounded-xl bg-stone-100 transition-shadow hover:shadow-md dark:bg-stone-800"
       onClick={() => onOpen(product)}
       role="button"
       tabIndex={0}

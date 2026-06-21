@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
-import { ArrowLeft, Mail, Trash2, Upload } from "lucide-react";
+import { ArrowLeft, Mail, Monitor, Moon, Sun, Trash2, Upload } from "lucide-react";
 import { authenticatedFetch, clearAuthStorage } from "../../utils/api";
 import { applyAccessToken, syncProfileToStorage } from "../../utils/userProfile";
 import { clearExtensionStorage } from "../../utils/extension";
 import { readAvatarFile } from "../../utils/avatarImage";
+import { THEME_OPTIONS, useThemePreference } from "../../utils/theme";
 import AveeLoader from "../AveeLoader";
 import UserAvatar from "../UserAvatar";
 
@@ -40,7 +41,7 @@ function GoogleRelinkButton({ onSuccess, onError, disabled }) {
       className={`group relative inline-block ${disabled ? "pointer-events-none opacity-50" : ""}`}
     >
       <div
-        className="pointer-events-none flex items-center justify-center gap-2 rounded-lg border-2 border-black bg-white px-4 py-2.5 text-sm font-bold text-black shadow-[2px_2px_0_#000] transition-transform group-hover:-translate-y-0.5"
+        className="pointer-events-none flex items-center justify-center gap-2 rounded-lg border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-surface)] px-4 py-2.5 text-sm font-bold text-[var(--color-text-primary)] shadow-[2px_2px_0_var(--color-shadow)] transition-transform group-hover:-translate-y-0.5"
         aria-hidden
       >
         <GoogleIcon />
@@ -64,7 +65,10 @@ function GoogleRelinkButton({ onSuccess, onError, disabled }) {
 function SettingsField({ id, label, value, onChange, placeholder }) {
   return (
     <div>
-      <label htmlFor={id} className="mb-1.5 block text-sm font-semibold text-stone-700">
+      <label
+        htmlFor={id}
+        className="mb-1.5 block text-sm font-semibold text-stone-700 dark:text-stone-300"
+      >
         {label}
       </label>
       <input
@@ -73,9 +77,49 @@ function SettingsField({ id, label, value, onChange, placeholder }) {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-lg border-2 border-stone-300 bg-white px-3 py-2.5 text-sm text-black outline-none transition-colors focus:border-black"
+        className="w-full rounded-lg border-2 border-stone-300 bg-[var(--color-bg-surface)] px-3 py-2.5 text-sm text-[var(--color-text-primary)] outline-none transition-colors focus:border-[var(--color-border-strong)] dark:border-stone-600"
       />
     </div>
+  );
+}
+
+const THEME_META = {
+  light: { label: "Light", icon: Sun },
+  dark: { label: "Dark", icon: Moon },
+  system: { label: "System", icon: Monitor },
+};
+
+function AppearanceSection() {
+  const [theme, setTheme] = useThemePreference();
+
+  return (
+    <section className="rounded-2xl border-2 border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5 sm:p-6">
+      <h2 className="text-lg font-bold text-[var(--color-text-primary)]">Appearance</h2>
+      <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
+        Choose how Chaos looks on this device.
+      </p>
+
+      <div className="mt-5 inline-flex overflow-hidden rounded-xl border-2 border-[var(--color-border-strong)] shadow-[3px_3px_0_var(--color-shadow)]">
+        {THEME_OPTIONS.map((option, index) => {
+          const { label, icon: Icon } = THEME_META[option];
+          const isActive = theme === option;
+          return (
+            <button
+              key={option}
+              type="button"
+              onClick={() => setTheme(option)}
+              aria-pressed={isActive}
+              className={`flex h-10 items-center gap-2 px-4 text-sm font-bold text-[var(--color-text-primary)] transition-colors ${
+                index > 0 ? "border-l-2 border-[var(--color-border-strong)]" : ""
+              } ${isActive ? "bg-[#FFBC42]/40" : "bg-[var(--color-bg-surface)] hover:bg-stone-50 dark:hover:bg-white/5"}`}
+            >
+              <Icon className="h-4 w-4" strokeWidth={2.25} />
+              {label}
+            </button>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 
@@ -273,21 +317,25 @@ export default function SettingsPage() {
     <div className="mx-auto w-full max-w-2xl px-4 py-6 sm:px-6 lg:px-8">
       <Link
         to="/home"
-        className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-stone-600 transition-colors hover:text-black"
+        className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-stone-600 transition-colors hover:text-[var(--color-text-primary)] dark:text-stone-400"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to dashboard
       </Link>
 
-      <h1 className="text-2xl font-extrabold tracking-tight text-black">Settings</h1>
-      <p className="mt-1 text-sm text-stone-500">Manage your profile and account.</p>
+      <h1 className="text-2xl font-extrabold tracking-tight text-[var(--color-text-primary)]">
+        Settings
+      </h1>
+      <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
+        Manage your profile and account.
+      </p>
 
       {(error || success) && (
         <div
           className={`mt-4 rounded-lg border-2 px-4 py-3 text-sm font-medium ${
             error
-              ? "border-red-300 bg-red-50 text-red-800"
-              : "border-emerald-300 bg-emerald-50 text-emerald-800"
+              ? "border-red-300 bg-red-50 text-red-800 dark:border-red-800/60 dark:bg-red-950/40 dark:text-red-300"
+              : "border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-300"
           }`}
           role="alert"
         >
@@ -295,15 +343,19 @@ export default function SettingsPage() {
         </div>
       )}
 
-      <section className="mt-8 rounded-2xl border-2 border-stone-200 bg-white p-5 sm:p-6">
-        <h2 className="text-lg font-bold text-black">Profile</h2>
-        <p className="mt-1 text-sm text-stone-500">
+      <div className="mt-8">
+        <AppearanceSection />
+      </div>
+
+      <section className="mt-6 rounded-2xl border-2 border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5 sm:p-6">
+        <h2 className="text-lg font-bold text-[var(--color-text-primary)]">Profile</h2>
+        <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
           Your username is shown in the app. Your photo comes from Google unless you upload
           your own.
         </p>
 
         <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-center">
-          <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-2 border-black bg-[#faf8f4] shadow-[2px_2px_0_#FFBC42]">
+          <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-app-alt)] shadow-[2px_2px_0_#FFBC42]">
             <UserAvatar src={avatarUrl} size="lg" />
           </div>
 
@@ -319,7 +371,7 @@ export default function SettingsPage() {
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={uploadingPhoto}
-              className="inline-flex items-center gap-2 rounded-lg border-2 border-black bg-white px-4 py-2.5 text-sm font-bold text-black shadow-[2px_2px_0_#000] transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-lg border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-surface)] px-4 py-2.5 text-sm font-bold text-[var(--color-text-primary)] shadow-[2px_2px_0_var(--color-shadow)] transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Upload className="h-4 w-4" strokeWidth={2.25} />
               {uploadingPhoto ? "Uploading…" : "Upload photo"}
@@ -329,7 +381,7 @@ export default function SettingsPage() {
                 type="button"
                 onClick={handleRemovePhoto}
                 disabled={uploadingPhoto}
-                className="rounded-lg border-2 border-stone-300 bg-white px-4 py-2.5 text-sm font-semibold text-stone-700 transition-colors hover:border-black hover:text-black disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-lg border-2 border-stone-300 bg-[var(--color-bg-surface)] px-4 py-2.5 text-sm font-semibold text-stone-700 transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-text-primary)] disabled:cursor-not-allowed disabled:opacity-50 dark:border-stone-600 dark:text-stone-300"
               >
                 Use Google photo
               </button>
@@ -349,27 +401,29 @@ export default function SettingsPage() {
           <button
             type="submit"
             disabled={!profileDirty || saving}
-            className="rounded-lg border-2 border-black bg-[#FFBC42] px-5 py-2.5 text-sm font-bold text-black shadow-[2px_2px_0_#000] transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
+            className="rounded-lg border-2 border-[var(--color-border-strong)] bg-[#FFBC42] px-5 py-2.5 text-sm font-bold text-black shadow-[2px_2px_0_var(--color-shadow)] transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
           >
             {saving ? "Saving…" : "Save changes"}
           </button>
         </form>
       </section>
 
-      <section className="mt-6 rounded-2xl border-2 border-stone-200 bg-white p-5 sm:p-6">
-        <h2 className="text-lg font-bold text-black">Google account</h2>
-        <p className="mt-1 text-sm text-stone-500">
+      <section className="mt-6 rounded-2xl border-2 border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5 sm:p-6">
+        <h2 className="text-lg font-bold text-[var(--color-text-primary)]">Google account</h2>
+        <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
           Your account is linked to Google for sign-in.
         </p>
 
         <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3 rounded-lg border-2 border-stone-200 bg-[#faf8f4] px-4 py-3">
-            <Mail className="h-5 w-5 shrink-0 text-stone-500" />
+          <div className="flex items-center gap-3 rounded-lg border-2 border-[var(--color-border-subtle)] bg-[var(--color-bg-app-alt)] px-4 py-3">
+            <Mail className="h-5 w-5 shrink-0 text-stone-500 dark:text-stone-400" />
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-wide text-stone-400">
                 Linked Gmail
               </p>
-              <p className="truncate text-sm font-semibold text-black">{email || "—"}</p>
+              <p className="truncate text-sm font-semibold text-[var(--color-text-primary)]">
+                {email || "—"}
+              </p>
             </div>
           </div>
 
@@ -379,18 +433,18 @@ export default function SettingsPage() {
             disabled={linkingGoogle}
           />
         </div>
-        <p className="mt-3 text-xs text-stone-500">
+        <p className="mt-3 text-xs text-stone-500 dark:text-stone-400">
           Updating your Google account refreshes your linked email and default photo if you
           haven&apos;t uploaded a custom one.
         </p>
       </section>
 
-      <section className="mt-6 rounded-2xl border-2 border-red-300 bg-red-50/50 p-5 sm:p-6">
-        <h2 className="flex items-center gap-2 text-lg font-bold text-red-900">
+      <section className="mt-6 rounded-2xl border-2 border-red-300 bg-red-50/50 p-5 sm:p-6 dark:border-red-800/50 dark:bg-red-950/20">
+        <h2 className="flex items-center gap-2 text-lg font-bold text-red-900 dark:text-red-300">
           <Trash2 className="h-5 w-5" />
           Danger zone
         </h2>
-        <p className="mt-2 text-sm text-red-800">
+        <p className="mt-2 text-sm text-red-800 dark:text-red-300/90">
           Permanently delete your account and all associated data — carts, saved products, and
           settings. This cannot be undone.
         </p>
@@ -398,7 +452,7 @@ export default function SettingsPage() {
         <div className="mt-5">
           <label
             htmlFor="delete-confirm"
-            className="mb-1.5 block text-sm font-semibold text-red-900"
+            className="mb-1.5 block text-sm font-semibold text-red-900 dark:text-red-300"
           >
             Type <span className="font-mono">DELETE</span> to confirm
           </label>
@@ -408,7 +462,7 @@ export default function SettingsPage() {
             value={deleteConfirm}
             onChange={(e) => setDeleteConfirm(e.target.value)}
             placeholder="DELETE"
-            className="w-full max-w-xs rounded-lg border-2 border-red-300 bg-white px-3 py-2.5 text-sm text-black outline-none focus:border-red-600"
+            className="w-full max-w-xs rounded-lg border-2 border-red-300 bg-[var(--color-bg-surface)] px-3 py-2.5 text-sm text-[var(--color-text-primary)] outline-none focus:border-red-600 dark:border-red-800/60"
             autoComplete="off"
           />
         </div>

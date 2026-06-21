@@ -51,7 +51,7 @@ function StyledGoogleSignIn({ onSuccess, onError }) {
   return (
     <div className="group relative mx-auto w-full max-w-[280px]">
       <div
-        className="pointer-events-none flex w-full items-center justify-center gap-3 rounded-full border-2 border-black bg-[var(--primary-btncolor)] px-6 py-3.5 text-base font-bold text-black shadow-[4px_4px_0_#000] transition-shadow group-hover:shadow-[2px_2px_0_#000] group-active:shadow-none"
+        className="pointer-events-none flex w-full items-center justify-center gap-3 rounded-full border-2 border-[var(--color-border-strong)] bg-[var(--primary-btncolor)] px-6 py-3.5 text-base font-bold text-black shadow-[4px_4px_0_var(--color-shadow)] transition-shadow group-hover:shadow-[2px_2px_0_var(--color-shadow)] group-active:shadow-none"
         aria-hidden
       >
         <GoogleIcon />
@@ -261,14 +261,14 @@ const Login = () => {
 
   if (!sessionChecked) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-gradient-to-b from-[#f8f6f0] via-[#fef6eb] to-[#f8f6f0] text-black">
+      <div className="flex h-screen w-full items-center justify-center bg-gradient-to-b from-[#f8f6f0] via-[#fef6eb] to-[#f8f6f0] dark:from-[#18181b] dark:via-[#241f1a] dark:to-[#18181b] text-[var(--color-text-primary)]">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#FFBC42] border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-gradient-to-b from-[#f8f6f0] via-[#fef6eb] to-[#f8f6f0] text-black">
+    <div className="relative min-h-screen w-full overflow-hidden bg-gradient-to-b from-[#f8f6f0] via-[#fef6eb] to-[#f8f6f0] dark:from-[#18181b] dark:via-[#241f1a] dark:to-[#18181b] text-[var(--color-text-primary)]">
       <div
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_50%_45%,rgba(255,188,66,0.14),transparent_70%)]"
         aria-hidden
@@ -288,14 +288,14 @@ const Login = () => {
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
-          className="w-full max-w-md rounded-3xl border-2 border-black bg-white p-8 shadow-[8px_8px_0_#FFBC42] md:p-10"
+          className="w-full max-w-md rounded-3xl border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-surface)] p-8 shadow-[8px_8px_0_#FFBC42] md:p-10"
         >
-          <span className="mb-5 inline-flex items-center gap-2 rounded-full border-2 border-black bg-white px-4 py-1.5 text-sm font-semibold shadow-[3px_3px_0_#FFBC42]">
+          <span className="mb-5 inline-flex items-center gap-2 rounded-full border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-surface)] px-4 py-1.5 text-sm font-semibold shadow-[3px_3px_0_#FFBC42]">
             <Sparkles className="h-4 w-4 text-[#b45309]" strokeWidth={2.25} />
             Welcome back
           </span>
 
-          <h1 className="text-2xl font-bold leading-tight tracking-tight sm:text-3xl">
+          <h1 className="text-2xl font-bold leading-tight tracking-tight text-[var(--color-text-primary)] sm:text-3xl">
             Get started with{" "}
             <span className="relative inline-block">
               <span className="relative z-10 font-extrabold underline decoration-[#FFBC42] decoration-[5px] underline-offset-4">
@@ -308,7 +308,7 @@ const Login = () => {
             </span>
           </h1>
 
-          <p className="mt-3 text-sm font-medium leading-relaxed text-primary-dark sm:text-base">
+          <p className="mt-3 text-sm font-medium leading-relaxed text-primary-dark dark:text-stone-400 sm:text-base">
             Sign in to save, organize, and shop stress-free.
           </p>
 
@@ -322,7 +322,7 @@ const Login = () => {
           <div className="mt-8 flex justify-center">
             <Link
               to="/"
-              className="special_links inline-flex items-center gap-2 text-sm font-semibold text-stone-700 transition-colors hover:text-black"
+              className="special_links inline-flex items-center gap-2 text-sm font-semibold text-stone-700 transition-colors hover:text-[var(--color-text-primary)] dark:text-stone-300"
             >
             <ArrowLeft className="h-4 w-4 text-[#b45309]" strokeWidth={2.25} />
               Back to home

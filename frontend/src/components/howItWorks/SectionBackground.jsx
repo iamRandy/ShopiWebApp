@@ -6,7 +6,7 @@ export default function SectionBackground() {
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute inset-0 [background-image:radial-gradient(#d4a574_1px,transparent_1px)] [background-size:20px_20px] [mask-image:linear-gradient(to_bottom,transparent_0%,rgba(0,0,0,0.2)_14%,rgba(0,0,0,0.75)_38%,rgba(0,0,0,0.9)_50%,rgba(0,0,0,0.75)_62%,rgba(0,0,0,0.2)_86%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,transparent_0%,rgba(0,0,0,0.2)_14%,rgba(0,0,0,0.75)_38%,rgba(0,0,0,0.9)_50%,rgba(0,0,0,0.75)_62%,rgba(0,0,0,0.2)_86%,transparent_100%)]"
+        className="pointer-events-none absolute inset-0 [background-image:radial-gradient(#d4a574_1px,transparent_1px)] dark:[background-image:radial-gradient(#5a4a38_1px,transparent_1px)] [background-size:20px_20px] [mask-image:linear-gradient(to_bottom,transparent_0%,rgba(0,0,0,0.2)_14%,rgba(0,0,0,0.75)_38%,rgba(0,0,0,0.9)_50%,rgba(0,0,0,0.75)_62%,rgba(0,0,0,0.2)_86%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,transparent_0%,rgba(0,0,0,0.2)_14%,rgba(0,0,0,0.75)_38%,rgba(0,0,0,0.9)_50%,rgba(0,0,0,0.75)_62%,rgba(0,0,0,0.2)_86%,transparent_100%)]"
         aria-hidden
       />
       <div

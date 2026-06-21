@@ -7,22 +7,22 @@ const CONTACT_EMAIL = "shoppii.cart@gmail.com";
 
 const Section = ({ id, title, children }) => (
   <section id={id} className="mb-8 scroll-mt-24">
-    <h2 className="text-xl font-semibold text-gray-900 mb-2">{title}</h2>
-    <div className="text-gray-700 leading-relaxed space-y-3">{children}</div>
+    <h2 className="text-xl font-semibold text-[var(--color-text-primary)] mb-2">{title}</h2>
+    <div className="text-stone-700 dark:text-stone-300 leading-relaxed space-y-3">{children}</div>
   </section>
 );
 
 export default function Privacy() {
   return (
-    <div className="overflow-hidden bg-primary text-black min-h-screen flex flex-col">
+    <div className="overflow-hidden bg-[var(--color-bg-app)] text-[var(--color-text-primary)] min-h-screen flex flex-col">
       <NavBar isLanding={true} />
       <main className="flex-1 pt-28 pb-16">
         <article className="container mx-auto px-6 max-w-2xl">
           <header className="mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">
+            <h1 className="text-4xl font-bold text-[var(--color-text-primary)] mb-2">
               Privacy Policy
             </h1>
-            <p className="text-gray-500 text-sm">
+            <p className="text-stone-500 dark:text-stone-400 text-sm">
               Last updated: {LAST_UPDATED}
             </p>
           </header>
@@ -81,7 +81,10 @@ export default function Privacy() {
             <p>
               You can sign out at any time, delete saved products from your
               carts, or request full account and data deletion by emailing{" "}
-              <a href={`mailto:${CONTACT_EMAIL}`} className="special_links">
+              <a
+                href={`mailto:${CONTACT_EMAIL}`}
+                className="special_links text-[var(--color-text-primary)]"
+              >
                 {CONTACT_EMAIL}
               </a>
               . We action verified requests within 30 days. Depending on your
@@ -116,7 +119,10 @@ export default function Privacy() {
           <Section id="contact" title="Contact">
             <p>
               Questions about this policy or your data? Email{" "}
-              <a href={`mailto:${CONTACT_EMAIL}`} className="special_links">
+              <a
+                href={`mailto:${CONTACT_EMAIL}`}
+                className="special_links text-[var(--color-text-primary)]"
+              >
                 {CONTACT_EMAIL}
               </a>
               .

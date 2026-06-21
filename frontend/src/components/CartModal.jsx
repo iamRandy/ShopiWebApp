@@ -16,8 +16,8 @@ function IconOptionButton({ iconName, selected, onSelect, className = "" }) {
       type="button"
       className={`flex aspect-square items-center justify-center rounded-xl border transition-all ${
         selected
-          ? "border-[#FFBC42] bg-[#FFBC42]/15 text-stone-900"
-          : "border-stone-200 bg-stone-50 text-stone-600 hover:border-stone-300 hover:bg-white"
+          ? "border-[#FFBC42] bg-[#FFBC42]/15 text-stone-900 dark:text-stone-50"
+          : "border-stone-200 bg-stone-50 text-stone-600 hover:border-stone-300 hover:bg-white dark:border-stone-700 dark:bg-stone-800 dark:text-stone-400 dark:hover:border-stone-600 dark:hover:bg-stone-700"
       } ${className}`}
       onClick={onSelect}
       aria-label={formatCartIconLabel(iconName)}
@@ -38,8 +38,8 @@ function CartSidebarRow({
 }) {
   return (
     <div>
-      <div className="flex items-center gap-2.5 rounded-xl border border-stone-200 bg-[#faf8f4] px-3 py-2.5 focus-within:border-[#FFBC42] focus-within:ring-2 focus-within:ring-[#FFBC42]/25">
-        <span className="shrink-0 text-stone-700">
+      <div className="flex items-center gap-2.5 rounded-xl border border-stone-200 bg-[var(--color-bg-app-alt)] px-3 py-2.5 focus-within:border-[#FFBC42] focus-within:ring-2 focus-within:ring-[#FFBC42]/25 dark:border-stone-700">
+        <span className="shrink-0 text-stone-700 dark:text-stone-300">
           {getCartIcon(icon, { className: "h-5 w-5" })}
         </span>
         <input
@@ -51,7 +51,7 @@ function CartSidebarRow({
           maxLength={20}
           autoComplete="off"
           autoFocus
-          className="min-w-0 flex-1 bg-transparent text-sm font-medium text-stone-800 outline-none placeholder:text-stone-400"
+          className="min-w-0 flex-1 bg-transparent text-sm font-medium text-stone-800 outline-none placeholder:text-stone-400 dark:text-stone-100"
         />
         <span className="shrink-0 text-xs font-medium tabular-nums text-stone-400">
           {itemCount}
@@ -222,16 +222,16 @@ const CartModal = ({
         onClick={handleBackdropClick}
       >
         <div
-          className="flex max-h-[min(92dvh,640px)] w-full max-w-md flex-col overflow-hidden rounded-t-2xl border border-stone-200 bg-white shadow-xl sm:rounded-2xl"
+          className="flex max-h-[min(92dvh,640px)] w-full max-w-md flex-col overflow-hidden rounded-t-2xl border border-stone-200 bg-[var(--color-bg-surface)] shadow-xl sm:rounded-2xl dark:border-stone-700"
           onClick={(e) => e.stopPropagation()}
           role="dialog"
           aria-modal="true"
           aria-labelledby="cart-modal-title"
         >
-          <div className="flex shrink-0 items-center justify-between border-b border-stone-100 px-5 py-4">
+          <div className="flex shrink-0 items-center justify-between border-b border-stone-100 px-5 py-4 dark:border-stone-800">
             <h2
               id="cart-modal-title"
-              className="text-lg font-semibold text-stone-900"
+              className="text-lg font-semibold text-stone-900 dark:text-stone-50"
             >
               {isEditMode ? "Edit cart" : "New cart"}
             </h2>
@@ -239,7 +239,7 @@ const CartModal = ({
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="flex h-8 w-8 items-center justify-center rounded-full text-stone-500 transition-colors hover:bg-stone-100 hover:text-stone-800 disabled:opacity-50"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-stone-500 transition-colors hover:bg-stone-100 hover:text-stone-800 disabled:opacity-50 dark:hover:bg-white/5 dark:hover:text-stone-200"
               aria-label="Close"
             >
               <X className="h-5 w-5" />
@@ -265,7 +265,7 @@ const CartModal = ({
               </div>
 
               <div>
-                <span className="mb-2 block text-sm font-medium text-stone-700">
+                <span className="mb-2 block text-sm font-medium text-stone-700 dark:text-stone-300">
                   Icon
                 </span>
                 <div className="relative mb-3">
@@ -276,7 +276,7 @@ const CartModal = ({
                     onChange={(e) => setIconQuery(e.target.value)}
                     placeholder="Search 1,600+ icons…"
                     autoComplete="off"
-                    className="w-full rounded-xl border border-stone-200 bg-[#faf8f4] py-2 pl-8 pr-3 text-sm text-stone-800 outline-none placeholder:text-stone-400 focus:border-[#FFBC42] focus:ring-2 focus:ring-[#FFBC42]/25"
+                    className="w-full rounded-xl border border-stone-200 bg-[var(--color-bg-app-alt)] py-2 pl-8 pr-3 text-sm text-stone-800 outline-none placeholder:text-stone-400 focus:border-[#FFBC42] focus:ring-2 focus:ring-[#FFBC42]/25 dark:border-stone-700 dark:text-stone-100"
                   />
                 </div>
 
@@ -289,7 +289,7 @@ const CartModal = ({
                       <button
                         type="button"
                         onClick={() => scrollCarousel(-1)}
-                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-stone-200 text-stone-500 transition-colors hover:border-stone-300 hover:text-stone-800"
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-stone-200 text-stone-500 transition-colors hover:border-stone-300 hover:text-stone-800 dark:border-stone-700 dark:hover:border-stone-600 dark:hover:text-stone-200"
                         aria-label="Scroll icons left"
                       >
                         <ChevronLeft className="h-4 w-4" />
@@ -312,7 +312,7 @@ const CartModal = ({
                       <button
                         type="button"
                         onClick={() => scrollCarousel(1)}
-                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-stone-200 text-stone-500 transition-colors hover:border-stone-300 hover:text-stone-800"
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-stone-200 text-stone-500 transition-colors hover:border-stone-300 hover:text-stone-800 dark:border-stone-700 dark:hover:border-stone-600 dark:hover:text-stone-200"
                         aria-label="Scroll icons right"
                       >
                         <ChevronRight className="h-4 w-4" />
@@ -342,8 +342,8 @@ const CartModal = ({
                 <p
                   className={`rounded-lg px-3 py-2 text-center text-sm ${
                     status.includes("Failed")
-                      ? "bg-red-50 text-red-600"
-                      : "bg-amber-50 text-amber-800"
+                      ? "bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-300"
+                      : "bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
                   }`}
                   role="alert"
                 >
@@ -352,7 +352,7 @@ const CartModal = ({
               )}
             </div>
 
-            <div className="shrink-0 space-y-2 border-t border-stone-100 px-5 py-4">
+            <div className="shrink-0 space-y-2 border-t border-stone-100 px-5 py-4 dark:border-stone-800">
               <button
                 type="submit"
                 disabled={isSubmitting}
@@ -370,7 +370,7 @@ const CartModal = ({
                   type="button"
                   onClick={handleDeleteCart}
                   disabled={isSubmitting}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 dark:hover:bg-red-950/30"
                 >
                   <Trash2 className="h-4 w-4" />
                   Delete cart

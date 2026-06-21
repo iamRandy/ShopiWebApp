@@ -2,7 +2,7 @@ export default function CardsBackdrop() {
   return (
     <>
       <div
-        className="pointer-events-none absolute inset-[-1.25rem] rounded-[2rem] border-2 border-[#FFBC42]/25 bg-gradient-to-br from-white/80 via-[#fff8ee]/90 to-[#ffecd0]/60 shadow-[inset_0_0_80px_rgba(255,188,66,0.14)] sm:inset-[-1.75rem] sm:rounded-[2.5rem] md:inset-[-2rem]"
+        className="pointer-events-none absolute inset-[-1.25rem] rounded-[2rem] border-2 border-[#FFBC42]/25 bg-gradient-to-br from-white/80 via-[#fff8ee]/90 to-[#ffecd0]/60 dark:from-[#26252b]/80 dark:via-[#241f1a]/70 dark:to-[#3a2f1f]/50 shadow-[inset_0_0_80px_rgba(255,188,66,0.14)] sm:inset-[-1.75rem] sm:rounded-[2.5rem] md:inset-[-2rem]"
         aria-hidden
       />
       <div

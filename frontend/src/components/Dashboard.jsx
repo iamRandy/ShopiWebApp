@@ -176,6 +176,8 @@ const Dashboard = () => {
       productNickname: product.nickname,
       originalTitle: product.title || "Unknown Product",
       productHostname: product.hostname,
+      productIsFavorite: Boolean(product.isFavorite),
+      productSavedAt: product.savedAt,
     });
     setIsModalOpen(true);
   };
@@ -184,14 +186,15 @@ const Dashboard = () => {
     handleProductUpdated(productId, updates);
     setSelectedProduct((prev) => {
       if (!prev || prev.productId !== productId) return prev;
-      const nickname = updates.nickname?.trim() || "";
-      const note = updates.note !== undefined ? updates.note : prev.productNote;
-      return {
-        ...prev,
-        productNickname: nickname || undefined,
-        productNote: note,
-        productName: nickname || prev.originalTitle,
-      };
+      const next = { ...prev };
+      if (updates.nickname !== undefined) {
+        const nickname = updates.nickname?.trim() || "";
+        next.productNickname = nickname || undefined;
+        next.productName = nickname || prev.originalTitle;
+      }
+      if (updates.note !== undefined) next.productNote = updates.note;
+      if (updates.isFavorite !== undefined) next.productIsFavorite = updates.isFavorite;
+      return next;
     });
   };
 
@@ -232,7 +235,7 @@ const Dashboard = () => {
 
   return (
     <AppShell sidebarProps={sidebarProps}>
-      <div className="relative min-h-0 flex-1 px-4 py-6 sm:px-6 lg:px-8">
+      <div className="relative flex min-h-0 flex-1 flex-col px-4 py-6 sm:px-6 lg:px-8">
         {loading ? (
           <AveeLoader message="Loading cart…" />
         ) : (
@@ -246,36 +249,38 @@ const Dashboard = () => {
               activeFilterCount={activeFilterCount}
             />
 
-            {showEmptyCart ? (
-              <div className="flex min-h-[12rem] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-stone-300 bg-white/50 p-8 text-center">
-                <p className="text-stone-500">
-                  No products saved yet. Use the extension to save some products!
-                </p>
-                <a
-                  href="https://chromewebstore.google.com/detail/chaos-cart-saver/bjofoogkolnnpldckgedhdeekajhnpcb?authuser=0&hl=en"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-2 text-sm font-semibold text-[#c47f00] hover:underline"
-                >
-                  Need help?
-                </a>
-              </div>
-            ) : viewMode === "grid" ? (
-              <ProductGridView
-                products={pageItems}
-                onFavoriteToggle={handleFavoriteToggle}
-                onOpen={openProductModal}
-                favoriteLoadingId={favoriteLoadingId}
-              />
-            ) : (
-              <ProductListView
-                products={pageItems}
-                onFavoriteToggle={handleFavoriteToggle}
-                onOpen={openProductModal}
-                onMenu={openProductModal}
-                favoriteLoadingId={favoriteLoadingId}
-              />
-            )}
+            <div className="flex-1">
+              {showEmptyCart ? (
+                <div className="flex min-h-[12rem] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-stone-300 bg-[var(--color-bg-surface)]/50 p-8 text-center dark:border-stone-700">
+                  <p className="text-stone-500 dark:text-stone-400">
+                    No products saved yet. Use the extension to save some products!
+                  </p>
+                  <a
+                    href="https://chromewebstore.google.com/detail/chaos-cart-saver/bjofoogkolnnpldckgedhdeekajhnpcb?authuser=0&hl=en"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 text-sm font-semibold text-[#c47f00] hover:underline dark:text-[#FFBC42]"
+                  >
+                    Need help?
+                  </a>
+                </div>
+              ) : viewMode === "grid" ? (
+                <ProductGridView
+                  products={pageItems}
+                  onFavoriteToggle={handleFavoriteToggle}
+                  onOpen={openProductModal}
+                  favoriteLoadingId={favoriteLoadingId}
+                />
+              ) : (
+                <ProductListView
+                  products={pageItems}
+                  onFavoriteToggle={handleFavoriteToggle}
+                  onOpen={openProductModal}
+                  onMenu={openProductModal}
+                  favoriteLoadingId={favoriteLoadingId}
+                />
+              )}
+            </div>
 
             {!showEmptyCart && (
               <Pagination
@@ -314,6 +319,8 @@ const Dashboard = () => {
           productNote={selectedProduct?.productNote}
           productNickname={selectedProduct?.productNickname}
           productHostname={selectedProduct?.productHostname}
+          productIsFavorite={selectedProduct?.productIsFavorite}
+          productSavedAt={selectedProduct?.productSavedAt}
           originalTitle={selectedProduct?.originalTitle}
           cartId={selectedCart}
           onDelete={handleProductDelete}

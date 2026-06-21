@@ -39,13 +39,13 @@ export default function FilterModal({
         className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4"
         onClick={handleBackdropClick}
       >
-      <div className="w-full max-w-md overflow-hidden rounded-2xl border-2 border-black bg-white shadow-[8px_8px_0_#FFBC42]">
-        <div className="flex items-center justify-between border-b-2 border-stone-200 px-5 py-4">
-          <h2 className="text-lg font-extrabold text-black">Filter products</h2>
+      <div className="w-full max-w-md overflow-hidden rounded-2xl border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-surface)] shadow-[8px_8px_0_#FFBC42]">
+        <div className="flex items-center justify-between border-b-2 border-[var(--color-border-subtle)] px-5 py-4">
+          <h2 className="text-lg font-extrabold text-[var(--color-text-primary)]">Filter products</h2>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1 text-black hover:bg-stone-100"
+            className="rounded-lg p-1 text-[var(--color-text-primary)] hover:bg-stone-100 dark:hover:bg-white/5"
             aria-label="Close filter"
           >
             <X className="h-5 w-5" />
@@ -54,7 +54,7 @@ export default function FilterModal({
 
         <div className="space-y-4 px-5 py-5">
           <label className="block">
-            <span className="mb-1.5 block text-sm font-semibold text-stone-700">
+            <span className="mb-1.5 block text-sm font-semibold text-stone-700 dark:text-stone-300">
               Keyword
             </span>
             <input
@@ -62,13 +62,13 @@ export default function FilterModal({
               value={draft.keyword}
               onChange={(e) => setDraft((prev) => ({ ...prev, keyword: e.target.value }))}
               placeholder="Search name, nickname, store..."
-              className="w-full rounded-xl border-2 border-stone-300 px-3 py-2 text-sm outline-none focus:border-black"
+              className="w-full rounded-xl border-2 border-stone-300 bg-[var(--color-bg-surface)] px-3 py-2 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-border-strong)] dark:border-stone-600"
             />
           </label>
 
           <div className="grid grid-cols-2 gap-3">
             <label className="block">
-              <span className="mb-1.5 block text-sm font-semibold text-stone-700">
+              <span className="mb-1.5 block text-sm font-semibold text-stone-700 dark:text-stone-300">
                 Min price
               </span>
               <input
@@ -80,11 +80,11 @@ export default function FilterModal({
                   setDraft((prev) => ({ ...prev, priceMin: e.target.value }))
                 }
                 placeholder="0"
-                className="w-full rounded-xl border-2 border-stone-300 px-3 py-2 text-sm outline-none focus:border-black"
+                className="w-full rounded-xl border-2 border-stone-300 bg-[var(--color-bg-surface)] px-3 py-2 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-border-strong)] dark:border-stone-600"
               />
             </label>
             <label className="block">
-              <span className="mb-1.5 block text-sm font-semibold text-stone-700">
+              <span className="mb-1.5 block text-sm font-semibold text-stone-700 dark:text-stone-300">
                 Max price
               </span>
               <input
@@ -96,13 +96,13 @@ export default function FilterModal({
                   setDraft((prev) => ({ ...prev, priceMax: e.target.value }))
                 }
                 placeholder="Any"
-                className="w-full rounded-xl border-2 border-stone-300 px-3 py-2 text-sm outline-none focus:border-black"
+                className="w-full rounded-xl border-2 border-stone-300 bg-[var(--color-bg-surface)] px-3 py-2 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-border-strong)] dark:border-stone-600"
               />
             </label>
           </div>
 
           <label className="block">
-            <span className="mb-1.5 block text-sm font-semibold text-stone-700">
+            <span className="mb-1.5 block text-sm font-semibold text-stone-700 dark:text-stone-300">
               Store
             </span>
             <input
@@ -111,7 +111,7 @@ export default function FilterModal({
               value={draft.store}
               onChange={(e) => setDraft((prev) => ({ ...prev, store: e.target.value }))}
               placeholder="e.g. amazon.com"
-              className="w-full rounded-xl border-2 border-stone-300 px-3 py-2 text-sm outline-none focus:border-black"
+              className="w-full rounded-xl border-2 border-stone-300 bg-[var(--color-bg-surface)] px-3 py-2 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-border-strong)] dark:border-stone-600"
             />
             <datalist id="store-options">
               {storeOptions.map((store) => (
@@ -121,18 +121,18 @@ export default function FilterModal({
           </label>
         </div>
 
-        <div className="flex gap-2 border-t-2 border-stone-200 px-5 py-4">
+        <div className="flex gap-2 border-t-2 border-[var(--color-border-subtle)] px-5 py-4">
           <button
             type="button"
             onClick={handleClear}
-            className="flex-1 rounded-xl border-2 border-black bg-white px-4 py-2.5 text-sm font-bold text-black shadow-[2px_2px_0_#000] transition-transform hover:-translate-y-0.5"
+            className="flex-1 rounded-xl border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-surface)] px-4 py-2.5 text-sm font-bold text-[var(--color-text-primary)] shadow-[2px_2px_0_var(--color-shadow)] transition-transform hover:-translate-y-0.5"
           >
             Clear
           </button>
           <button
             type="button"
             onClick={handleApply}
-            className="flex-1 rounded-xl border-2 border-black bg-[#FFBC42] px-4 py-2.5 text-sm font-bold text-black shadow-[2px_2px_0_#000] transition-transform hover:-translate-y-0.5"
+            className="flex-1 rounded-xl border-2 border-[var(--color-border-strong)] bg-[#FFBC42] px-4 py-2.5 text-sm font-bold text-black shadow-[2px_2px_0_var(--color-shadow)] transition-transform hover:-translate-y-0.5"
           >
             Apply
           </button>

@@ -12,22 +12,22 @@ export default function ProductToolbar({
   return (
     <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        <h1 className="text-2xl font-extrabold tracking-tight text-black sm:text-3xl">
+        <h1 className="text-2xl font-extrabold tracking-tight text-[var(--color-text-primary)] sm:text-3xl">
           {title}
         </h1>
-        <p className="mt-1 text-sm font-medium text-stone-500">
+        <p className="mt-1 text-sm font-medium text-stone-500 dark:text-stone-400">
           {formatItemCount(itemCount)}
         </p>
       </div>
 
       <div className="flex items-center gap-2">
-        <div className="flex overflow-hidden rounded-xl border-2 border-black bg-white shadow-[3px_3px_0_#000]">
+        <div className="flex overflow-hidden rounded-xl border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-surface)] shadow-[3px_3px_0_var(--color-shadow)]">
           <button
             type="button"
             onClick={() => onViewModeChange("grid")}
             aria-pressed={viewMode === "grid"}
-            className={`flex h-10 w-10 items-center justify-center text-black transition-colors ${
-              viewMode === "grid" ? "bg-[#FFBC42]/40" : "hover:bg-stone-50"
+            className={`flex h-10 w-10 items-center justify-center text-[var(--color-text-primary)] transition-colors ${
+              viewMode === "grid" ? "bg-[#FFBC42]/40" : "hover:bg-stone-50 dark:hover:bg-white/5"
             }`}
             title="Grid view"
           >
@@ -37,8 +37,8 @@ export default function ProductToolbar({
             type="button"
             onClick={() => onViewModeChange("list")}
             aria-pressed={viewMode === "list"}
-            className={`flex h-10 w-10 items-center justify-center border-l-2 border-black text-black transition-colors ${
-              viewMode === "list" ? "bg-[#FFBC42]/40" : "hover:bg-stone-50"
+            className={`flex h-10 w-10 items-center justify-center border-l-2 border-[var(--color-border-strong)] text-[var(--color-text-primary)] transition-colors ${
+              viewMode === "list" ? "bg-[#FFBC42]/40" : "hover:bg-stone-50 dark:hover:bg-white/5"
             }`}
             title="List view"
           >
@@ -49,7 +49,7 @@ export default function ProductToolbar({
         <button
           type="button"
           onClick={onFilterOpen}
-          className="relative flex h-10 items-center gap-2 rounded-xl border-2 border-black bg-white px-4 text-sm font-bold text-black shadow-[3px_3px_0_#000] transition-transform hover:-translate-y-0.5"
+          className="relative flex h-10 items-center gap-2 rounded-xl border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-surface)] px-4 text-sm font-bold text-[var(--color-text-primary)] shadow-[3px_3px_0_var(--color-shadow)] transition-transform hover:-translate-y-0.5"
         >
           <SlidersHorizontal className="h-4 w-4" strokeWidth={2.25} />
           Filter

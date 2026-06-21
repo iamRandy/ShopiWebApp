@@ -29,13 +29,15 @@ export default function AveeLoader({
           </div>
         </motion.div>
       </div>
-      <p className="text-base font-semibold text-stone-700 sm:text-lg">{message}</p>
+      <p className="text-base font-semibold text-stone-700 sm:text-lg dark:text-stone-300">
+        {message}
+      </p>
     </div>
   );
 
   if (overlay) {
     return (
-      <div className="absolute inset-0 z-20 flex items-center justify-center rounded-lg bg-[#f8f6f0]/80 backdrop-blur-[2px]">
+      <div className="absolute inset-0 z-20 flex items-center justify-center rounded-lg bg-[var(--color-bg-app)]/80 backdrop-blur-[2px]">
         {content}
       </div>
     );

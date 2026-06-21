@@ -51,6 +51,24 @@
       rel="stylesheet"
     />
     <title>Chaos - Smart Shopping Assistant</title>
+
+    <!-- Sets .dark before first paint so there's no flash of the wrong
+         theme. Key/values must match THEME_KEY in src/utils/theme.js. -->
+    <script>
+      (function () {
+        try {
+          var pref = localStorage.getItem("chaos_theme") || "system";
+          var prefersDark =
+            window.matchMedia &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches;
+          if (pref === "dark" || (pref === "system" && prefersDark)) {
+            document.documentElement.classList.add("dark");
+          }
+        } catch (e) {
+          /* ignore */
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

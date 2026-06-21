@@ -23,7 +23,7 @@ export default function ListProductRow({
 
   return (
     <div
-      className="group grid grid-cols-[minmax(0,2fr)_minmax(4rem,1fr)_minmax(5rem,1fr)_minmax(4rem,1fr)_auto] items-center gap-3 px-4 py-3 transition-colors hover:bg-stone-50/80"
+      className="group grid grid-cols-[minmax(0,2fr)_minmax(4rem,1fr)_minmax(5rem,1fr)_minmax(4rem,1fr)_auto] items-center gap-3 px-4 py-3 transition-colors hover:bg-stone-50/80 dark:hover:bg-white/5"
       onClick={() => onOpen(product)}
       role="button"
       tabIndex={0}
@@ -35,7 +35,7 @@ export default function ListProductRow({
       }}
     >
       <div className="flex min-w-0 items-center gap-3">
-        <div className="relative aspect-square h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-stone-100 sm:h-14 sm:w-14">
+        <div className="relative aspect-square h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-stone-100 sm:h-14 sm:w-14 dark:bg-stone-800">
           <ProductImage
             src={image}
             alt=""
@@ -60,16 +60,16 @@ export default function ListProductRow({
           </button>
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium text-stone-800">{name}</p>
+          <p className="truncate text-sm font-medium text-stone-800 dark:text-stone-100">{name}</p>
           {displayDescription && (
-            <p className="line-clamp-1 text-xs text-stone-500">{displayDescription}</p>
+            <p className="line-clamp-1 text-xs text-stone-500 dark:text-stone-400">{displayDescription}</p>
           )}
         </div>
       </div>
 
-      <span className="text-sm font-medium text-stone-800">{price}</span>
-      <span className="truncate text-sm text-stone-500">{product.hostname || "—"}</span>
-      <span className="text-sm text-stone-400">{formatRelativeAdded(product.savedAt)}</span>
+      <span className="text-sm font-medium text-stone-800 dark:text-stone-100">{price}</span>
+      <span className="truncate text-sm text-stone-500 dark:text-stone-400">{product.hostname || "—"}</span>
+      <span className="text-sm text-stone-400 dark:text-stone-500">{formatRelativeAdded(product.savedAt)}</span>
 
       <button
         type="button"
@@ -77,7 +77,7 @@ export default function ListProductRow({
           e.stopPropagation();
           onMenu(product);
         }}
-        className="flex h-8 w-8 items-center justify-center rounded-full text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-700"
+        className="flex h-8 w-8 items-center justify-center rounded-full text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-700 dark:text-stone-500 dark:hover:bg-white/5 dark:hover:text-stone-300"
         aria-label="Product options"
       >
         <MoreHorizontal className="h-4 w-4" strokeWidth={1.75} />

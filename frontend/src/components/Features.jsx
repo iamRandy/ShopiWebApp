@@ -60,7 +60,7 @@ export default function Features() {
       className="relative z-0 -mt-24 flex min-h-screen items-center justify-center overflow-hidden px-5 pb-16 pt-36 md:px-8 md:pb-20 md:pt-44"
     >
       <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-[75%] bg-gradient-to-b from-transparent via-[#ffeacf]/70 to-[#f8f6f0]"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-[75%] bg-gradient-to-b from-transparent via-[#ffeacf]/70 to-[#f8f6f0] dark:via-[#3a2f1f]/40 dark:to-[#18181b]"
         aria-hidden
       />
       <div
@@ -86,12 +86,12 @@ export default function Features() {
           transition={{ duration: 0.8, ease: "easeInOut", delay: 0.2 }}
           className="shrink-0 text-center md:max-w-md md:text-left"
         >
-          <span className="mb-4 inline-flex items-center gap-2 rounded-full border-2 border-black bg-white px-4 py-1.5 text-sm font-semibold shadow-[3px_3px_0_#FFBC42]">
+          <span className="mb-4 inline-flex items-center gap-2 rounded-full border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-surface)] px-4 py-1.5 text-sm font-semibold shadow-[3px_3px_0_#FFBC42]">
             <Bookmark className="h-4 w-4 text-[#b45309]" strokeWidth={2.25} />
             See it in action
           </span>
-          <h2 className="text-4xl font-bold md:text-5xl">Save first, think later</h2>
-          <p className="text-primary-dark mx-auto mt-4 max-w-md text-lg leading-relaxed md:mx-0">
+          <h2 className="text-4xl font-bold text-[var(--color-text-primary)] md:text-5xl">Save first, think later</h2>
+          <p className="text-primary-dark dark:text-stone-400 mx-auto mt-4 max-w-md text-lg leading-relaxed md:mx-0">
             Spot something while you browse? Save it! Leave the hard-thinking for later while you browse.
           </p>
         </motion.div>
@@ -109,8 +109,8 @@ export default function Features() {
               transition={{ duration: 0.25 }}
               className="group relative mx-auto w-full"
             >
-              <div className="overflow-hidden rounded-2xl border-2 border-black bg-white p-2.5 shadow-[6px_6px_0_#FFBC42] transition-shadow duration-300 group-hover:shadow-[8px_10px_0_#FFBC42] md:p-3">
-                <div className="relative overflow-hidden rounded-xl border-2 border-black">
+              <div className="overflow-hidden rounded-2xl border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-surface)] p-2.5 shadow-[6px_6px_0_#FFBC42] transition-shadow duration-300 group-hover:shadow-[8px_10px_0_#FFBC42] md:p-3">
+                <div className="relative overflow-hidden rounded-xl border-2 border-[var(--color-border-strong)]">
                   <img
                     className="aspect-video w-full object-cover"
                     src="/videos/SaveAndViewCart.gif"

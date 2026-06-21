@@ -22,11 +22,11 @@ export default function CartSidebarItem({
           aria-label={`${cartName}, ${count} items`}
           className={`flex w-full items-center justify-center rounded-xl border-2 p-2.5 transition-all ${
             selected
-              ? "border-black bg-[#FFBC42]/30 shadow-[3px_3px_0_#000]"
-              : "border-transparent bg-transparent hover:border-stone-200 hover:bg-white/80"
+              ? "border-[var(--color-border-strong)] bg-[#FFBC42]/30 shadow-[3px_3px_0_var(--color-shadow)]"
+              : "border-transparent bg-transparent hover:border-[var(--color-border-subtle)] hover:bg-[var(--color-bg-surface)]/80"
           }`}
         >
-          <span className="text-stone-700">
+          <span className="text-stone-700 dark:text-stone-300">
             {getCartIcon(cart.icon, { className: "h-5 w-5" }) || (
               <ShoppingCart className="h-5 w-5" />
             )}
@@ -38,7 +38,7 @@ export default function CartSidebarItem({
             e.stopPropagation();
             onEdit(cart);
           }}
-          className="absolute -right-0.5 -top-0.5 flex rounded-full bg-white p-0.5 text-stone-600 opacity-0 shadow-sm transition-opacity hover:text-black group-hover:opacity-100"
+          className="absolute -right-0.5 -top-0.5 flex rounded-full bg-[var(--color-bg-surface)] p-0.5 text-stone-600 opacity-0 shadow-sm transition-opacity hover:text-[var(--color-text-primary)] group-hover:opacity-100 dark:text-stone-400"
           title="Edit cart"
           aria-label={`Edit ${cartName}`}
         >
@@ -65,22 +65,22 @@ export default function CartSidebarItem({
         }
       }}
     >
-      <span className="flex-shrink-0 text-stone-700">
+      <span className="flex-shrink-0 text-stone-700 dark:text-stone-300">
         {getCartIcon(cart.icon, { className: "h-5 w-5" }) || (
           <ShoppingCart className="h-5 w-5" />
         )}
       </span>
-      <span className="min-w-0 flex-1 truncate text-sm font-semibold text-black">
+      <span className="min-w-0 flex-1 truncate text-sm font-semibold text-[var(--color-text-primary)]">
         {cartName}
       </span>
-      <span className="text-xs font-bold tabular-nums text-stone-500">{count}</span>
+      <span className="text-xs font-bold tabular-nums text-stone-500 dark:text-stone-400">{count}</span>
       <button
         type="button"
         onClick={(e) => {
           e.stopPropagation();
           onEdit(cart);
         }}
-        className="absolute right-1 top-1/2 flex -translate-y-1/2 rounded-full bg-white p-1 text-stone-600 opacity-0 shadow-sm transition-opacity hover:text-black group-hover:opacity-100"
+        className="absolute right-1 top-1/2 flex -translate-y-1/2 rounded-full bg-[var(--color-bg-surface)] p-1 text-stone-600 opacity-0 shadow-sm transition-opacity hover:text-[var(--color-text-primary)] group-hover:opacity-100 dark:text-stone-400"
         title="Edit cart"
       >
         <MoreHorizontal className="h-4 w-4" />

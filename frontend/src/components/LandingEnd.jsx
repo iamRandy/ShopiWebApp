@@ -40,14 +40,14 @@ function QuoteBubble({ quote, opacity, scale, y }) {
       style={{ opacity, scale, y }}
       className={`absolute max-w-[11rem] sm:max-w-[13rem] ${quote.position} ${quote.rotate} z-20 ${quote.hideOnMobile ? "hidden sm:block" : ""}`}
     >
-      <div className="rounded-2xl border-2 border-black bg-white px-4 py-3 shadow-[5px_5px_0_#FFBC42]">
-        <p className="text-sm font-semibold leading-snug text-black">
+      <div className="rounded-2xl border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-surface)] px-4 py-3 shadow-[5px_5px_0_#FFBC42]">
+        <p className="text-sm font-semibold leading-snug text-[var(--color-text-primary)]">
           &ldquo;{quote.text}&rdquo;
         </p>
         <p className="mt-1 text-xs font-medium text-[#b45309]">— {quote.author}</p>
       </div>
       <div
-        className={`absolute -bottom-2 h-4 w-4 rotate-45 border-b-2 border-r-2 border-black bg-white ${
+        className={`absolute -bottom-2 h-4 w-4 rotate-45 border-b-2 border-r-2 border-[var(--color-border-strong)] bg-[var(--color-bg-surface)] ${
           quote.position.includes("right") ? "right-6" : "left-6"
         }`}
         aria-hidden
@@ -127,14 +127,14 @@ export default function LandingEnd() {
           style={{ opacity: headlineOpacity, y: headlineY }}
         >
           <motion.div
-            className="mb-4 inline-flex items-center gap-2 rounded-full border-2 border-black bg-white/90 px-4 py-1.5 text-sm font-semibold shadow-[3px_3px_0_#000]"
+            className="mb-4 inline-flex items-center gap-2 rounded-full border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-surface)]/90 px-4 py-1.5 text-sm font-semibold shadow-[3px_3px_0_var(--color-shadow)]"
             style={{ opacity: subOpacity }}
           >
             <Sparkles className="h-4 w-4 text-[#FFBC42]" strokeWidth={2.5} />
             No credit card required
           </motion.div>
 
-          <h2 className="text-3xl font-extrabold leading-tight tracking-tight text-black sm:text-4xl md:text-5xl">
+          <h2 className="text-3xl font-extrabold leading-tight tracking-tight text-[var(--color-text-primary)] sm:text-4xl md:text-5xl">
             Still juggling tabs?
             <br />
             <span className="underline decoration-[#FFBC42] decoration-4 underline-offset-4">
@@ -143,7 +143,7 @@ export default function LandingEnd() {
           </h2>
 
           <motion.p
-            className="mt-4 text-base text-primary-dark sm:text-lg"
+            className="mt-4 text-base text-primary-dark dark:text-stone-400 sm:text-lg"
             style={{ opacity: subOpacity }}
           >
             Save from any store, organize in carts, and come back when you&apos;re
@@ -197,7 +197,7 @@ export default function LandingEnd() {
         </motion.div>
 
         <motion.p
-          className="relative z-30 mt-8 text-center text-sm font-medium text-stone-600"
+          className="relative z-30 mt-8 text-center text-sm font-medium text-stone-600 dark:text-stone-400"
           style={{ opacity: subOpacity }}
         >
           Join the shoppers who stopped losing great finds.

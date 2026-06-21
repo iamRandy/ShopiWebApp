@@ -23,14 +23,39 @@ html {
   font-variation-settings:
     "wdth" 100;
 
+  /* Semantic theme tokens, referenced via bg-[var(--...)] / text-[var(--...)]
+     utilities so light/dark swap by overriding these once under .dark,
+     rather than pairing every utility with its own dark: variant. */
+  --color-bg-app: #f8f6f0;
+  --color-bg-app-alt: #faf8f4;
+  --color-bg-surface: #ffffff;
+  --color-bg-secondary: #ffeacf;
+  --color-text-primary: #1a1a1a;
+  --color-border-strong: #000000;
+  --color-border-subtle: #e7e5e4;
+  --color-shadow: #000000;
+
   color-scheme: light;
-  color: #1a1a1a;
-  background-color: #f8f6f0;
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-app);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.dark {
+  --color-bg-app: #18181b;
+  --color-bg-app-alt: #1f1e23;
+  --color-bg-surface: #26252b;
+  --color-bg-secondary: #3a2f1f;
+  --color-text-primary: #f5f3ee;
+  --color-border-strong: #f5f3ee;
+  --color-border-subtle: #3a383f;
+  --color-shadow: #fbbc42;
+
+  color-scheme: dark;
 }
 
 body {
@@ -40,6 +65,8 @@ body {
   width: 100%;
   min-height: 100vh;
   overflow-x: hidden;
+  background-color: var(--color-bg-app);
+  transition: background-color 0.15s ease;
 }
 
 h1 {
