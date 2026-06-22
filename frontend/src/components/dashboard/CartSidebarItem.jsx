@@ -52,8 +52,8 @@ export default function CartSidebarItem({
     <div
       className={`group relative flex cursor-pointer items-center gap-2 rounded-xl border-2 px-3 py-2.5 transition-all ${
         selected
-          ? "border-black bg-[#FFBC42]/30 shadow-[3px_3px_0_#000]"
-          : "border-transparent bg-transparent hover:border-stone-200 hover:bg-white/80"
+          ? "border-[var(--color-border-strong)] bg-[#FFBC42]/30 shadow-[3px_3px_0_var(--color-shadow)]"
+          : "border-transparent bg-transparent hover:border-[var(--color-border-subtle)] hover:bg-[var(--color-bg-surface)]/80"
       }`}
       onClick={() => onSelect(cart.id)}
       role="button"

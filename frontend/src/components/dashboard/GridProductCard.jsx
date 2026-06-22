@@ -1,10 +1,13 @@
-import { Heart, ExternalLink } from "lucide-react";
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { ExternalLink } from "lucide-react";
 import {
   getProductDisplayName,
   getFormattedProductPrice,
 } from "../../utils/product";
 import { getAffiliateLink } from "../../utils/affiliate";
 import ProductImage from "../ProductImage";
+import FavoriteHeartButton from "../FavoriteHeartButton";
 
 export default function GridProductCard({
   product,
@@ -12,6 +15,7 @@ export default function GridProductCard({
   onOpen,
   isFavoriteLoading = false,
 }) {
+  const [isHovered, setIsHovered] = useState(false);
   const name = getProductDisplayName(product);
   const price = getFormattedProductPrice(product);
   const image =
@@ -36,6 +40,8 @@ export default function GridProductCard({
     <article
       className="group relative aspect-square cursor-pointer overflow-hidden rounded-xl bg-stone-100 transition-shadow hover:shadow-md dark:bg-stone-800"
       onClick={() => onOpen(product)}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => {
@@ -55,24 +61,28 @@ export default function GridProductCard({
       <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-black/5" />
 
       {product.hostname && (
-        <span className="absolute left-2.5 top-2.5 max-w-[calc(100%-3rem)] truncate rounded-md bg-white/85 px-2 py-0.5 text-[10px] font-medium text-stone-600 backdrop-blur-sm">
-          {product.hostname}
-        </span>
+        <motion.div
+          className="absolute left-2.5 top-2.5 max-w-[calc(100%-3rem)] overflow-hidden rounded-md"
+          initial={false}
+          animate={{ width: isHovered ? "auto" : 0, opacity: isHovered ? 1 : 0 }}
+          transition={{ duration: 0.25, ease: "easeOut" }}
+        >
+          <span className="block overflow-hidden whitespace-nowrap text-ellipsis bg-white/85 px-2 py-0.5 text-[10px] font-medium text-stone-600 backdrop-blur-sm">
+            {product.hostname}
+          </span>
+        </motion.div>
       )}
 
-      <button
-        type="button"
-        onClick={handleFavorite}
-        disabled={isFavoriteLoading}
-        aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-        className="absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-[#FFBC42] backdrop-blur-sm transition-colors hover:bg-black/55"
-      >
-        <Heart
-          className={`transition-all duration-200 ${isFavorite ? "h-[18px] w-[18px]" : "h-3.5 w-3.5"}`}
-          fill={isFavorite ? "currentColor" : "none"}
-          strokeWidth={2}
-        />
-      </button>
+      <FavoriteHeartButton
+        isFavorite={isFavorite}
+        isLoading={isFavoriteLoading}
+        onToggle={handleFavorite}
+        buttonClassName="right-2.5 top-2.5 h-8 w-8"
+        iconActiveClassName="h-[18px] w-[18px]"
+        iconInactiveClassName="h-3.5 w-3.5"
+        ariaLabelOn="Remove from favorites"
+        ariaLabelOff="Add to favorites"
+      />
 
       <div className="absolute inset-x-0 bottom-0 p-3">
         <h3 className="line-clamp-2 text-sm font-medium leading-snug text-white">

@@ -6,6 +6,7 @@ import { authenticatedFetch } from "../../utils/api";
 import { useNavigate } from "react-router-dom";
 import ModalPortal from "../ModalPortal";
 import ProductImage from "../ProductImage";
+import FavoriteHeartButton from "../FavoriteHeartButton";
 import ExpandableText from "./ExpandableText";
 import ProductNicknameForm from "./ProductNicknameForm";
 import ProductNoteForm from "./ProductNoteForm";
@@ -418,23 +419,16 @@ const ProductModal = ({
                 </>
               )}
 
-              <button
-                type="button"
-                onClick={handleToggleFavorite}
-                disabled={isFavoriteSaving}
-                aria-label={
-                  productIsFavorite ? "Remove from favorites" : "Add to favorites"
-                }
-                className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-[#FFBC42] backdrop-blur-sm transition-colors hover:bg-black/55 disabled:opacity-60"
-              >
-                <Heart
-                  className={`transition-all duration-200 ${
-                    productIsFavorite ? "h-[19px] w-[19px]" : "h-4 w-4"
-                  }`}
-                  fill={productIsFavorite ? "currentColor" : "none"}
-                  strokeWidth={2}
-                />
-              </button>
+              <FavoriteHeartButton
+                isFavorite={productIsFavorite}
+                isLoading={isFavoriteSaving}
+                onToggle={handleToggleFavorite}
+                buttonClassName="right-3 top-3 h-9 w-9"
+                iconActiveClassName="h-[19px] w-[19px]"
+                iconInactiveClassName="h-4 w-4"
+                ariaLabelOn="Remove from favorites"
+                ariaLabelOff="Add to favorites"
+              />
             </div>
 
             <div className="px-5 py-4">{renderDetails()}</div>
