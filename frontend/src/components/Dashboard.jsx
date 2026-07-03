@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { authenticatedFetch } from "../utils/api";
 import {
   getProductDisplayName,
@@ -13,6 +14,9 @@ import ProductGridView from "./dashboard/ProductGridView";
 import ProductListView from "./dashboard/ProductListView";
 import FilterModal from "./dashboard/FilterModal";
 import Pagination from "./dashboard/Pagination";
+import ShareCartModal from "./dashboard/ShareCartModal";
+import useCartRoom from "../hooks/useCartRoom";
+import useSharedCartEvents from "../hooks/useSharedCartEvents";
 import {
   useProductFilters,
   countActiveFilters,
@@ -34,12 +38,16 @@ function getInitialViewMode() {
 }
 
 const Dashboard = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [carts, setCarts] = useState([]);
+  const [sharedCarts, setSharedCarts] = useState([]);
   const [selectedCart, setSelectedCart] = useState(null);
   const [selectedCartObj, setSelectedCartObj] = useState(null);
   const [selectedCartProducts, setSelectedCartProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [cartSwitching, setCartSwitching] = useState(false);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [accessRevoked, setAccessRevoked] = useState(false);
 
   const [viewMode, setViewMode] = useState(getInitialViewMode);
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
@@ -79,9 +87,31 @@ const Dashboard = () => {
     }
   }, []);
 
+  const fetchSharedCarts = useCallback(async () => {
+    try {
+      const response = await authenticatedFetch(`${API_URL}/api/shared-carts`);
+      const data = await response.json();
+      setSharedCarts(data);
+    } catch (error) {
+      console.error("Error fetching shared carts:", error);
+    }
+  }, []);
+
   useEffect(() => {
     fetchCarts();
-  }, [fetchCarts]);
+    fetchSharedCarts();
+  }, [fetchCarts, fetchSharedCarts]);
+
+  // A cart deep-linked via ?cart=<id> (e.g. after accepting a share invite) gets selected once.
+  useEffect(() => {
+    const deepLinkedCartId = searchParams.get("cart");
+    if (!deepLinkedCartId) return;
+    cartSelected(deepLinkedCartId);
+    const next = new URLSearchParams(searchParams);
+    next.delete("cart");
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const handleProductUpdated = (productId, updates) => {
     const updateProducts = (products) =>
@@ -103,6 +133,7 @@ const Dashboard = () => {
   const cartSelected = async (cartId) => {
     if (cartId === selectedCartRef.current) return;
 
+    setAccessRevoked(false);
     setSelectedCart(cartId);
     setFilters(DEFAULT_FILTERS);
     const cartFromList = carts.find((c) => c.id === cartId);
@@ -113,10 +144,8 @@ const Dashboard = () => {
 
     setCartSwitching(true);
     try {
-      const response = await authenticatedFetch(`${API_URL}/api/carts/selectCart`, {
-        method: "POST",
-        body: JSON.stringify({ cartId }),
-      });
+      const response = await authenticatedFetch(`${API_URL}/api/carts/${cartId}`);
+      if (!response.ok) throw new Error("Failed to load cart");
       const data = await response.json();
       setSelectedCartObj(data);
       setSelectedCartProducts(data?.products || []);
@@ -127,6 +156,38 @@ const Dashboard = () => {
       console.error("Error selecting cart:", error);
     } finally {
       setCartSwitching(false);
+    }
+  };
+
+  const handleShareClick = () => setShareModalOpen(true);
+
+  const handleCloseShareModal = (result) => {
+    setShareModalOpen(false);
+    if (result?.ownershipTransferred) {
+      fetchCarts(true);
+      fetchSharedCarts();
+    }
+  };
+
+  const handleSharedCartSelect = (sharedCart) => {
+    cartSelected(sharedCart.cartId);
+  };
+
+  const handleLeaveSharedCart = async (cartId) => {
+    try {
+      const response = await authenticatedFetch(
+        `${API_URL}/api/shared-carts/${cartId}/leave`,
+        { method: "DELETE" }
+      );
+      if (!response.ok) throw new Error("Failed to leave shared cart");
+      setSharedCarts((prev) => prev.filter((c) => c.cartId !== cartId));
+      if (selectedCartRef.current === cartId) {
+        setSelectedCart(carts?.[0]?.id || null);
+        setSelectedCartObj(carts?.[0] || null);
+        setSelectedCartProducts(carts?.[0]?.products || []);
+      }
+    } catch (error) {
+      console.error("Error leaving shared cart:", error);
     }
   };
 
@@ -206,6 +267,58 @@ const Dashboard = () => {
     selectedCartObj || carts.find((c) => c.id === selectedCart) || null;
   const cartTitle = activeCart?.name || "Unnamed cart";
   const rawProducts = selectedCartProducts ?? [];
+  const isOwnedCart = Boolean(activeCart) && (!activeCart.myRole || activeCart.myRole === "owner");
+  const canEditCart = isOwnedCart || activeCart?.myRole === "edit";
+  const canShare = isOwnedCart;
+  const activeCartOwnerSub = activeCart?.ownerSub || localStorage.getItem("userSub");
+
+  useCartRoom(activeCartOwnerSub, selectedCart);
+  useSharedCartEvents({
+    "product:updated": ({ cartId, productId, product }) => {
+      if (cartId !== selectedCartRef.current) return;
+      handleProductUpdated(productId, product);
+    },
+    "product:deleted": ({ cartId, productId }) => {
+      if (cartId !== selectedCartRef.current) return;
+      setSelectedCartProducts((prev) => prev.filter((p) => p.id !== productId));
+      setCarts((prev) =>
+        prev.map((cart) =>
+          cart.id === cartId
+            ? { ...cart, products: (cart.products || []).filter((p) => p.id !== productId) }
+            : cart
+        )
+      );
+    },
+    "cart:renamed": ({ cartId, name, icon, color }) => {
+      const patch = (cart) => (cart.id === cartId ? { ...cart, name, icon, color } : cart);
+      setCarts((prev) => prev.map(patch));
+      setSelectedCartObj((prev) => (prev?.id === cartId ? { ...prev, name, icon, color } : prev));
+      setSharedCarts((prev) =>
+        prev.map((c) => (c.cartId === cartId ? { ...c, cartName: name, cartIcon: icon, cartColor: color } : c))
+      );
+    },
+    "cart:deleted": ({ cartId }) => {
+      setCarts((prev) => prev.filter((c) => c.id !== cartId));
+      setSharedCarts((prev) => prev.filter((c) => c.cartId !== cartId));
+      if (selectedCartRef.current === cartId) {
+        setSelectedCart(null);
+        setSelectedCartObj(null);
+        setSelectedCartProducts([]);
+        fetchCarts(false);
+      }
+    },
+    "collaborator:removed": ({ cartId, sub }) => {
+      const mySub = localStorage.getItem("userSub");
+      setSharedCarts((prev) => prev.filter((c) => c.cartId !== cartId || sub !== mySub));
+      if (sub === mySub && selectedCartRef.current === cartId) {
+        setAccessRevoked(true);
+      }
+    },
+    "cart:ownershipTransferred": () => {
+      fetchCarts(true);
+      fetchSharedCarts();
+    },
+  });
 
   const filteredProducts = useProductFilters(rawProducts, filters);
   const sortedProducts = useMemo(
@@ -231,6 +344,9 @@ const Dashboard = () => {
     selectedCartId: selectedCart,
     onCartSelect: cartSelected,
     onCartsChanged: () => fetchCarts(true),
+    sharedCarts,
+    onSharedCartSelect: handleSharedCartSelect,
+    onLeaveSharedCart: handleLeaveSharedCart,
   };
 
   return (
@@ -247,7 +363,15 @@ const Dashboard = () => {
               onViewModeChange={handleViewModeChange}
               onFilterOpen={() => setFilterModalOpen(true)}
               activeFilterCount={activeFilterCount}
+              canShare={canShare}
+              onShareClick={handleShareClick}
             />
+
+            {accessRevoked && (
+              <div className="mb-4 rounded-xl border-2 border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+                You no longer have access to this cart.
+              </div>
+            )}
 
             <div className="flex-1">
               {showEmptyCart ? (
@@ -267,14 +391,14 @@ const Dashboard = () => {
               ) : viewMode === "grid" ? (
                 <ProductGridView
                   products={pageItems}
-                  onFavoriteToggle={handleFavoriteToggle}
+                  onFavoriteToggle={canEditCart ? handleFavoriteToggle : undefined}
                   onOpen={openProductModal}
                   favoriteLoadingId={favoriteLoadingId}
                 />
               ) : (
                 <ProductListView
                   products={pageItems}
-                  onFavoriteToggle={handleFavoriteToggle}
+                  onFavoriteToggle={canEditCart ? handleFavoriteToggle : undefined}
                   onOpen={openProductModal}
                   onMenu={openProductModal}
                   favoriteLoadingId={favoriteLoadingId}
@@ -325,6 +449,12 @@ const Dashboard = () => {
           cartId={selectedCart}
           onDelete={handleProductDelete}
           onProductUpdated={handleModalProductUpdated}
+        />
+
+        <ShareCartModal
+          isOpen={shareModalOpen}
+          onClose={handleCloseShareModal}
+          cart={activeCart}
         />
       </div>
     </AppShell>

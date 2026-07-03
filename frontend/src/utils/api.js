@@ -16,7 +16,15 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+export const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
+// Lets other modules (e.g. the socket client) react to a fresh access token
+// without api.js importing them back (would create a circular import).
+const tokenRefreshListeners = new Set();
+export const onTokenRefreshed = (listener) => {
+  tokenRefreshListeners.add(listener);
+  return () => tokenRefreshListeners.delete(listener);
+};
 
 export const clearAuthStorage = () => {
   localStorage.removeItem("authToken");
@@ -75,6 +83,7 @@ export const refreshAccessToken = async ({ redirectOnFailure = true } = {}) => {
 
   localStorage.setItem("authToken", data.accessToken);
   localStorage.setItem("refreshToken", data.refreshToken);
+  tokenRefreshListeners.forEach((listener) => listener(data.accessToken));
 
   return data.accessToken;
 };
@@ -185,6 +194,17 @@ export const authenticatedFetch = async (url, options = {}) => {
   }
 
   return response;
+};
+
+/**
+ * Like authenticatedFetch, but for endpoints guests can also hit: attaches the
+ * auth header only if a token exists, and never throws/redirects on 401.
+ */
+export const optionalAuthFetch = async (url, options = {}) => {
+  const token = localStorage.getItem("authToken");
+  const headers = { "Content-Type": "application/json", ...options.headers };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  return fetch(url, { ...options, headers });
 };
 
 // Logout function that also calls the backend to invalidate refresh token

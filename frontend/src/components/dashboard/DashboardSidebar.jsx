@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Cog, PanelLeftClose, PanelLeftOpen, Plus, X } from "lucide-react";
 import CartSidebarItem from "./CartSidebarItem";
+import SharedCartsSection from "./SharedCartsSection";
 import UserFooter from "./UserFooter";
 import CartModal from "../CartModal";
 
@@ -10,6 +11,9 @@ export default function DashboardSidebar({
   selectedCartId,
   onCartSelect,
   onCartsChanged,
+  sharedCarts = [],
+  onSharedCartSelect,
+  onLeaveSharedCart,
   collapsed = false,
   onToggleCollapse,
   isMobileDrawer = false,
@@ -131,22 +135,32 @@ export default function DashboardSidebar({
         </button>
       </div>
 
-      <nav
-        className={`flex w-full flex-1 flex-col gap-1 overflow-y-auto ${
+      <div
+        className={`flex w-full flex-1 flex-col overflow-y-auto ${
           collapsed ? "items-center pr-0" : "pr-1"
         }`}
       >
-        {carts.map((cart) => (
-          <CartSidebarItem
-            key={cart.id}
-            cart={cart}
-            selected={selectedCartId === cart.id}
-            onSelect={onCartSelect}
-            onEdit={handleEditCart}
-            collapsed={collapsed}
-          />
-        ))}
-      </nav>
+        <nav className={`flex w-full flex-col gap-1 ${collapsed ? "items-center" : ""}`}>
+          {carts.map((cart) => (
+            <CartSidebarItem
+              key={cart.id}
+              cart={cart}
+              selected={selectedCartId === cart.id}
+              onSelect={onCartSelect}
+              onEdit={handleEditCart}
+              collapsed={collapsed}
+            />
+          ))}
+        </nav>
+
+        <SharedCartsSection
+          sharedCarts={sharedCarts}
+          selectedCartId={selectedCartId}
+          onCartSelect={onSharedCartSelect}
+          onLeaveCart={onLeaveSharedCart}
+          collapsed={collapsed}
+        />
+      </div>
 
       <UserFooter collapsed={collapsed} />
 

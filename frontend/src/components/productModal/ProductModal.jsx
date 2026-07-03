@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { ExternalLink, Heart, Trash2, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Check, Copy, ExternalLink, Heart, Trash2, X } from "lucide-react";
 import { getAffiliateLink } from "../../utils/affiliate";
 import { formatRelativeAdded } from "../../utils/product";
 import { authenticatedFetch } from "../../utils/api";
@@ -41,6 +42,8 @@ const ProductModal = ({
   const [saveError, setSaveError] = useState(null);
   const [deleteError, setDeleteError] = useState(null);
   const [showOriginalDescription, setShowOriginalDescription] = useState(false);
+  const [copyFeedback, setCopyFeedback] = useState(false);
+  const copyTimeoutRef = useRef(null);
 
   const trimmedNote = productNote?.trim() || "";
   const trimmedDescription = productDescription?.trim() || "";
@@ -55,8 +58,15 @@ const ProductModal = ({
       setSaveError(null);
       setDeleteError(null);
       setShowOriginalDescription(false);
+      setCopyFeedback(false);
     }
   }, [isOpen, productNickname, productNote, productId]);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+    };
+  }, []);
 
   if (!isOpen) return null;
 
@@ -105,6 +115,18 @@ const ProductModal = ({
   const handleVisitProduct = () => {
     if (productUrl) {
       window.open(getAffiliateLink(productUrl), "_blank", "noopener,noreferrer");
+    }
+  };
+
+  const handleCopyLink = async () => {
+    if (!productUrl) return;
+    try {
+      await navigator.clipboard.writeText(productUrl);
+      setCopyFeedback(true);
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+      copyTimeoutRef.current = setTimeout(() => setCopyFeedback(false), 1500);
+    } catch {
+      // Clipboard permission denied/unavailable — nothing useful to show the user.
     }
   };
 
@@ -445,15 +467,50 @@ const ProductModal = ({
 
           {!editMode && (
             <div className="shrink-0 space-y-2 border-t border-stone-100 px-5 py-3.5 dark:border-stone-800">
-              <button
-                type="button"
-                onClick={handleVisitProduct}
-                disabled={!productUrl || busy}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#FFBC42] px-4 py-3 text-sm font-semibold text-stone-900 transition-colors hover:bg-[#f0ad35] disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                Visit product
-                <ExternalLink className="h-4 w-4" strokeWidth={2} />
-              </button>
+              <div className="grid grid-cols-[1fr_auto] gap-2">
+                <button
+                  type="button"
+                  onClick={handleVisitProduct}
+                  disabled={!productUrl || busy}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#FFBC42] px-4 py-3 text-sm font-semibold text-stone-900 transition-colors hover:bg-[#f0ad35] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Visit product
+                  <ExternalLink className="h-4 w-4" strokeWidth={2} />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleCopyLink}
+                  disabled={!productUrl || busy}
+                  title="Copy link"
+                  aria-label="Copy product link"
+                  className="flex items-center justify-center rounded-xl border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-surface)] px-3.5 text-stone-700 transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 dark:text-stone-200"
+                >
+                  <AnimatePresence mode="wait" initial={false}>
+                    {copyFeedback ? (
+                      <motion.span
+                        key="check"
+                        initial={{ scale: 0.6, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.6, opacity: 0 }}
+                        transition={{ duration: 0.12 }}
+                      >
+                        <Check className="h-4 w-4" />
+                      </motion.span>
+                    ) : (
+                      <motion.span
+                        key="copy"
+                        initial={{ scale: 0.6, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.6, opacity: 0 }}
+                        transition={{ duration: 0.12 }}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </button>
+              </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <button

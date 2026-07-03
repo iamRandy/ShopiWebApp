@@ -1,9 +1,11 @@
 // ShopiWebApp/backend/server.js
 const path = require("path");
+const http = require("http");
 const cors = require("cors");
 const express = require("express");
 const dotenv = require("dotenv");
 const { MongoClient } = require("mongodb");
+const { Server: SocketIOServer } = require("socket.io");
 const jwt = require("jsonwebtoken");
 const { OAuth2Client } = require("google-auth-library");
 const crypto = require("crypto");
@@ -14,17 +16,22 @@ const app = express();
 const PORT = 3000;
 const client_id = process.env.VITE_CLIENT_ID;
 const oauth_client = new OAuth2Client(client_id);
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
 // JWT secrets - use environment variables in production
 const JWT_SECRET = process.env.JWT_SECRET;
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
 
 // Token expiration times
-const ACCESS_TOKEN_EXPIRY = "15m"; // 15 minutes
+const ACCESS_TOKEN_EXPIRY = "2h"; // 2 hours
 const REFRESH_TOKEN_EXPIRY = "7d"; // 7 days
 
 const client = new MongoClient(process.env.MONGODB_URI);
 let usersCollection;
+let cartSharesCollection;
+
+const httpServer = http.createServer(app);
+const io = new SocketIOServer(httpServer, { cors: { origin: "*" } });
 
 app.use(
   cors({
@@ -39,7 +46,14 @@ async function init() {
   await client.connect();
   const db = client.db("shopi");
   usersCollection = db.collection("users");
-  app.listen(PORT, () => console.log("API ready on", PORT));
+  cartSharesCollection = db.collection("cartShares");
+  await Promise.all([
+    cartSharesCollection.createIndex({ shareToken: 1 }, { unique: true }),
+    cartSharesCollection.createIndex({ cartId: 1, ownerSub: 1 }, { unique: true }),
+    cartSharesCollection.createIndex({ "collaborators.sub": 1 }),
+    usersCollection.createIndex({ "sharedCartIds.cartId": 1 }),
+  ]);
+  httpServer.listen(PORT, () => console.log("API ready on", PORT));
 }
 
 const MAX_PROFILE_FIELD_LENGTH = 50;
@@ -129,6 +143,44 @@ const generateTokens = (user) => {
   return { accessToken, refreshToken };
 };
 
+/** Socket.IO room name for a given cart, keyed by its owner (stable regardless of who's viewing). */
+const room = (ownerSub, cartId) => `cart:${ownerSub}:${cartId}`;
+
+/**
+ * Resolves whether `sub` can act on `cartId`, and as what role.
+ * Returns { allowed, role: "owner"|"edit"|"view"|null, ownerSub }.
+ * Checks owner-status first (cheap, existing pattern), falls back to cartShares.
+ */
+async function resolveCartAccess(sub, cartId) {
+  const ownerDoc = await usersCollection.findOne(
+    { sub, "carts.id": cartId },
+    { projection: { _id: 1 } }
+  );
+  if (ownerDoc) return { allowed: true, role: "owner", ownerSub: sub };
+
+  const share = await cartSharesCollection.findOne({ cartId });
+  if (!share) return { allowed: false, role: null, ownerSub: null };
+
+  const collab = share.collaborators.find((c) => c.sub === sub);
+  if (!collab) return { allowed: false, role: null, ownerSub: share.ownerSub };
+
+  return { allowed: true, role: collab.role, ownerSub: share.ownerSub };
+}
+
+/** Patches the denormalized display fields in every collaborator's sharedCartIds entry for a cart. */
+async function syncSharedCartIdsDisplay(cartId, fields) {
+  const $set = {};
+  for (const [key, value] of Object.entries(fields)) {
+    $set[`sharedCartIds.$[s].${key}`] = value;
+  }
+  if (Object.keys($set).length === 0) return;
+  await usersCollection.updateMany(
+    { "sharedCartIds.cartId": cartId },
+    { $set },
+    { arrayFilters: [{ "s.cartId": cartId }] }
+  );
+}
+
 // Middleware to verify JWT token (our own tokens, not Google's)
 const verifyToken = async (req, res, next) => {
   try {
@@ -151,6 +203,35 @@ const verifyToken = async (req, res, next) => {
     return res.status(401).json({ error: "Verify token: Invalid token" });
   }
 };
+
+// Socket.IO: authenticate the handshake with the same access JWT used by REST, then
+// let clients join/leave a room scoped to whichever single cart they currently have open.
+io.use((socket, next) => {
+  const token = socket.handshake.auth?.token;
+  if (!token) return next(new Error("unauthorized"));
+  try {
+    socket.user = jwt.verify(token, JWT_SECRET);
+    next();
+  } catch {
+    next(new Error("unauthorized"));
+  }
+});
+
+io.on("connection", (socket) => {
+  socket.on("cart:join", async ({ cartId }) => {
+    try {
+      const access = await resolveCartAccess(socket.user.sub, cartId);
+      if (!access.allowed) return socket.emit("cart:joinDenied", { cartId });
+      socket.join(room(access.ownerSub, cartId));
+    } catch (e) {
+      console.error("cart:join error", e);
+    }
+  });
+
+  socket.on("cart:leave", ({ cartId, ownerSub }) => {
+    if (cartId && ownerSub) socket.leave(room(ownerSub, cartId));
+  });
+});
 
 // API routes
 app.post("/api/login/google", async (req, res) => {
@@ -329,9 +410,14 @@ app.put("/api/carts/:cartId", verifyToken, async (req, res) => {
       return res.status(400).json({ error: "Cart ID is required" });
     }
 
-    // Update the cart in the user's carts array
+    const access = await resolveCartAccess(req.user.sub, cartId);
+    if (!access.allowed || access.role === "view") {
+      return res.status(403).json({ error: "You do not have permission to edit this cart" });
+    }
+
+    // Update the cart in the owner's carts array (owner may differ from the requester for shared carts)
     const result = await usersCollection.updateOne(
-      { sub: req.user.sub, "carts.id": cartId },
+      { sub: access.ownerSub, "carts.id": cartId },
       {
         $set: {
           "carts.$.name": name,
@@ -344,10 +430,23 @@ app.put("/api/carts/:cartId", verifyToken, async (req, res) => {
     if (result.modifiedCount > 0) {
       // Fetch the updated cart to return it
       const user = await usersCollection.findOne(
-        { sub: req.user.sub },
+        { sub: access.ownerSub },
         { projection: { _id: 0, carts: 1 } }
       );
       const updatedCart = user.carts.find((cart) => cart.id === cartId);
+
+      await syncSharedCartIdsDisplay(cartId, {
+        cartName: updatedCart.name,
+        cartIcon: updatedCart.icon,
+        ...(updatedCart.color && { cartColor: updatedCart.color }),
+      });
+      io.to(room(access.ownerSub, cartId)).emit("cart:renamed", {
+        cartId,
+        name: updatedCart.name,
+        icon: updatedCart.icon,
+        color: updatedCart.color,
+      });
+
       res.json(updatedCart);
     } else {
       res.status(404).json({ error: "Cart not found" });
@@ -358,13 +457,18 @@ app.put("/api/carts/:cartId", verifyToken, async (req, res) => {
   }
 });
 
-// Delete a specific cart
+// Delete a specific cart (owner only)
 app.delete("/api/carts/:cartId", verifyToken, async (req, res) => {
   try {
     const { cartId } = req.params;
 
     if (!cartId) {
       return res.status(400).json({ error: "Cart ID is required" });
+    }
+
+    const access = await resolveCartAccess(req.user.sub, cartId);
+    if (access.role !== "owner") {
+      return res.status(403).json({ error: "Only the cart owner can delete this cart" });
     }
 
     // Remove the cart from the user's carts array
@@ -374,6 +478,20 @@ app.delete("/api/carts/:cartId", verifyToken, async (req, res) => {
     );
 
     if (result.modifiedCount > 0) {
+      io.to(room(req.user.sub, cartId)).emit("cart:deleted", { cartId });
+
+      const share = await cartSharesCollection.findOneAndDelete({
+        cartId,
+        ownerSub: req.user.sub,
+      });
+      const collaboratorSubs = share?.collaborators?.map((c) => c.sub) || [];
+      if (collaboratorSubs.length > 0) {
+        await usersCollection.updateMany(
+          { sub: { $in: collaboratorSubs } },
+          { $pull: { sharedCartIds: { cartId } } }
+        );
+      }
+
       res.json({ success: true, message: "Cart deleted successfully" });
     } else {
       res.status(404).json({ error: "Cart not found or already deleted" });
@@ -396,6 +514,11 @@ app.patch("/api/carts/:cartId/products/:productId", verifyToken, async (req, res
 
     if (!cartId || !productId) {
       return res.status(400).json({ error: "Cart ID and Product ID are required" });
+    }
+
+    const access = await resolveCartAccess(req.user.sub, cartId);
+    if (!access.allowed || access.role === "view") {
+      return res.status(403).json({ error: "You do not have permission to edit this cart" });
     }
 
     if (nickname !== undefined && typeof nickname !== "string") {
@@ -446,7 +569,7 @@ app.patch("/api/carts/:cartId/products/:productId", verifyToken, async (req, res
     if (Object.keys($unset).length > 0) update.$unset = $unset;
 
     const result = await usersCollection.updateOne(
-      { sub: req.user.sub },
+      { sub: access.ownerSub },
       update,
       { arrayFilters: [{ "c.id": cartId }, { "p.id": productId }] }
     );
@@ -456,7 +579,7 @@ app.patch("/api/carts/:cartId/products/:productId", verifyToken, async (req, res
     }
 
     const user = await usersCollection.findOne(
-      { sub: req.user.sub },
+      { sub: access.ownerSub },
       { projection: { _id: 0, carts: 1 } }
     );
     const cart = user?.carts?.find((c) => c.id === cartId);
@@ -465,6 +588,8 @@ app.patch("/api/carts/:cartId/products/:productId", verifyToken, async (req, res
     if (!product) {
       return res.status(404).json({ error: "Product not found after update" });
     }
+
+    io.to(room(access.ownerSub, cartId)).emit("product:updated", { cartId, productId, product });
 
     res.json({ success: true, product });
   } catch (e) {
@@ -482,13 +607,19 @@ app.delete("/api/carts/:cartId/products/:productId", verifyToken, async (req, re
       return res.status(400).json({ error: "Cart ID and Product ID are required" });
     }
 
+    const access = await resolveCartAccess(req.user.sub, cartId);
+    if (!access.allowed || access.role === "view") {
+      return res.status(403).json({ error: "You do not have permission to edit this cart" });
+    }
+
     // Remove the product from the cart's products array
     const result = await usersCollection.updateOne(
-      { sub: req.user.sub, "carts.id": cartId },
+      { sub: access.ownerSub, "carts.id": cartId },
       { $pull: { "carts.$.products": { id: productId } } }
     );
 
     if (result.modifiedCount > 0) {
+      io.to(room(access.ownerSub, cartId)).emit("product:deleted", { cartId, productId });
       res.json({ success: true, message: "Product deleted successfully" });
     } else {
       res.status(404).json({ error: "Product not found in cart or cart not found" });
@@ -497,6 +628,499 @@ app.delete("/api/carts/:cartId/products/:productId", verifyToken, async (req, re
     console.error(e);
     res.status(500).json({ error: "Failed to delete product" });
   }
+});
+
+// ---------------------------------------------------------------------------
+// Cart sharing
+// ---------------------------------------------------------------------------
+
+// New unified single-cart fetch (owner or accepted collaborator), with products.
+app.get("/api/carts/:cartId", verifyToken, async (req, res) => {
+  try {
+    const { cartId } = req.params;
+    const access = await resolveCartAccess(req.user.sub, cartId);
+    if (!access.allowed) {
+      return res.status(403).json({ error: "You do not have access to this cart" });
+    }
+    const doc = await usersCollection.findOne(
+      { sub: access.ownerSub, "carts.id": cartId },
+      { projection: { _id: 0, "carts.$": 1 } }
+    );
+    const cart = doc?.carts?.[0];
+    if (!cart) return res.status(404).json({ error: "Cart not found" });
+    res.json({ ...cart, myRole: access.role, ownerSub: access.ownerSub });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Failed to fetch cart" });
+  }
+});
+
+// List (metadata only, no products) of carts shared with the current user.
+app.get("/api/shared-carts", verifyToken, async (req, res) => {
+  try {
+    const doc = await usersCollection.findOne(
+      { sub: req.user.sub },
+      { projection: { _id: 0, sharedCartIds: 1 } }
+    );
+    res.json(doc?.sharedCartIds || []);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Failed to fetch shared carts" });
+  }
+});
+
+// A collaborator removes their own access to a shared cart.
+app.delete("/api/shared-carts/:cartId/leave", verifyToken, async (req, res) => {
+  try {
+    const { cartId } = req.params;
+    const share = await cartSharesCollection.findOne({ cartId });
+    if (!share) {
+      return res.status(404).json({ error: "This cart is not shared" });
+    }
+    if (share.ownerSub === req.user.sub) {
+      return res.status(400).json({ error: "Owners cannot leave their own cart" });
+    }
+
+    await cartSharesCollection.updateOne(
+      { cartId },
+      { $pull: { collaborators: { sub: req.user.sub } } }
+    );
+    await usersCollection.updateOne(
+      { sub: req.user.sub },
+      { $pull: { sharedCartIds: { cartId } } }
+    );
+
+    io.to(room(share.ownerSub, cartId)).emit("collaborator:removed", { cartId, sub: req.user.sub });
+
+    res.json({ success: true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Failed to leave shared cart" });
+  }
+});
+
+// Owner generates or regenerates a cart's share link + role.
+app.post("/api/carts/:cartId/share", verifyToken, async (req, res) => {
+  try {
+    const { cartId } = req.params;
+    const { role } = req.body;
+    if (role !== "view" && role !== "edit") {
+      return res.status(400).json({ error: "role must be 'view' or 'edit'" });
+    }
+
+    const access = await resolveCartAccess(req.user.sub, cartId);
+    if (access.role !== "owner") {
+      return res.status(403).json({ error: "Only the cart owner can share this cart" });
+    }
+
+    const shareToken = crypto.randomBytes(32).toString("base64url");
+    const now = new Date();
+
+    const existing = await cartSharesCollection.findOne({ cartId, ownerSub: req.user.sub });
+    if (existing) {
+      await cartSharesCollection.updateOne(
+        { _id: existing._id },
+        { $set: { shareToken, linkRole: role, updatedAt: now } }
+      );
+    } else {
+      await cartSharesCollection.insertOne({
+        cartId,
+        ownerSub: req.user.sub,
+        shareToken,
+        linkRole: role,
+        createdAt: now,
+        updatedAt: now,
+        collaborators: [],
+      });
+    }
+
+    res.json({ shareToken, linkRole: role, shareUrl: `${FRONTEND_URL}/shared/${shareToken}` });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Failed to generate share link" });
+  }
+});
+
+// Owner fetches share link + collaborator list, for the manage-collaborators UI.
+app.get("/api/carts/:cartId/share", verifyToken, async (req, res) => {
+  try {
+    const { cartId } = req.params;
+    const access = await resolveCartAccess(req.user.sub, cartId);
+    if (access.role !== "owner") {
+      return res.status(403).json({ error: "Only the cart owner can view sharing settings" });
+    }
+
+    const share = await cartSharesCollection.findOne({ cartId, ownerSub: req.user.sub });
+    if (!share) {
+      return res.json({ shareToken: null, linkRole: null, shareUrl: null, collaborators: [] });
+    }
+
+    res.json({
+      shareToken: share.shareToken,
+      linkRole: share.linkRole,
+      shareUrl: `${FRONTEND_URL}/shared/${share.shareToken}`,
+      collaborators: share.collaborators.map((c) => ({
+        sub: c.sub,
+        role: c.role,
+        email: c.email,
+        name: c.name,
+        picture: c.picture,
+        acceptedAt: c.acceptedAt,
+      })),
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Failed to fetch sharing settings" });
+  }
+});
+
+// Owner changes a collaborator's role.
+app.patch("/api/carts/:cartId/share/collaborators/:collaboratorSub", verifyToken, async (req, res) => {
+  try {
+    const { cartId, collaboratorSub } = req.params;
+    const { role } = req.body;
+    if (role !== "view" && role !== "edit") {
+      return res.status(400).json({ error: "role must be 'view' or 'edit'" });
+    }
+
+    const access = await resolveCartAccess(req.user.sub, cartId);
+    if (access.role !== "owner") {
+      return res.status(403).json({ error: "Only the cart owner can change collaborator roles" });
+    }
+
+    const result = await cartSharesCollection.updateOne(
+      { cartId, ownerSub: req.user.sub, "collaborators.sub": collaboratorSub },
+      { $set: { "collaborators.$.role": role } }
+    );
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: "Collaborator not found" });
+    }
+
+    await usersCollection.updateOne(
+      { sub: collaboratorSub, "sharedCartIds.cartId": cartId },
+      { $set: { "sharedCartIds.$.role": role } }
+    );
+
+    io.to(room(req.user.sub, cartId)).emit("collaborator:roleChanged", { cartId, sub: collaboratorSub, role });
+
+    res.json({ success: true, sub: collaboratorSub, role });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Failed to change collaborator role" });
+  }
+});
+
+// Owner removes a collaborator. The share link itself stays valid for reuse.
+app.delete("/api/carts/:cartId/share/collaborators/:collaboratorSub", verifyToken, async (req, res) => {
+  try {
+    const { cartId, collaboratorSub } = req.params;
+
+    const access = await resolveCartAccess(req.user.sub, cartId);
+    if (access.role !== "owner") {
+      return res.status(403).json({ error: "Only the cart owner can remove collaborators" });
+    }
+
+    await cartSharesCollection.updateOne(
+      { cartId, ownerSub: req.user.sub },
+      { $pull: { collaborators: { sub: collaboratorSub } } }
+    );
+    await usersCollection.updateOne(
+      { sub: collaboratorSub },
+      { $pull: { sharedCartIds: { cartId } } }
+    );
+
+    io.to(room(req.user.sub, cartId)).emit("collaborator:removed", { cartId, sub: collaboratorSub });
+
+    res.json({ success: true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Failed to remove collaborator" });
+  }
+});
+
+// Owner transfers ownership of a cart to an existing collaborator.
+app.post("/api/carts/:cartId/share/transfer", verifyToken, async (req, res) => {
+  try {
+    const { cartId } = req.params;
+    const { toSub } = req.body;
+    if (!toSub) {
+      return res.status(400).json({ error: "toSub is required" });
+    }
+
+    const access = await resolveCartAccess(req.user.sub, cartId);
+    if (access.role !== "owner") {
+      return res.status(403).json({ error: "Only the cart owner can transfer ownership" });
+    }
+    if (toSub === req.user.sub) {
+      return res.status(400).json({ error: "You already own this cart" });
+    }
+
+    const oldOwnerSub = req.user.sub;
+    const share = await cartSharesCollection.findOne({ cartId, ownerSub: oldOwnerSub });
+    const targetCollab = share?.collaborators?.find((c) => c.sub === toSub);
+    if (!targetCollab) {
+      return res.status(400).json({ error: "Transfer target must be an existing collaborator" });
+    }
+
+    let newOwnerProfile = null;
+
+    const session = client.startSession();
+    try {
+      await session.withTransaction(async () => {
+        const oldOwnerDoc = await usersCollection.findOne(
+          { sub: oldOwnerSub, "carts.id": cartId },
+          { session, projection: { "carts.$": 1, name: 1, username: 1, picture: 1, email: 1 } }
+        );
+        const cartSubdoc = oldOwnerDoc?.carts?.[0];
+        if (!cartSubdoc) throw new Error("Cart not found");
+
+        newOwnerProfile = await usersCollection.findOne(
+          { sub: toSub },
+          { session, projection: { name: 1, username: 1, picture: 1 } }
+        );
+        if (!newOwnerProfile) throw new Error("Target user not found");
+
+        await usersCollection.updateOne(
+          { sub: oldOwnerSub },
+          { $pull: { carts: { id: cartId } } },
+          { session }
+        );
+        await usersCollection.updateOne(
+          { sub: toSub },
+          { $push: { carts: cartSubdoc } },
+          { session }
+        );
+
+        const otherCollaborators = (share.collaborators || []).filter((c) => c.sub !== toSub);
+        await cartSharesCollection.updateOne(
+          { _id: share._id },
+          {
+            $set: {
+              ownerSub: toSub,
+              collaborators: [
+                ...otherCollaborators,
+                {
+                  sub: oldOwnerSub,
+                  role: "edit",
+                  email: oldOwnerDoc.email || "",
+                  name: oldOwnerDoc.username || oldOwnerDoc.name || "",
+                  picture: oldOwnerDoc.picture || "",
+                  acceptedAt: new Date(),
+                },
+              ],
+            },
+          },
+          { session }
+        );
+
+        // toSub is now the owner: drop their "shared with me" pointer for this cart.
+        await usersCollection.updateOne(
+          { sub: toSub },
+          { $pull: { sharedCartIds: { cartId } } },
+          { session }
+        );
+
+        // Old owner now sees this cart under "Shared with me" as an edit collaborator.
+        await usersCollection.updateOne(
+          { sub: oldOwnerSub },
+          {
+            $push: {
+              sharedCartIds: {
+                shareId: share._id,
+                cartId,
+                ownerSub: toSub,
+                ownerName: newOwnerProfile.username || newOwnerProfile.name || "",
+                ownerPicture: newOwnerProfile.picture || "",
+                cartName: cartSubdoc.name,
+                cartIcon: cartSubdoc.icon,
+                cartColor: cartSubdoc.color,
+                role: "edit",
+                acceptedAt: new Date(),
+              },
+            },
+          },
+          { session }
+        );
+
+        // Fix up display data for every other remaining collaborator.
+        const otherSubs = otherCollaborators.map((c) => c.sub);
+        if (otherSubs.length > 0) {
+          await usersCollection.updateMany(
+            { sub: { $in: otherSubs }, "sharedCartIds.cartId": cartId },
+            {
+              $set: {
+                "sharedCartIds.$[s].ownerSub": toSub,
+                "sharedCartIds.$[s].ownerName": newOwnerProfile.username || newOwnerProfile.name || "",
+                "sharedCartIds.$[s].ownerPicture": newOwnerProfile.picture || "",
+              },
+            },
+            { session, arrayFilters: [{ "s.cartId": cartId }] }
+          );
+        }
+      });
+    } finally {
+      await session.endSession();
+    }
+
+    io.to(room(oldOwnerSub, cartId)).emit("cart:ownershipTransferred", {
+      cartId,
+      newOwnerSub: toSub,
+      newOwnerName: newOwnerProfile?.username || newOwnerProfile?.name || "",
+      previousOwnerSub: oldOwnerSub,
+    });
+
+    res.json({ success: true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message || "Failed to transfer ownership" });
+  }
+});
+
+// Public: resolve a share token into a cart preview + the viewer's status. Optional auth —
+// guests (no/invalid Bearer token) are allowed through with a read-only preview.
+app.get("/api/shared/:token", async (req, res) => {
+  try {
+    const share = await cartSharesCollection.findOne({ shareToken: req.params.token });
+    if (!share) {
+      return res.status(404).json({ error: "This share link is invalid or has been removed." });
+    }
+
+    const ownerDoc = await usersCollection.findOne(
+      { sub: share.ownerSub, "carts.id": share.cartId },
+      { projection: { "carts.$": 1, name: 1, username: 1, picture: 1 } }
+    );
+    const cart = ownerDoc?.carts?.[0];
+    if (!cart) {
+      return res.status(404).json({ error: "This cart no longer exists." });
+    }
+
+    let viewerSub = null;
+    const authHeader = req.headers.authorization;
+    if (authHeader?.startsWith("Bearer ")) {
+      try {
+        viewerSub = jwt.verify(authHeader.split(" ")[1], JWT_SECRET).sub;
+      } catch {
+        // Invalid/expired token: treat as a guest rather than rejecting the request.
+      }
+    }
+
+    let status;
+    let myRole = null;
+    if (!viewerSub) {
+      status = "guest";
+    } else if (viewerSub === share.ownerSub) {
+      status = "owner";
+    } else {
+      const collab = share.collaborators.find((c) => c.sub === viewerSub);
+      if (collab) {
+        status = "collaborator";
+        myRole = collab.role;
+      } else {
+        status = "pending";
+      }
+    }
+
+    res.json({
+      cartId: share.cartId,
+      cartName: cart.name,
+      cartIcon: cart.icon,
+      cartColor: cart.color,
+      productCount: cart.products?.length || 0,
+      ownerName: ownerDoc?.username || ownerDoc?.name || "Someone",
+      ownerPicture: ownerDoc?.picture || "",
+      linkRole: share.linkRole,
+      status,
+      myRole,
+      products: status === "guest" || status === "pending" ? cart.products || [] : undefined,
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Failed to resolve share link" });
+  }
+});
+
+// Authenticated user accepts a share invite.
+app.post("/api/shared/:token/accept", verifyToken, async (req, res) => {
+  try {
+    const share = await cartSharesCollection.findOne({ shareToken: req.params.token });
+    if (!share) {
+      return res.status(404).json({ error: "This share link is invalid or has been removed." });
+    }
+
+    if (req.user.sub === share.ownerSub) {
+      return res.status(400).json({ error: "You already own this cart" });
+    }
+
+    const existing = share.collaborators.find((c) => c.sub === req.user.sub);
+    if (existing) {
+      return res.json({ cartId: share.cartId, role: existing.role });
+    }
+
+    const ownerDoc = await usersCollection.findOne(
+      { sub: share.ownerSub, "carts.id": share.cartId },
+      { projection: { "carts.$": 1, name: 1, username: 1, picture: 1 } }
+    );
+    const cart = ownerDoc?.carts?.[0];
+    if (!cart) {
+      return res.status(404).json({ error: "This cart no longer exists." });
+    }
+
+    const viewerDoc = await usersCollection.findOne({ sub: req.user.sub });
+    const acceptedAt = new Date();
+    const collaborator = {
+      sub: req.user.sub,
+      role: share.linkRole,
+      email: viewerDoc?.email || req.user.email || "",
+      name: viewerDoc?.username || viewerDoc?.name || req.user.name || "",
+      picture: viewerDoc?.picture || req.user.picture || "",
+      acceptedAt,
+    };
+
+    await cartSharesCollection.updateOne(
+      { _id: share._id },
+      { $push: { collaborators: collaborator } }
+    );
+
+    await usersCollection.updateOne(
+      { sub: req.user.sub },
+      {
+        $push: {
+          sharedCartIds: {
+            shareId: share._id,
+            cartId: share.cartId,
+            ownerSub: share.ownerSub,
+            ownerName: ownerDoc?.username || ownerDoc?.name || "Someone",
+            ownerPicture: ownerDoc?.picture || "",
+            cartName: cart.name,
+            cartIcon: cart.icon,
+            cartColor: cart.color,
+            role: share.linkRole,
+            acceptedAt,
+          },
+        },
+      }
+    );
+
+    io.to(room(share.ownerSub, share.cartId)).emit("collaborator:added", {
+      cartId: share.cartId,
+      collaborator: {
+        sub: collaborator.sub,
+        role: collaborator.role,
+        name: collaborator.name,
+        picture: collaborator.picture,
+      },
+    });
+
+    res.json({ cartId: share.cartId, role: share.linkRole });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Failed to accept share invite" });
+  }
+});
+
+// Authenticated user declines a share invite — nothing to undo, just an acknowledgement.
+app.post("/api/shared/:token/decline", verifyToken, async (req, res) => {
+  res.json({ success: true });
 });
 
 app.get("/api/account", verifyToken, async (req, res) => {

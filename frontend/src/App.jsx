@@ -8,6 +8,7 @@ import Home from "./pages/Home";
 import Settings from "./pages/Settings";
 import Landing from "./pages/Landing";
 import Privacy from "./pages/Privacy";
+import SharedCart from "./pages/SharedCart";
 
 /**
  * SPA navigations keep window scrollY. Reset to top on each location update.
@@ -32,6 +33,7 @@ function App() {
         <Route path="/home" element={<Home />} />
         <Route path="/home/settings" element={<Settings />} />
         <Route path="/privacy" element={<Privacy />} />
+        <Route path="/shared/:token" element={<SharedCart />} />
       </Routes>
     </BrowserRouter>
   );

@@ -1,4 +1,4 @@
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, X } from "lucide-react";
 import { ShoppingCart } from "lucide-react";
 import { getCartIcon } from "../../utils/cartIcons";
 
@@ -7,10 +7,31 @@ export default function CartSidebarItem({
   selected,
   onSelect,
   onEdit,
+  onLeave,
+  variant = "owned",
   collapsed = false,
 }) {
   const count = cart.products?.length ?? 0;
   const cartName = cart.name || "Unnamed Cart";
+  const isShared = variant === "shared";
+
+  const handleTrailingClick = (e) => {
+    e.stopPropagation();
+    if (isShared) {
+      if (
+        window.confirm(
+          "Leave this shared cart? You can rejoin if someone shares the link with you again."
+        )
+      ) {
+        onLeave(cart.id);
+      }
+    } else {
+      onEdit(cart);
+    }
+  };
+
+  const trailingTitle = isShared ? "Leave shared cart" : "Edit cart";
+  const trailingAriaLabel = isShared ? `Leave ${cartName}` : `Edit ${cartName}`;
 
   if (collapsed) {
     return (
@@ -34,15 +55,12 @@ export default function CartSidebarItem({
         </button>
         <button
           type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit(cart);
-          }}
+          onClick={handleTrailingClick}
           className="absolute -right-0.5 -top-0.5 flex rounded-full bg-[var(--color-bg-surface)] p-0.5 text-stone-600 opacity-0 shadow-sm transition-opacity hover:text-[var(--color-text-primary)] group-hover:opacity-100 dark:text-stone-400"
-          title="Edit cart"
-          aria-label={`Edit ${cartName}`}
+          title={trailingTitle}
+          aria-label={trailingAriaLabel}
         >
-          <MoreHorizontal className="h-3.5 w-3.5" />
+          {isShared ? <X className="h-3.5 w-3.5" /> : <MoreHorizontal className="h-3.5 w-3.5" />}
         </button>
       </div>
     );
@@ -73,17 +91,16 @@ export default function CartSidebarItem({
       <span className="min-w-0 flex-1 truncate text-sm font-semibold text-[var(--color-text-primary)]">
         {cartName}
       </span>
-      <span className="text-xs font-bold tabular-nums text-stone-500 dark:text-stone-400">{count}</span>
+      {!isShared && (
+        <span className="text-xs font-bold tabular-nums text-stone-500 dark:text-stone-400">{count}</span>
+      )}
       <button
         type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          onEdit(cart);
-        }}
+        onClick={handleTrailingClick}
         className="absolute right-1 top-1/2 flex -translate-y-1/2 rounded-full bg-[var(--color-bg-surface)] p-1 text-stone-600 opacity-0 shadow-sm transition-opacity hover:text-[var(--color-text-primary)] group-hover:opacity-100 dark:text-stone-400"
-        title="Edit cart"
+        title={trailingTitle}
       >
-        <MoreHorizontal className="h-4 w-4" />
+        {isShared ? <X className="h-4 w-4" /> : <MoreHorizontal className="h-4 w-4" />}
       </button>
     </div>
   );
