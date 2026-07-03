@@ -1,5 +1,6 @@
 const { connectToDatabase } = require("../../../_lib/db");
 const { verifyToken } = require("../../../_lib/auth");
+const { resolveCartAccess } = require("../../../_lib/cartAccess");
 
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -30,7 +31,11 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { usersCollection } = await connectToDatabase();
+    const { usersCollection, cartSharesCollection } = await connectToDatabase();
+    const access = await resolveCartAccess(usersCollection, cartSharesCollection, req.user.sub, cartId);
+    if (!access.allowed || access.role === "view") {
+      return res.status(403).json({ error: "You do not have permission to edit this cart" });
+    }
 
     if (req.method === "PATCH") {
       const { nickname, isFavorite, note } = req.body;
@@ -83,7 +88,7 @@ module.exports = async function handler(req, res) {
       if (Object.keys($unset).length > 0) update.$unset = $unset;
 
       const result = await usersCollection.updateOne(
-        { sub: req.user.sub },
+        { sub: access.ownerSub },
         update,
         { arrayFilters: [{ "c.id": cartId }, { "p.id": productId }] }
       );
@@ -95,7 +100,7 @@ module.exports = async function handler(req, res) {
       }
 
       const user = await usersCollection.findOne(
-        { sub: req.user.sub },
+        { sub: access.ownerSub },
         { projection: { _id: 0, carts: 1 } }
       );
       const cart = user?.carts?.find((c) => c.id === cartId);
@@ -110,7 +115,7 @@ module.exports = async function handler(req, res) {
 
     if (req.method === "DELETE") {
       const result = await usersCollection.updateOne(
-        { sub: req.user.sub, "carts.id": cartId },
+        { sub: access.ownerSub, "carts.id": cartId },
         { $pull: { "carts.$.products": { id: productId } } }
       );
 
