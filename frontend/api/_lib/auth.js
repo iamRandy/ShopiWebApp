@@ -32,13 +32,16 @@ const generateTokens = (user) => {
   return { accessToken, refreshToken };
 };
 
-// Middleware to verify JWT token
+// Middleware to verify JWT token.
+// Callers wrap this in a Promise that resolves/rejects based on `next`, so every
+// path — success or failure — must call `next`, or the wrapping Promise hangs forever
+// even though the 401 response was already sent.
 const verifyToken = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ error: `JWT: No token provided..AUTH ${authHeader}` }); 
-      // return res.status(401).json({ error: "JWT: No token provided" }); 
+      res.status(401).json({ error: `JWT: No token provided..AUTH ${authHeader}` });
+      return next(new Error("No token provided"));
     }
 
     const token = authHeader.split(" ")[1];
@@ -47,12 +50,12 @@ const verifyToken = (req, res, next) => {
     next();
   } catch (error) {
     if (error.name === "TokenExpiredError") {
-      return res
-        .status(401)
-        .json({ error: "Token expired", code: "TOKEN_EXPIRED" });
+      res.status(401).json({ error: "Token expired", code: "TOKEN_EXPIRED" });
+      return next(error);
     }
     console.error("Token verification failed:", error);
-    return res.status(401).json({ error: "JWT: Invalid token" });
+    res.status(401).json({ error: "JWT: Invalid token" });
+    return next(error);
   }
 };
 
