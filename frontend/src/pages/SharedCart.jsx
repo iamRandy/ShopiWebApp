@@ -54,8 +54,9 @@ export default function SharedCart() {
   const handleAccept = async () => {
     setResponding(true);
     try {
-      const res = await authenticatedFetch(`${API_URL}/api/shared/${token}/accept`, {
+      const res = await authenticatedFetch(`${API_URL}/api/shared/${token}`, {
         method: "POST",
+        body: JSON.stringify({ action: "accept" }),
       });
       if (!res.ok) throw new Error("Failed to accept");
       const body = await res.json();
@@ -69,7 +70,10 @@ export default function SharedCart() {
   const handleDecline = async () => {
     setResponding(true);
     try {
-      await authenticatedFetch(`${API_URL}/api/shared/${token}/decline`, { method: "POST" });
+      await authenticatedFetch(`${API_URL}/api/shared/${token}`, {
+        method: "POST",
+        body: JSON.stringify({ action: "decline" }),
+      });
     } catch {
       /* nothing to roll back — declining has no server-side state to undo */
     }

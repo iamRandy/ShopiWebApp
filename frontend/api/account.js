@@ -5,7 +5,48 @@ const {
   sanitizeCustomPicture,
 } = require("./_lib/user");
 const { connectToDatabase } = require("./_lib/db");
-const { verifyToken, generateTokens } = require("./_lib/auth");
+const { verifyToken, generateTokens, oauth_client, client_id } = require("./_lib/auth");
+
+async function applyGoogleLink(usersCollection, user, body) {
+  const { token } = body || {};
+  if (!token) {
+    return { error: "Google token is required", status: 400 };
+  }
+
+  const ticket = await oauth_client.verifyIdToken({
+    idToken: token,
+    audience: client_id,
+  });
+  const payload = ticket.getPayload();
+
+  if (!payload) {
+    return { error: "Invalid Google token", status: 400 };
+  }
+
+  if (payload.sub !== user.sub) {
+    return {
+      error:
+        "This Google account does not match your current login. Sign out and sign in with the other account instead.",
+      status: 403,
+    };
+  }
+
+  await usersCollection.updateOne(
+    { sub: user.sub },
+    { $set: { email: payload.email, picture: payload.picture } }
+  );
+
+  const updatedUser = await usersCollection.findOne({ sub: user.sub });
+  const { accessToken } = generateTokens(updatedUser);
+
+  return {
+    body: {
+      ...toPublicProfile(updatedUser),
+      accessToken,
+      message: "Google account updated",
+    },
+  };
+}
 
 async function applyAccountPatch(usersCollection, user, body) {
   const { username, customPicture } = body || {};
@@ -96,7 +137,10 @@ module.exports = async function handler(req, res) {
         return res.status(404).json({ error: "Account not found" });
       }
 
-      const result = await applyAccountPatch(usersCollection, user, req.body);
+      const result =
+        req.body?.action === "linkGoogle"
+          ? await applyGoogleLink(usersCollection, user, req.body)
+          : await applyAccountPatch(usersCollection, user, req.body);
       if (result.error) {
         return res.status(result.status).json({ error: result.error });
       }

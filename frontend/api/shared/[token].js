@@ -2,15 +2,7 @@ const jwt = require("jsonwebtoken");
 const { connectToDatabase } = require("../_lib/db");
 const { verifyToken, JWT_SECRET } = require("../_lib/auth");
 
-// Catch-all under /api/shared/*.
-// Routed shapes: [token]  GET (public preview) | [token, "accept"|"decline"]  POST (auth required)
-
-async function handlePreview(req, res, usersCollection, cartSharesCollection, token) {
-  if (req.method !== "GET") {
-    res.setHeader("Allow", "GET, OPTIONS");
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-
+async function preview(req, res, usersCollection, cartSharesCollection, token) {
   try {
     const share = await cartSharesCollection.findOne({ shareToken: token });
     if (!share) {
@@ -71,12 +63,7 @@ async function handlePreview(req, res, usersCollection, cartSharesCollection, to
   }
 }
 
-async function handleAccept(req, res, usersCollection, cartSharesCollection, token) {
-  if (req.method !== "POST") {
-    res.setHeader("Allow", "POST, OPTIONS");
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-
+async function accept(req, res, usersCollection, cartSharesCollection, token) {
   try {
     const share = await cartSharesCollection.findOne({ shareToken: token });
     if (!share) {
@@ -144,14 +131,6 @@ async function handleAccept(req, res, usersCollection, cartSharesCollection, tok
   }
 }
 
-function handleDecline(req, res) {
-  if (req.method !== "POST") {
-    res.setHeader("Allow", "POST, OPTIONS");
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-  res.json({ success: true });
-}
-
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
@@ -161,19 +140,21 @@ module.exports = async function handler(req, res) {
     return res.status(200).end();
   }
 
-  const segments = [].concat(req.query.segments || []);
-  const [token, action] = segments;
+  const { token } = req.query;
 
-  if (!token || segments.length > 2) {
-    return res.status(404).json({ error: "Not found" });
-  }
-
-  // The bare token preview is publicly accessible (optional auth); accept/decline require auth.
-  if (segments.length === 1) {
+  if (req.method === "GET") {
+    // Public: resolve a share token into a cart preview + the viewer's status. Optional
+    // auth — guests (no/invalid Bearer token) are allowed through with a read-only preview.
     const { usersCollection, cartSharesCollection } = await connectToDatabase();
-    return handlePreview(req, res, usersCollection, cartSharesCollection, token);
+    return preview(req, res, usersCollection, cartSharesCollection, token);
   }
 
+  if (req.method !== "POST") {
+    res.setHeader("Allow", "GET, POST, OPTIONS");
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  // Accept/decline both require auth.
   const verifyTokenPromise = new Promise((resolve, reject) => {
     verifyToken(req, res, (error) => {
       if (error) reject(error);
@@ -187,14 +168,17 @@ module.exports = async function handler(req, res) {
     return;
   }
 
+  const action = req.body?.action;
+
   if (action === "accept") {
     const { usersCollection, cartSharesCollection } = await connectToDatabase();
-    return handleAccept(req, res, usersCollection, cartSharesCollection, token);
+    return accept(req, res, usersCollection, cartSharesCollection, token);
   }
 
   if (action === "decline") {
-    return handleDecline(req, res);
+    // Nothing to undo, just an acknowledgement.
+    return res.json({ success: true });
   }
 
-  return res.status(404).json({ error: "Not found" });
+  return res.status(400).json({ error: "Unknown or missing action" });
 };

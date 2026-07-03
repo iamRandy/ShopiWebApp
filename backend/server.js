@@ -670,9 +670,12 @@ app.get("/api/shared-carts", verifyToken, async (req, res) => {
 });
 
 // A collaborator removes their own access to a shared cart.
-app.delete("/api/shared-carts/:cartId/leave", verifyToken, async (req, res) => {
+app.delete("/api/shared-carts", verifyToken, async (req, res) => {
   try {
-    const { cartId } = req.params;
+    const { cartId } = req.body || {};
+    if (!cartId) {
+      return res.status(400).json({ error: "cartId is required" });
+    }
     const share = await cartSharesCollection.findOne({ cartId });
     if (!share) {
       return res.status(404).json({ error: "This cart is not shared" });
@@ -700,44 +703,250 @@ app.delete("/api/shared-carts/:cartId/leave", verifyToken, async (req, res) => {
 });
 
 // Owner generates or regenerates a cart's share link + role.
-app.post("/api/carts/:cartId/share", verifyToken, async (req, res) => {
+async function generateShareLink(req, res, cartId) {
+  const { role } = req.body;
+  if (role !== "view" && role !== "edit") {
+    return res.status(400).json({ error: "role must be 'view' or 'edit'" });
+  }
+
+  const access = await resolveCartAccess(req.user.sub, cartId);
+  if (access.role !== "owner") {
+    return res.status(403).json({ error: "Only the cart owner can share this cart" });
+  }
+
+  const shareToken = crypto.randomBytes(32).toString("base64url");
+  const now = new Date();
+
+  const existing = await cartSharesCollection.findOne({ cartId, ownerSub: req.user.sub });
+  if (existing) {
+    await cartSharesCollection.updateOne(
+      { _id: existing._id },
+      { $set: { shareToken, linkRole: role, updatedAt: now } }
+    );
+  } else {
+    await cartSharesCollection.insertOne({
+      cartId,
+      ownerSub: req.user.sub,
+      shareToken,
+      linkRole: role,
+      createdAt: now,
+      updatedAt: now,
+      collaborators: [],
+    });
+  }
+
+  res.json({ shareToken, linkRole: role, shareUrl: `${FRONTEND_URL}/shared/${shareToken}` });
+}
+
+// Owner changes a collaborator's role.
+async function setCollaboratorRole(req, res, cartId) {
+  const { sub, role } = req.body;
+  if (!sub) return res.status(400).json({ error: "sub is required" });
+  if (role !== "view" && role !== "edit") {
+    return res.status(400).json({ error: "role must be 'view' or 'edit'" });
+  }
+
+  const access = await resolveCartAccess(req.user.sub, cartId);
+  if (access.role !== "owner") {
+    return res.status(403).json({ error: "Only the cart owner can change collaborator roles" });
+  }
+
+  const result = await cartSharesCollection.updateOne(
+    { cartId, ownerSub: req.user.sub, "collaborators.sub": sub },
+    { $set: { "collaborators.$.role": role } }
+  );
+  if (result.matchedCount === 0) {
+    return res.status(404).json({ error: "Collaborator not found" });
+  }
+
+  await usersCollection.updateOne(
+    { sub, "sharedCartIds.cartId": cartId },
+    { $set: { "sharedCartIds.$.role": role } }
+  );
+
+  io.to(room(req.user.sub, cartId)).emit("collaborator:roleChanged", { cartId, sub, role });
+
+  res.json({ success: true, sub, role });
+}
+
+// Owner removes a collaborator. The share link itself stays valid for reuse.
+async function removeCollaborator(req, res, cartId) {
+  const { sub } = req.body;
+  if (!sub) return res.status(400).json({ error: "sub is required" });
+
+  const access = await resolveCartAccess(req.user.sub, cartId);
+  if (access.role !== "owner") {
+    return res.status(403).json({ error: "Only the cart owner can remove collaborators" });
+  }
+
+  await cartSharesCollection.updateOne(
+    { cartId, ownerSub: req.user.sub },
+    { $pull: { collaborators: { sub } } }
+  );
+  await usersCollection.updateOne(
+    { sub },
+    { $pull: { sharedCartIds: { cartId } } }
+  );
+
+  io.to(room(req.user.sub, cartId)).emit("collaborator:removed", { cartId, sub });
+
+  res.json({ success: true });
+}
+
+// Owner transfers ownership of a cart to an existing collaborator.
+async function transferOwnership(req, res, cartId) {
+  const { toSub } = req.body;
+  if (!toSub) {
+    return res.status(400).json({ error: "toSub is required" });
+  }
+
+  const access = await resolveCartAccess(req.user.sub, cartId);
+  if (access.role !== "owner") {
+    return res.status(403).json({ error: "Only the cart owner can transfer ownership" });
+  }
+  if (toSub === req.user.sub) {
+    return res.status(400).json({ error: "You already own this cart" });
+  }
+
+  const oldOwnerSub = req.user.sub;
+  const share = await cartSharesCollection.findOne({ cartId, ownerSub: oldOwnerSub });
+  const targetCollab = share?.collaborators?.find((c) => c.sub === toSub);
+  if (!targetCollab) {
+    return res.status(400).json({ error: "Transfer target must be an existing collaborator" });
+  }
+
+  let newOwnerProfile = null;
+
+  const session = client.startSession();
   try {
-    const { cartId } = req.params;
-    const { role } = req.body;
-    if (role !== "view" && role !== "edit") {
-      return res.status(400).json({ error: "role must be 'view' or 'edit'" });
-    }
-
-    const access = await resolveCartAccess(req.user.sub, cartId);
-    if (access.role !== "owner") {
-      return res.status(403).json({ error: "Only the cart owner can share this cart" });
-    }
-
-    const shareToken = crypto.randomBytes(32).toString("base64url");
-    const now = new Date();
-
-    const existing = await cartSharesCollection.findOne({ cartId, ownerSub: req.user.sub });
-    if (existing) {
-      await cartSharesCollection.updateOne(
-        { _id: existing._id },
-        { $set: { shareToken, linkRole: role, updatedAt: now } }
+    await session.withTransaction(async () => {
+      const oldOwnerDoc = await usersCollection.findOne(
+        { sub: oldOwnerSub, "carts.id": cartId },
+        { session, projection: { "carts.$": 1, name: 1, username: 1, picture: 1, email: 1 } }
       );
-    } else {
-      await cartSharesCollection.insertOne({
-        cartId,
-        ownerSub: req.user.sub,
-        shareToken,
-        linkRole: role,
-        createdAt: now,
-        updatedAt: now,
-        collaborators: [],
-      });
-    }
+      const cartSubdoc = oldOwnerDoc?.carts?.[0];
+      if (!cartSubdoc) throw new Error("Cart not found");
 
-    res.json({ shareToken, linkRole: role, shareUrl: `${FRONTEND_URL}/shared/${shareToken}` });
+      newOwnerProfile = await usersCollection.findOne(
+        { sub: toSub },
+        { session, projection: { name: 1, username: 1, picture: 1 } }
+      );
+      if (!newOwnerProfile) throw new Error("Target user not found");
+
+      await usersCollection.updateOne(
+        { sub: oldOwnerSub },
+        { $pull: { carts: { id: cartId } } },
+        { session }
+      );
+      await usersCollection.updateOne(
+        { sub: toSub },
+        { $push: { carts: cartSubdoc } },
+        { session }
+      );
+
+      const otherCollaborators = (share.collaborators || []).filter((c) => c.sub !== toSub);
+      await cartSharesCollection.updateOne(
+        { _id: share._id },
+        {
+          $set: {
+            ownerSub: toSub,
+            collaborators: [
+              ...otherCollaborators,
+              {
+                sub: oldOwnerSub,
+                role: "edit",
+                email: oldOwnerDoc.email || "",
+                name: oldOwnerDoc.username || oldOwnerDoc.name || "",
+                picture: oldOwnerDoc.picture || "",
+                acceptedAt: new Date(),
+              },
+            ],
+          },
+        },
+        { session }
+      );
+
+      // toSub is now the owner: drop their "shared with me" pointer for this cart.
+      await usersCollection.updateOne(
+        { sub: toSub },
+        { $pull: { sharedCartIds: { cartId } } },
+        { session }
+      );
+
+      // Old owner now sees this cart under "Shared with me" as an edit collaborator.
+      await usersCollection.updateOne(
+        { sub: oldOwnerSub },
+        {
+          $push: {
+            sharedCartIds: {
+              shareId: share._id,
+              cartId,
+              ownerSub: toSub,
+              ownerName: newOwnerProfile.username || newOwnerProfile.name || "",
+              ownerPicture: newOwnerProfile.picture || "",
+              cartName: cartSubdoc.name,
+              cartIcon: cartSubdoc.icon,
+              cartColor: cartSubdoc.color,
+              role: "edit",
+              acceptedAt: new Date(),
+            },
+          },
+        },
+        { session }
+      );
+
+      // Fix up display data for every other remaining collaborator.
+      const otherSubs = otherCollaborators.map((c) => c.sub);
+      if (otherSubs.length > 0) {
+        await usersCollection.updateMany(
+          { sub: { $in: otherSubs }, "sharedCartIds.cartId": cartId },
+          {
+            $set: {
+              "sharedCartIds.$[s].ownerSub": toSub,
+              "sharedCartIds.$[s].ownerName": newOwnerProfile.username || newOwnerProfile.name || "",
+              "sharedCartIds.$[s].ownerPicture": newOwnerProfile.picture || "",
+            },
+          },
+          { session, arrayFilters: [{ "s.cartId": cartId }] }
+        );
+      }
+    });
+  } finally {
+    await session.endSession();
+  }
+
+  io.to(room(oldOwnerSub, cartId)).emit("cart:ownershipTransferred", {
+    cartId,
+    newOwnerSub: toSub,
+    newOwnerName: newOwnerProfile?.username || newOwnerProfile?.name || "",
+    previousOwnerSub: oldOwnerSub,
+  });
+
+  res.json({ success: true });
+}
+
+// Cart-sharing mutations (generate/regenerate link, change a collaborator's role, remove a
+// collaborator, transfer ownership) are folded behind a body.action discriminator on this one
+// route — mirrors the equivalent consolidation in frontend/api/carts/[cartId]/share.js, which
+// Vercel's Hobby plan function-count cap forced; kept in sync here so local dev matches prod.
+app.post("/api/carts/:cartId/share", verifyToken, async (req, res) => {
+  const { cartId } = req.params;
+  try {
+    switch (req.body?.action) {
+      case "generate":
+        return await generateShareLink(req, res, cartId);
+      case "setRole":
+        return await setCollaboratorRole(req, res, cartId);
+      case "remove":
+        return await removeCollaborator(req, res, cartId);
+      case "transfer":
+        return await transferOwnership(req, res, cartId);
+      default:
+        return res.status(400).json({ error: "Unknown or missing action" });
+    }
   } catch (e) {
     console.error(e);
-    res.status(500).json({ error: "Failed to generate share link" });
+    res.status(500).json({ error: e.message || "Failed to update sharing settings" });
   }
 });
 
@@ -771,208 +980,6 @@ app.get("/api/carts/:cartId/share", verifyToken, async (req, res) => {
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Failed to fetch sharing settings" });
-  }
-});
-
-// Owner changes a collaborator's role.
-app.patch("/api/carts/:cartId/share/collaborators/:collaboratorSub", verifyToken, async (req, res) => {
-  try {
-    const { cartId, collaboratorSub } = req.params;
-    const { role } = req.body;
-    if (role !== "view" && role !== "edit") {
-      return res.status(400).json({ error: "role must be 'view' or 'edit'" });
-    }
-
-    const access = await resolveCartAccess(req.user.sub, cartId);
-    if (access.role !== "owner") {
-      return res.status(403).json({ error: "Only the cart owner can change collaborator roles" });
-    }
-
-    const result = await cartSharesCollection.updateOne(
-      { cartId, ownerSub: req.user.sub, "collaborators.sub": collaboratorSub },
-      { $set: { "collaborators.$.role": role } }
-    );
-    if (result.matchedCount === 0) {
-      return res.status(404).json({ error: "Collaborator not found" });
-    }
-
-    await usersCollection.updateOne(
-      { sub: collaboratorSub, "sharedCartIds.cartId": cartId },
-      { $set: { "sharedCartIds.$.role": role } }
-    );
-
-    io.to(room(req.user.sub, cartId)).emit("collaborator:roleChanged", { cartId, sub: collaboratorSub, role });
-
-    res.json({ success: true, sub: collaboratorSub, role });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Failed to change collaborator role" });
-  }
-});
-
-// Owner removes a collaborator. The share link itself stays valid for reuse.
-app.delete("/api/carts/:cartId/share/collaborators/:collaboratorSub", verifyToken, async (req, res) => {
-  try {
-    const { cartId, collaboratorSub } = req.params;
-
-    const access = await resolveCartAccess(req.user.sub, cartId);
-    if (access.role !== "owner") {
-      return res.status(403).json({ error: "Only the cart owner can remove collaborators" });
-    }
-
-    await cartSharesCollection.updateOne(
-      { cartId, ownerSub: req.user.sub },
-      { $pull: { collaborators: { sub: collaboratorSub } } }
-    );
-    await usersCollection.updateOne(
-      { sub: collaboratorSub },
-      { $pull: { sharedCartIds: { cartId } } }
-    );
-
-    io.to(room(req.user.sub, cartId)).emit("collaborator:removed", { cartId, sub: collaboratorSub });
-
-    res.json({ success: true });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Failed to remove collaborator" });
-  }
-});
-
-// Owner transfers ownership of a cart to an existing collaborator.
-app.post("/api/carts/:cartId/share/transfer", verifyToken, async (req, res) => {
-  try {
-    const { cartId } = req.params;
-    const { toSub } = req.body;
-    if (!toSub) {
-      return res.status(400).json({ error: "toSub is required" });
-    }
-
-    const access = await resolveCartAccess(req.user.sub, cartId);
-    if (access.role !== "owner") {
-      return res.status(403).json({ error: "Only the cart owner can transfer ownership" });
-    }
-    if (toSub === req.user.sub) {
-      return res.status(400).json({ error: "You already own this cart" });
-    }
-
-    const oldOwnerSub = req.user.sub;
-    const share = await cartSharesCollection.findOne({ cartId, ownerSub: oldOwnerSub });
-    const targetCollab = share?.collaborators?.find((c) => c.sub === toSub);
-    if (!targetCollab) {
-      return res.status(400).json({ error: "Transfer target must be an existing collaborator" });
-    }
-
-    let newOwnerProfile = null;
-
-    const session = client.startSession();
-    try {
-      await session.withTransaction(async () => {
-        const oldOwnerDoc = await usersCollection.findOne(
-          { sub: oldOwnerSub, "carts.id": cartId },
-          { session, projection: { "carts.$": 1, name: 1, username: 1, picture: 1, email: 1 } }
-        );
-        const cartSubdoc = oldOwnerDoc?.carts?.[0];
-        if (!cartSubdoc) throw new Error("Cart not found");
-
-        newOwnerProfile = await usersCollection.findOne(
-          { sub: toSub },
-          { session, projection: { name: 1, username: 1, picture: 1 } }
-        );
-        if (!newOwnerProfile) throw new Error("Target user not found");
-
-        await usersCollection.updateOne(
-          { sub: oldOwnerSub },
-          { $pull: { carts: { id: cartId } } },
-          { session }
-        );
-        await usersCollection.updateOne(
-          { sub: toSub },
-          { $push: { carts: cartSubdoc } },
-          { session }
-        );
-
-        const otherCollaborators = (share.collaborators || []).filter((c) => c.sub !== toSub);
-        await cartSharesCollection.updateOne(
-          { _id: share._id },
-          {
-            $set: {
-              ownerSub: toSub,
-              collaborators: [
-                ...otherCollaborators,
-                {
-                  sub: oldOwnerSub,
-                  role: "edit",
-                  email: oldOwnerDoc.email || "",
-                  name: oldOwnerDoc.username || oldOwnerDoc.name || "",
-                  picture: oldOwnerDoc.picture || "",
-                  acceptedAt: new Date(),
-                },
-              ],
-            },
-          },
-          { session }
-        );
-
-        // toSub is now the owner: drop their "shared with me" pointer for this cart.
-        await usersCollection.updateOne(
-          { sub: toSub },
-          { $pull: { sharedCartIds: { cartId } } },
-          { session }
-        );
-
-        // Old owner now sees this cart under "Shared with me" as an edit collaborator.
-        await usersCollection.updateOne(
-          { sub: oldOwnerSub },
-          {
-            $push: {
-              sharedCartIds: {
-                shareId: share._id,
-                cartId,
-                ownerSub: toSub,
-                ownerName: newOwnerProfile.username || newOwnerProfile.name || "",
-                ownerPicture: newOwnerProfile.picture || "",
-                cartName: cartSubdoc.name,
-                cartIcon: cartSubdoc.icon,
-                cartColor: cartSubdoc.color,
-                role: "edit",
-                acceptedAt: new Date(),
-              },
-            },
-          },
-          { session }
-        );
-
-        // Fix up display data for every other remaining collaborator.
-        const otherSubs = otherCollaborators.map((c) => c.sub);
-        if (otherSubs.length > 0) {
-          await usersCollection.updateMany(
-            { sub: { $in: otherSubs }, "sharedCartIds.cartId": cartId },
-            {
-              $set: {
-                "sharedCartIds.$[s].ownerSub": toSub,
-                "sharedCartIds.$[s].ownerName": newOwnerProfile.username || newOwnerProfile.name || "",
-                "sharedCartIds.$[s].ownerPicture": newOwnerProfile.picture || "",
-              },
-            },
-            { session, arrayFilters: [{ "s.cartId": cartId }] }
-          );
-        }
-      });
-    } finally {
-      await session.endSession();
-    }
-
-    io.to(room(oldOwnerSub, cartId)).emit("cart:ownershipTransferred", {
-      cartId,
-      newOwnerSub: toSub,
-      newOwnerName: newOwnerProfile?.username || newOwnerProfile?.name || "",
-      previousOwnerSub: oldOwnerSub,
-    });
-
-    res.json({ success: true });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: e.message || "Failed to transfer ownership" });
   }
 });
 
@@ -1040,87 +1047,95 @@ app.get("/api/shared/:token", async (req, res) => {
 });
 
 // Authenticated user accepts a share invite.
-app.post("/api/shared/:token/accept", verifyToken, async (req, res) => {
-  try {
-    const share = await cartSharesCollection.findOne({ shareToken: req.params.token });
-    if (!share) {
-      return res.status(404).json({ error: "This share link is invalid or has been removed." });
-    }
+async function acceptShareInvite(req, res, token) {
+  const share = await cartSharesCollection.findOne({ shareToken: token });
+  if (!share) {
+    return res.status(404).json({ error: "This share link is invalid or has been removed." });
+  }
 
-    if (req.user.sub === share.ownerSub) {
-      return res.status(400).json({ error: "You already own this cart" });
-    }
+  if (req.user.sub === share.ownerSub) {
+    return res.status(400).json({ error: "You already own this cart" });
+  }
 
-    const existing = share.collaborators.find((c) => c.sub === req.user.sub);
-    if (existing) {
-      return res.json({ cartId: share.cartId, role: existing.role });
-    }
+  const existing = share.collaborators.find((c) => c.sub === req.user.sub);
+  if (existing) {
+    return res.json({ cartId: share.cartId, role: existing.role });
+  }
 
-    const ownerDoc = await usersCollection.findOne(
-      { sub: share.ownerSub, "carts.id": share.cartId },
-      { projection: { "carts.$": 1, name: 1, username: 1, picture: 1 } }
-    );
-    const cart = ownerDoc?.carts?.[0];
-    if (!cart) {
-      return res.status(404).json({ error: "This cart no longer exists." });
-    }
+  const ownerDoc = await usersCollection.findOne(
+    { sub: share.ownerSub, "carts.id": share.cartId },
+    { projection: { "carts.$": 1, name: 1, username: 1, picture: 1 } }
+  );
+  const cart = ownerDoc?.carts?.[0];
+  if (!cart) {
+    return res.status(404).json({ error: "This cart no longer exists." });
+  }
 
-    const viewerDoc = await usersCollection.findOne({ sub: req.user.sub });
-    const acceptedAt = new Date();
-    const collaborator = {
-      sub: req.user.sub,
-      role: share.linkRole,
-      email: viewerDoc?.email || req.user.email || "",
-      name: viewerDoc?.username || viewerDoc?.name || req.user.name || "",
-      picture: viewerDoc?.picture || req.user.picture || "",
-      acceptedAt,
-    };
+  const viewerDoc = await usersCollection.findOne({ sub: req.user.sub });
+  const acceptedAt = new Date();
+  const collaborator = {
+    sub: req.user.sub,
+    role: share.linkRole,
+    email: viewerDoc?.email || req.user.email || "",
+    name: viewerDoc?.username || viewerDoc?.name || req.user.name || "",
+    picture: viewerDoc?.picture || req.user.picture || "",
+    acceptedAt,
+  };
 
-    await cartSharesCollection.updateOne(
-      { _id: share._id },
-      { $push: { collaborators: collaborator } }
-    );
+  await cartSharesCollection.updateOne(
+    { _id: share._id },
+    { $push: { collaborators: collaborator } }
+  );
 
-    await usersCollection.updateOne(
-      { sub: req.user.sub },
-      {
-        $push: {
-          sharedCartIds: {
-            shareId: share._id,
-            cartId: share.cartId,
-            ownerSub: share.ownerSub,
-            ownerName: ownerDoc?.username || ownerDoc?.name || "Someone",
-            ownerPicture: ownerDoc?.picture || "",
-            cartName: cart.name,
-            cartIcon: cart.icon,
-            cartColor: cart.color,
-            role: share.linkRole,
-            acceptedAt,
-          },
+  await usersCollection.updateOne(
+    { sub: req.user.sub },
+    {
+      $push: {
+        sharedCartIds: {
+          shareId: share._id,
+          cartId: share.cartId,
+          ownerSub: share.ownerSub,
+          ownerName: ownerDoc?.username || ownerDoc?.name || "Someone",
+          ownerPicture: ownerDoc?.picture || "",
+          cartName: cart.name,
+          cartIcon: cart.icon,
+          cartColor: cart.color,
+          role: share.linkRole,
+          acceptedAt,
         },
-      }
-    );
-
-    io.to(room(share.ownerSub, share.cartId)).emit("collaborator:added", {
-      cartId: share.cartId,
-      collaborator: {
-        sub: collaborator.sub,
-        role: collaborator.role,
-        name: collaborator.name,
-        picture: collaborator.picture,
       },
-    });
+    }
+  );
 
-    res.json({ cartId: share.cartId, role: share.linkRole });
+  io.to(room(share.ownerSub, share.cartId)).emit("collaborator:added", {
+    cartId: share.cartId,
+    collaborator: {
+      sub: collaborator.sub,
+      role: collaborator.role,
+      name: collaborator.name,
+      picture: collaborator.picture,
+    },
+  });
+
+  res.json({ cartId: share.cartId, role: share.linkRole });
+}
+
+// Authenticated user accepts or declines a share invite (declining has no server-side state
+// to undo, just an acknowledgement) — folded behind body.action for the same reason the
+// cart-sharing routes above are; kept in sync with frontend/api/shared/[token].js.
+app.post("/api/shared/:token", verifyToken, async (req, res) => {
+  try {
+    if (req.body?.action === "decline") {
+      return res.json({ success: true });
+    }
+    if (req.body?.action === "accept") {
+      return await acceptShareInvite(req, res, req.params.token);
+    }
+    res.status(400).json({ error: "Unknown or missing action" });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Failed to accept share invite" });
   }
-});
-
-// Authenticated user declines a share invite — nothing to undo, just an acknowledgement.
-app.post("/api/shared/:token/decline", verifyToken, async (req, res) => {
-  res.json({ success: true });
 });
 
 app.get("/api/account", verifyToken, async (req, res) => {
@@ -1136,6 +1151,89 @@ app.get("/api/account", verifyToken, async (req, res) => {
   }
 });
 
+async function linkGoogleAccount(req, res, user) {
+  const { token } = req.body;
+  if (!token) {
+    return res.status(400).json({ error: "Google token is required" });
+  }
+
+  const ticket = await oauth_client.verifyIdToken({
+    idToken: token,
+    audience: client_id,
+  });
+  const payload = ticket.getPayload();
+
+  if (!payload) {
+    return res.status(400).json({ error: "Invalid Google token" });
+  }
+
+  if (payload.sub !== user.sub) {
+    return res.status(403).json({
+      error:
+        "This Google account does not match your current login. Sign out and sign in with the other account instead.",
+    });
+  }
+
+  await usersCollection.updateOne(
+    { sub: user.sub },
+    { $set: { email: payload.email, picture: payload.picture } }
+  );
+
+  const updatedUser = await usersCollection.findOne({ sub: user.sub });
+  const { accessToken } = generateTokens(updatedUser);
+
+  res.json({
+    ...toPublicProfile(updatedUser),
+    accessToken,
+    message: "Google account updated",
+  });
+}
+
+async function updateProfile(req, res, user) {
+  const { username, customPicture } = req.body || {};
+  const updates = {};
+  const unsets = {};
+
+  try {
+    const nextUsername = sanitizeProfileField(username, "username");
+    if (nextUsername !== undefined) updates.username = nextUsername;
+
+    if (customPicture !== undefined) {
+      const nextPicture = sanitizeCustomPicture(customPicture);
+      if (nextPicture === null) {
+        unsets.customPicture = "";
+      } else {
+        updates.customPicture = nextPicture;
+      }
+    }
+  } catch (validationError) {
+    return res.status(400).json({ error: validationError.message });
+  }
+
+  if (Object.keys(updates).length === 0 && Object.keys(unsets).length === 0) {
+    return res.status(400).json({ error: "No profile fields to update" });
+  }
+
+  if (updates.username !== undefined) {
+    updates.name = buildDisplayName({ ...user, ...updates });
+  }
+
+  const updateOp = {};
+  if (Object.keys(updates).length > 0) updateOp.$set = updates;
+  if (Object.keys(unsets).length > 0) updateOp.$unset = unsets;
+
+  await usersCollection.updateOne({ sub: user.sub }, updateOp);
+  const updatedUser = await usersCollection.findOne({ sub: user.sub });
+  const { accessToken } = generateTokens(updatedUser);
+
+  res.json({
+    ...toPublicProfile(updatedUser),
+    accessToken,
+  });
+}
+
+// Profile field updates and Google account (re)linking are folded behind body.action —
+// kept in sync with frontend/api/account.js's equivalent consolidation.
 app.patch("/api/account", verifyToken, async (req, res) => {
   try {
     const user = await usersCollection.findOne({ sub: req.user.sub });
@@ -1143,97 +1241,13 @@ app.patch("/api/account", verifyToken, async (req, res) => {
       return res.status(404).json({ error: "Account not found" });
     }
 
-    const { username, customPicture } = req.body || {};
-    const updates = {};
-    const unsets = {};
-
-    try {
-      const nextUsername = sanitizeProfileField(username, "username");
-      if (nextUsername !== undefined) updates.username = nextUsername;
-
-      if (customPicture !== undefined) {
-        const nextPicture = sanitizeCustomPicture(customPicture);
-        if (nextPicture === null) {
-          unsets.customPicture = "";
-        } else {
-          updates.customPicture = nextPicture;
-        }
-      }
-    } catch (validationError) {
-      return res.status(400).json({ error: validationError.message });
+    if (req.body?.action === "linkGoogle") {
+      return await linkGoogleAccount(req, res, user);
     }
-
-    if (Object.keys(updates).length === 0 && Object.keys(unsets).length === 0) {
-      return res.status(400).json({ error: "No profile fields to update" });
-    }
-
-    if (updates.username !== undefined) {
-      updates.name = buildDisplayName({ ...user, ...updates });
-    }
-
-    const updateOp = {};
-    if (Object.keys(updates).length > 0) updateOp.$set = updates;
-    if (Object.keys(unsets).length > 0) updateOp.$unset = unsets;
-
-    await usersCollection.updateOne({ sub: req.user.sub }, updateOp);
-    const updatedUser = await usersCollection.findOne({ sub: req.user.sub });
-    const { accessToken } = generateTokens(updatedUser);
-
-    res.json({
-      ...toPublicProfile(updatedUser),
-      accessToken,
-    });
+    await updateProfile(req, res, user);
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Failed to update account" });
-  }
-});
-
-app.post("/api/account/link-google", verifyToken, async (req, res) => {
-  try {
-    const { token } = req.body;
-    if (!token) {
-      return res.status(400).json({ error: "Google token is required" });
-    }
-
-    const ticket = await oauth_client.verifyIdToken({
-      idToken: token,
-      audience: client_id,
-    });
-    const payload = ticket.getPayload();
-
-    if (!payload) {
-      return res.status(400).json({ error: "Invalid Google token" });
-    }
-
-    if (payload.sub !== req.user.sub) {
-      return res.status(403).json({
-        error:
-          "This Google account does not match your current login. Sign out and sign in with the other account instead.",
-      });
-    }
-
-    await usersCollection.updateOne(
-      { sub: req.user.sub },
-      {
-        $set: {
-          email: payload.email,
-          picture: payload.picture,
-        },
-      }
-    );
-
-    const updatedUser = await usersCollection.findOne({ sub: req.user.sub });
-    const { accessToken } = generateTokens(updatedUser);
-
-    res.json({
-      ...toPublicProfile(updatedUser),
-      accessToken,
-      message: "Google account updated",
-    });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Failed to link Google account" });
   }
 });
 

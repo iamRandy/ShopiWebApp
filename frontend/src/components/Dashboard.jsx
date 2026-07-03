@@ -175,10 +175,10 @@ const Dashboard = () => {
 
   const handleLeaveSharedCart = async (cartId) => {
     try {
-      const response = await authenticatedFetch(
-        `${API_URL}/api/shared-carts/${cartId}/leave`,
-        { method: "DELETE" }
-      );
+      const response = await authenticatedFetch(`${API_URL}/api/shared-carts`, {
+        method: "DELETE",
+        body: JSON.stringify({ cartId }),
+      });
       if (!response.ok) throw new Error("Failed to leave shared cart");
       setSharedCarts((prev) => prev.filter((c) => c.cartId !== cartId));
       if (selectedCartRef.current === cartId) {

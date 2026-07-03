@@ -83,7 +83,7 @@ export default function ShareCartModal({ isOpen, onClose, cart }) {
     try {
       const res = await authenticatedFetch(`${API_URL}/api/carts/${cartId}/share`, {
         method: "POST",
-        body: JSON.stringify({ role: pendingRole }),
+        body: JSON.stringify({ action: "generate", role: pendingRole }),
       });
       if (!res.ok) throw new Error("Request failed");
       const data = await res.json();
@@ -109,10 +109,10 @@ export default function ShareCartModal({ isOpen, onClose, cart }) {
     setRoleChangingSub(sub);
     setError(null);
     try {
-      const res = await authenticatedFetch(
-        `${API_URL}/api/carts/${cartId}/share/collaborators/${sub}`,
-        { method: "PATCH", body: JSON.stringify({ role }) }
-      );
+      const res = await authenticatedFetch(`${API_URL}/api/carts/${cartId}/share`, {
+        method: "POST",
+        body: JSON.stringify({ action: "setRole", sub, role }),
+      });
       if (!res.ok) throw new Error("Request failed");
       setShareInfo((prev) => ({
         ...prev,
@@ -129,10 +129,10 @@ export default function ShareCartModal({ isOpen, onClose, cart }) {
     setRemovingSub(sub);
     setError(null);
     try {
-      const res = await authenticatedFetch(
-        `${API_URL}/api/carts/${cartId}/share/collaborators/${sub}`,
-        { method: "DELETE" }
-      );
+      const res = await authenticatedFetch(`${API_URL}/api/carts/${cartId}/share`, {
+        method: "POST",
+        body: JSON.stringify({ action: "remove", sub }),
+      });
       if (!res.ok) throw new Error("Request failed");
       setShareInfo((prev) => ({
         ...prev,
@@ -149,9 +149,9 @@ export default function ShareCartModal({ isOpen, onClose, cart }) {
     setTransferring(true);
     setError(null);
     try {
-      const res = await authenticatedFetch(`${API_URL}/api/carts/${cartId}/share/transfer`, {
+      const res = await authenticatedFetch(`${API_URL}/api/carts/${cartId}/share`, {
         method: "POST",
-        body: JSON.stringify({ toSub: sub }),
+        body: JSON.stringify({ action: "transfer", toSub: sub }),
       });
       if (!res.ok) throw new Error("Request failed");
       onClose({ ownershipTransferred: true });

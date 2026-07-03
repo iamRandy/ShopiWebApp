@@ -266,9 +266,9 @@ export default function SettingsPage() {
     setError("");
     setSuccess("");
     try {
-      const response = await authenticatedFetch(`${API_URL}/api/account/link-google`, {
-        method: "POST",
-        body: JSON.stringify({ token: credentialResponse.credential }),
+      const response = await authenticatedFetch(`${API_URL}/api/account`, {
+        method: "PATCH",
+        body: JSON.stringify({ action: "linkGoogle", token: credentialResponse.credential }),
       });
       const data = await response.json();
       if (!response.ok) {
