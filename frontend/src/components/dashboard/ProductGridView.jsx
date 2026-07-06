@@ -5,6 +5,10 @@ export default function ProductGridView({
   onFavoriteToggle,
   onOpen,
   favoriteLoadingId,
+  selectedIds,
+  onToggleSelect,
+  onSelectAllPage,
+  selectLimitReached = false,
 }) {
   if (products.length === 0) {
     return (
@@ -23,6 +27,10 @@ export default function ProductGridView({
           onFavoriteToggle={onFavoriteToggle}
           onOpen={onOpen}
           isFavoriteLoading={favoriteLoadingId === product.id}
+          isSelected={selectedIds?.has(product.id)}
+          onToggleSelect={onToggleSelect}
+          onSelectAllPage={onSelectAllPage}
+          selectDisabled={selectLimitReached}
         />
       ))}
     </div>

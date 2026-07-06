@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { authenticatedFetch } from "../utils/api";
 import {
   getProductDisplayName,
@@ -19,7 +20,12 @@ import {
   DEFAULT_FILTERS,
 } from "./dashboard/useProductFilters";
 import { usePagination } from "./dashboard/usePagination";
-import { VIEW_MODE_KEY, GRID_PAGE_SIZE, LIST_PAGE_SIZE } from "./dashboard/constants";
+import {
+  VIEW_MODE_KEY,
+  GRID_PAGE_SIZE,
+  LIST_PAGE_SIZE,
+  MAX_COMPARE_PRODUCTS,
+} from "./dashboard/constants";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -34,6 +40,7 @@ function getInitialViewMode() {
 }
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [carts, setCarts] = useState([]);
   const [selectedCart, setSelectedCart] = useState(null);
   const [selectedCartObj, setSelectedCartObj] = useState(null);
@@ -48,6 +55,7 @@ const Dashboard = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [favoriteLoadingId, setFavoriteLoadingId] = useState(null);
+  const [compareIds, setCompareIds] = useState(() => new Set());
 
   const selectedCartRef = useRef(selectedCart);
   selectedCartRef.current = selectedCart;
@@ -82,6 +90,40 @@ const Dashboard = () => {
   useEffect(() => {
     fetchCarts();
   }, [fetchCarts]);
+
+  useEffect(() => {
+    setCompareIds(new Set());
+  }, [selectedCart]);
+
+  const toggleCompareSelect = (productId) => {
+    setCompareIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(productId)) {
+        next.delete(productId);
+      } else if (next.size < MAX_COMPARE_PRODUCTS) {
+        next.add(productId);
+      }
+      return next;
+    });
+  };
+
+  const selectAllOnPage = (productIds) => {
+    setCompareIds((prev) => {
+      const next = new Set(prev);
+      for (const id of productIds) {
+        if (next.size >= MAX_COMPARE_PRODUCTS) break;
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const clearCompareSelection = () => setCompareIds(new Set());
+
+  const handleCompareNow = () => {
+    const products = selectedCartProducts.filter((p) => compareIds.has(p.id));
+    navigate("/home/compare", { state: { products } });
+  };
 
   const handleProductUpdated = (productId, updates) => {
     const updateProducts = (products) =>
@@ -247,6 +289,10 @@ const Dashboard = () => {
               onViewModeChange={handleViewModeChange}
               onFilterOpen={() => setFilterModalOpen(true)}
               activeFilterCount={activeFilterCount}
+              compareCount={compareIds.size}
+              maxCompare={MAX_COMPARE_PRODUCTS}
+              onCompareNow={handleCompareNow}
+              onClearCompare={clearCompareSelection}
             />
 
             <div className="flex-1">
@@ -270,6 +316,10 @@ const Dashboard = () => {
                   onFavoriteToggle={handleFavoriteToggle}
                   onOpen={openProductModal}
                   favoriteLoadingId={favoriteLoadingId}
+                  selectedIds={compareIds}
+                  onToggleSelect={toggleCompareSelect}
+                  onSelectAllPage={() => selectAllOnPage(pageItems.map((p) => p.id))}
+                  selectLimitReached={compareIds.size >= MAX_COMPARE_PRODUCTS}
                 />
               ) : (
                 <ProductListView
@@ -278,6 +328,10 @@ const Dashboard = () => {
                   onOpen={openProductModal}
                   onMenu={openProductModal}
                   favoriteLoadingId={favoriteLoadingId}
+                  selectedIds={compareIds}
+                  onToggleSelect={toggleCompareSelect}
+                  onSelectAllPage={() => selectAllOnPage(pageItems.map((p) => p.id))}
+                  selectLimitReached={compareIds.size >= MAX_COMPARE_PRODUCTS}
                 />
               )}
             </div>

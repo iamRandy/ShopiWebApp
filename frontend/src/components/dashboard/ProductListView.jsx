@@ -6,6 +6,10 @@ export default function ProductListView({
   onOpen,
   onMenu,
   favoriteLoadingId,
+  selectedIds,
+  onToggleSelect,
+  onSelectAllPage,
+  selectLimitReached = false,
 }) {
   if (products.length === 0) {
     return (
@@ -17,7 +21,8 @@ export default function ProductListView({
 
   return (
     <div className="overflow-hidden rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]">
-      <div className="hidden grid-cols-[minmax(0,2fr)_minmax(4rem,1fr)_minmax(5rem,1fr)_minmax(4rem,1fr)_auto] gap-3 border-b border-stone-100 px-4 py-2.5 text-xs font-medium text-stone-400 sm:grid dark:border-stone-800 dark:text-stone-500">
+      <div className="hidden grid-cols-[4rem_minmax(0,2fr)_minmax(4rem,1fr)_minmax(5rem,1fr)_minmax(4rem,1fr)_auto] gap-3 border-b border-stone-100 px-4 py-2.5 text-xs font-medium text-stone-400 sm:grid dark:border-stone-800 dark:text-stone-500">
+        <span className="sr-only">Select</span>
         <span>Product</span>
         <span>Price</span>
         <span>Store</span>
@@ -33,6 +38,10 @@ export default function ProductListView({
             onOpen={onOpen}
             onMenu={onMenu}
             isFavoriteLoading={favoriteLoadingId === product.id}
+            isSelected={selectedIds?.has(product.id)}
+            onToggleSelect={onToggleSelect}
+            onSelectAllPage={onSelectAllPage}
+            selectDisabled={selectLimitReached}
           />
         ))}
       </div>
