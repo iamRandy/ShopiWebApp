@@ -1,6 +1,4 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
-import { ExternalLink } from "lucide-react";
+import { Check, CheckCheck, ExternalLink } from "lucide-react";
 import {
   getProductDisplayName,
   getFormattedProductPrice,
@@ -14,8 +12,11 @@ export default function GridProductCard({
   onFavoriteToggle,
   onOpen,
   isFavoriteLoading = false,
+  isSelected = false,
+  onToggleSelect,
+  onSelectAllPage,
+  selectDisabled = false,
 }) {
-  const [isHovered, setIsHovered] = useState(false);
   const name = getProductDisplayName(product);
   const price = getFormattedProductPrice(product);
   const image =
@@ -36,12 +37,20 @@ export default function GridProductCard({
     }
   };
 
+  const handleToggleSelect = (e) => {
+    e.stopPropagation();
+    onToggleSelect(product.id);
+  };
+
+  const handleSelectAllPage = (e) => {
+    e.stopPropagation();
+    onSelectAllPage();
+  };
+
   return (
     <article
-      className="group relative aspect-square cursor-pointer overflow-hidden rounded-xl bg-stone-100 transition-shadow hover:shadow-md dark:bg-stone-800"
+      className="group/card relative aspect-square cursor-pointer overflow-hidden rounded-xl bg-stone-100 transition-shadow hover:shadow-md dark:bg-stone-800"
       onClick={() => onOpen(product)}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => {
@@ -54,24 +63,55 @@ export default function GridProductCard({
       <ProductImage
         src={image}
         alt={name}
-        className="absolute inset-0 h-full w-full transition-transform duration-300 group-hover:scale-[1.03]"
+        className="absolute inset-0 h-full w-full transition-transform duration-300 group-hover/card:scale-[1.03]"
         loading="lazy"
       />
 
       <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-black/5" />
 
-      {product.hostname && (
-        <motion.div
-          className="absolute left-2.5 top-2.5 max-w-[calc(100%-3rem)] overflow-hidden rounded-md"
-          initial={false}
-          animate={{ width: isHovered ? "auto" : 0, opacity: isHovered ? 1 : 0 }}
-          transition={{ duration: 0.25, ease: "easeOut" }}
-        >
-          <span className="block overflow-hidden whitespace-nowrap text-ellipsis bg-white/85 px-2 py-0.5 text-[10px] font-medium text-stone-600 backdrop-blur-sm">
-            {product.hostname}
+      <div className="absolute left-2.5 top-2.5 flex gap-1.5">
+        <div className="group/select relative">
+          <button
+            type="button"
+            onClick={handleToggleSelect}
+            disabled={!isSelected && selectDisabled}
+            aria-label={isSelected ? "Deselect for comparison" : "Select for comparison"}
+            aria-pressed={isSelected}
+            className={`flex h-7 w-7 items-center justify-center rounded-md border-2 backdrop-blur-sm transition-all ${
+              isSelected
+                ? "border-[#FFBC42] bg-[#FFBC42] text-black opacity-100"
+                : `border-white/80 bg-black/25 text-transparent hover:bg-black/40 ${
+                    selectDisabled ? "cursor-not-allowed opacity-0" : "opacity-0 group-hover/card:opacity-100"
+                  }`
+            }`}
+          >
+            <Check className="h-4 w-4" strokeWidth={3} />
+          </button>
+          <span
+            role="tooltip"
+            className="pointer-events-none absolute left-0 top-full z-10 mt-1.5 whitespace-nowrap rounded-md bg-stone-800 px-2 py-1 text-[11px] font-medium text-white opacity-0 shadow-sm transition-opacity group-hover/select:opacity-100"
+          >
+            {!isSelected && selectDisabled ? "Compare limit reached" : "Select"}
           </span>
-        </motion.div>
-      )}
+        </div>
+
+        <div className="group/selectall relative">
+          <button
+            type="button"
+            onClick={handleSelectAllPage}
+            aria-label="Select all products on this page"
+            className="flex h-7 w-7 items-center justify-center rounded-md border-2 border-white/80 bg-black/25 text-white opacity-0 backdrop-blur-sm transition-all hover:bg-black/40 group-hover/card:opacity-100"
+          >
+            <CheckCheck className="h-4 w-4" strokeWidth={2.25} />
+          </button>
+          <span
+            role="tooltip"
+            className="pointer-events-none absolute left-0 top-full z-10 mt-1.5 whitespace-nowrap rounded-md bg-stone-800 px-2 py-1 text-[11px] font-medium text-white opacity-0 shadow-sm transition-opacity group-hover/selectall:opacity-100"
+          >
+            Select All
+          </span>
+        </div>
+      </div>
 
       <FavoriteHeartButton
         isFavorite={isFavorite}
@@ -88,6 +128,11 @@ export default function GridProductCard({
         <h3 className="line-clamp-2 text-sm font-medium leading-snug text-white">
           {name}
         </h3>
+        {product.hostname && (
+          <p className="mt-0.5 truncate text-[10px] font-medium uppercase tracking-wide text-white/60">
+            {product.hostname}
+          </p>
+        )}
         <div className="mt-1.5 flex items-center justify-between gap-2">
           <p className="text-sm font-semibold text-white/95">{price}</p>
           <button

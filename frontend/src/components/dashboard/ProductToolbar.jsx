@@ -1,4 +1,4 @@
-import { LayoutGrid, List, Share2, SlidersHorizontal } from "lucide-react";
+import { GitCompare, LayoutGrid, List, Share2, SlidersHorizontal, X } from "lucide-react";
 import { formatItemCount } from "../../utils/product";
 
 export default function ProductToolbar({
@@ -10,6 +10,10 @@ export default function ProductToolbar({
   activeFilterCount = 0,
   canShare = false,
   onShareClick,
+  compareCount = 0,
+  maxCompare,
+  onCompareNow,
+  onClearCompare,
 }) {
   return (
     <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -37,6 +41,33 @@ export default function ProductToolbar({
       </div>
 
       <div className="flex items-center gap-2">
+        {compareCount >= 2 && (
+          <div className="flex items-center gap-1 rounded-xl border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-surface)] py-1 pl-3 pr-1 shadow-[3px_3px_0_var(--color-shadow)]">
+            <span className="text-sm font-bold text-[var(--color-text-primary)]">
+              {compareCount}
+              {maxCompare ? (
+                <span className="text-stone-400 dark:text-stone-500"> / {maxCompare}</span>
+              ) : null}
+            </span>
+            <button
+              type="button"
+              onClick={onCompareNow}
+              className="flex h-8 items-center gap-1.5 rounded-lg bg-[#FFBC42] px-3 text-sm font-bold text-black transition-transform hover:-translate-y-0.5"
+            >
+              <GitCompare className="h-4 w-4" strokeWidth={2.25} />
+              Compare
+            </button>
+            <button
+              type="button"
+              onClick={onClearCompare}
+              aria-label="Clear comparison selection"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-700 dark:hover:bg-white/5 dark:hover:text-stone-300"
+            >
+              <X className="h-4 w-4" strokeWidth={2.25} />
+            </button>
+          </div>
+        )}
+
         <div className="flex overflow-hidden rounded-xl border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-surface)] shadow-[3px_3px_0_var(--color-shadow)]">
           <button
             type="button"

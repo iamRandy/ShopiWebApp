@@ -135,3 +135,8 @@ export function formatItemCount(count) {
   if (count === 1) return "1 Item";
   return `${count} Items`;
 }
+
+export function truncateProductName(name, maxLength = 20) {
+  if (!name) return name;
+  return name.length > maxLength ? `${name.slice(0, maxLength).trimEnd()}…` : name;
+}

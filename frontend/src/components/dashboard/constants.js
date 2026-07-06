@@ -5,3 +5,4 @@ export const PAGE_SIZE = LIST_PAGE_SIZE;
 export const VIEW_MODE_KEY = "chaos_product_view";
 export const SIDEBAR_COLLAPSED_KEY = "chaos_sidebar_collapsed";
 export const SHARED_SECTION_COLLAPSED_KEY = "chaos_shared_section_collapsed";
+export const MAX_COMPARE_PRODUCTS = GRID_PAGE_SIZE;
