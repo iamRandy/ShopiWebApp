@@ -10,6 +10,8 @@ export default function ProductListView({
   onToggleSelect,
   onSelectAllPage,
   selectLimitReached = false,
+  onQuickDelete,
+  deletingId,
 }) {
   if (products.length === 0) {
     return (
@@ -42,6 +44,8 @@ export default function ProductListView({
             onToggleSelect={onToggleSelect}
             onSelectAllPage={onSelectAllPage}
             selectDisabled={selectLimitReached}
+            onQuickDelete={onQuickDelete}
+            isDeleting={deletingId === product.id}
           />
         ))}
       </div>

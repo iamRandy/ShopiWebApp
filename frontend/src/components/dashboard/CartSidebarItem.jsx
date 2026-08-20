@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { MoreHorizontal, X } from "lucide-react";
 import { ShoppingCart } from "lucide-react";
 import { getCartIcon } from "../../utils/cartIcons";
+import ConfirmModal from "../ConfirmModal";
 
 export default function CartSidebarItem({
   cart,
@@ -11,6 +13,7 @@ export default function CartSidebarItem({
   variant = "owned",
   collapsed = false,
 }) {
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const count = cart.products?.length ?? 0;
   const cartName = cart.name || "Unnamed Cart";
   const isShared = variant === "shared";
@@ -18,20 +21,31 @@ export default function CartSidebarItem({
   const handleTrailingClick = (e) => {
     e.stopPropagation();
     if (isShared) {
-      if (
-        window.confirm(
-          "Leave this shared cart? You can rejoin if someone shares the link with you again."
-        )
-      ) {
-        onLeave(cart.id);
-      }
+      setShowLeaveConfirm(true);
     } else {
       onEdit(cart);
     }
   };
 
+  const confirmLeave = () => {
+    setShowLeaveConfirm(false);
+    onLeave(cart.id);
+  };
+
   const trailingTitle = isShared ? "Leave shared cart" : "Edit cart";
   const trailingAriaLabel = isShared ? `Leave ${cartName}` : `Edit ${cartName}`;
+
+  const leaveConfirmModal = (
+    <ConfirmModal
+      isOpen={showLeaveConfirm}
+      title="Leave this shared cart?"
+      message={`You'll lose access to "${cartName}". You can rejoin if someone shares the link with you again.`}
+      confirmLabel="Leave"
+      danger
+      onConfirm={confirmLeave}
+      onCancel={() => setShowLeaveConfirm(false)}
+    />
+  );
 
   if (collapsed) {
     return (
@@ -62,11 +76,13 @@ export default function CartSidebarItem({
         >
           {isShared ? <X className="h-3.5 w-3.5" /> : <MoreHorizontal className="h-3.5 w-3.5" />}
         </button>
+        {leaveConfirmModal}
       </div>
     );
   }
 
   return (
+    <>
     <div
       className={`group relative flex cursor-pointer items-center gap-2 rounded-xl border-2 px-3 py-2.5 transition-all ${
         selected
@@ -103,5 +119,7 @@ export default function CartSidebarItem({
         {isShared ? <X className="h-4 w-4" /> : <MoreHorizontal className="h-4 w-4" />}
       </button>
     </div>
+    {leaveConfirmModal}
+    </>
   );
 }

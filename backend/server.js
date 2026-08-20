@@ -510,7 +510,7 @@ app.delete("/api/carts/:cartId", verifyToken, async (req, res) => {
 app.patch("/api/carts/:cartId/products/:productId", verifyToken, async (req, res) => {
   try {
     const { cartId, productId } = req.params;
-    const { nickname, isFavorite, note } = req.body;
+    const { nickname, isFavorite, note, price } = req.body;
 
     if (!cartId || !productId) {
       return res.status(400).json({ error: "Cart ID and Product ID are required" });
@@ -531,6 +531,15 @@ app.patch("/api/carts/:cartId/products/:productId", verifyToken, async (req, res
 
     if (note !== undefined && typeof note !== "string") {
       return res.status(400).json({ error: "Note must be a string" });
+    }
+
+    let normalizedPrice;
+    if (price !== undefined) {
+      normalizedPrice = typeof price === "string" ? Number(price.replace(/,/g, "").trim()) : Number(price);
+      if (!Number.isFinite(normalizedPrice) || normalizedPrice < 0) {
+        return res.status(400).json({ error: "Price must be a non-negative number" });
+      }
+      normalizedPrice = Math.round(normalizedPrice * 100) / 100;
     }
 
     const trimmedNickname =
@@ -558,6 +567,10 @@ app.patch("/api/carts/:cartId/products/:productId", verifyToken, async (req, res
       } else {
         $unset["carts.$[c].products.$[p].note"] = "";
       }
+    }
+
+    if (normalizedPrice !== undefined) {
+      $set["carts.$[c].products.$[p].price"] = normalizedPrice;
     }
 
     if (Object.keys($set).length === 0 && Object.keys($unset).length === 0) {
@@ -627,6 +640,42 @@ app.delete("/api/carts/:cartId/products/:productId", verifyToken, async (req, re
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Failed to delete product" });
+  }
+});
+
+// Delete multiple products from a specific cart in a single request
+app.delete("/api/carts/:cartId/products", verifyToken, async (req, res) => {
+  try {
+    const { cartId } = req.params;
+    const { productIds } = req.body;
+
+    if (!cartId) {
+      return res.status(400).json({ error: "Cart ID is required" });
+    }
+
+    if (!Array.isArray(productIds) || productIds.length === 0) {
+      return res.status(400).json({ error: "productIds must be a non-empty array" });
+    }
+
+    const access = await resolveCartAccess(req.user.sub, cartId);
+    if (!access.allowed || access.role === "view") {
+      return res.status(403).json({ error: "You do not have permission to edit this cart" });
+    }
+
+    const result = await usersCollection.updateOne(
+      { sub: access.ownerSub, "carts.id": cartId },
+      { $pull: { "carts.$.products": { id: { $in: productIds } } } }
+    );
+
+    if (result.modifiedCount > 0) {
+      io.to(room(access.ownerSub, cartId)).emit("products:deleted", { cartId, productIds });
+      res.json({ success: true });
+    } else {
+      res.status(404).json({ error: "No matching products found in cart" });
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Failed to delete products" });
   }
 });
 

@@ -4,9 +4,12 @@ import { authenticatedFetch } from "../utils/api";
 import {
   getProductDisplayName,
   getFormattedProductPrice,
+  getProductNumericPrice,
+  formatProductPrice,
   sortProducts,
 } from "../utils/product";
 import AveeLoader from "./AveeLoader";
+import ConfirmModal from "./ConfirmModal";
 import ProductModal from "./productModal/ProductModal";
 import AppShell from "./dashboard/AppShell";
 import ProductToolbar from "./dashboard/ProductToolbar";
@@ -63,6 +66,10 @@ const Dashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [favoriteLoadingId, setFavoriteLoadingId] = useState(null);
   const [compareIds, setCompareIds] = useState(() => new Set());
+  const [deletingId, setDeletingId] = useState(null);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [quickDeleteTarget, setQuickDeleteTarget] = useState(null);
+  const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false);
 
   const selectedCartRef = useRef(selectedCart);
   selectedCartRef.current = selectedCart;
@@ -171,6 +178,80 @@ const Dashboard = () => {
     );
   };
 
+  const removeProductsFromState = (cartId, idsToRemove) => {
+    const idSet = idsToRemove instanceof Set ? idsToRemove : new Set(idsToRemove);
+    const stripProducts = (products) => (products || []).filter((p) => !idSet.has(p.id));
+
+    if (cartId === selectedCartRef.current) {
+      setSelectedCartProducts((prev) => stripProducts(prev));
+      setSelectedCartObj((prev) => (prev ? { ...prev, products: stripProducts(prev.products) } : prev));
+    }
+    setCarts((prev) =>
+      prev.map((cart) => (cart.id === cartId ? { ...cart, products: stripProducts(cart.products) } : cart))
+    );
+    setCompareIds((prev) => {
+      if (![...idSet].some((id) => prev.has(id))) return prev;
+      const next = new Set(prev);
+      idSet.forEach((id) => next.delete(id));
+      return next;
+    });
+  };
+
+  const handleQuickDelete = (product) => {
+    if (deletingId || !selectedCart) return;
+    setQuickDeleteTarget(product);
+  };
+
+  const confirmQuickDelete = async () => {
+    const product = quickDeleteTarget;
+    if (!product || deletingId || !selectedCart) return;
+
+    setDeletingId(product.id);
+    try {
+      const response = await authenticatedFetch(
+        `${API_URL}/api/carts/${selectedCart}/products/${product.id}`,
+        { method: "DELETE" }
+      );
+      if (response.ok) {
+        removeProductsFromState(selectedCart, [product.id]);
+      }
+    } catch (error) {
+      console.error("Error deleting product:", error);
+    } finally {
+      setDeletingId(null);
+      setQuickDeleteTarget(null);
+    }
+  };
+
+  const handleDeleteSelected = () => {
+    if (isBulkDeleting || compareIds.size === 0 || !selectedCart) return;
+    setBulkDeleteConfirmOpen(true);
+  };
+
+  const confirmDeleteSelected = async () => {
+    if (isBulkDeleting || compareIds.size === 0 || !selectedCart) return;
+    const ids = [...compareIds];
+
+    setIsBulkDeleting(true);
+    try {
+      const response = await authenticatedFetch(`${API_URL}/api/carts/${selectedCart}/products`, {
+        method: "DELETE",
+        body: JSON.stringify({ productIds: ids }),
+      });
+      if (response.ok) {
+        removeProductsFromState(selectedCart, ids);
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        window.alert(errorData.error || "Failed to delete the selected items. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error deleting selected products:", error);
+    } finally {
+      setIsBulkDeleting(false);
+      setBulkDeleteConfirmOpen(false);
+    }
+  };
+
   const cartSelected = async (cartId) => {
     if (cartId === selectedCartRef.current) return;
 
@@ -271,6 +352,7 @@ const Dashboard = () => {
       productImg:
         product.image || "https://via.placeholder.com/300x300?text=No+Image",
       productPrice: getFormattedProductPrice(product),
+      productPriceValue: getProductNumericPrice(product),
       productId: product.id,
       productUrl: product.url,
       productDescription: product.description,
@@ -296,12 +378,17 @@ const Dashboard = () => {
       }
       if (updates.note !== undefined) next.productNote = updates.note;
       if (updates.isFavorite !== undefined) next.productIsFavorite = updates.isFavorite;
+      if (updates.price !== undefined) {
+        next.productPriceValue = updates.price;
+        next.productPrice = formatProductPrice(updates.price, updates.currency || "$");
+      }
       return next;
     });
   };
 
-  const handleProductDelete = () => {
-    window.location.reload();
+  const handleProductDelete = (productId) => {
+    if (!selectedCart) return;
+    removeProductsFromState(selectedCart, [productId]);
   };
 
   const activeCart =
@@ -320,15 +407,10 @@ const Dashboard = () => {
       handleProductUpdated(productId, product);
     },
     "product:deleted": ({ cartId, productId }) => {
-      if (cartId !== selectedCartRef.current) return;
-      setSelectedCartProducts((prev) => prev.filter((p) => p.id !== productId));
-      setCarts((prev) =>
-        prev.map((cart) =>
-          cart.id === cartId
-            ? { ...cart, products: (cart.products || []).filter((p) => p.id !== productId) }
-            : cart
-        )
-      );
+      removeProductsFromState(cartId, [productId]);
+    },
+    "products:deleted": ({ cartId, productIds }) => {
+      removeProductsFromState(cartId, productIds || []);
     },
     "cart:renamed": ({ cartId, name, icon, color }) => {
       const patch = (cart) => (cart.id === cartId ? { ...cart, name, icon, color } : cart);
@@ -410,6 +492,8 @@ const Dashboard = () => {
               maxCompare={MAX_COMPARE_PRODUCTS}
               onCompareNow={handleCompareNow}
               onClearCompare={clearCompareSelection}
+              onDeleteSelected={canEditCart ? handleDeleteSelected : undefined}
+              isDeletingSelected={isBulkDeleting}
             />
 
             {accessRevoked && (
@@ -443,6 +527,8 @@ const Dashboard = () => {
                   onToggleSelect={toggleCompareSelect}
                   onSelectAllPage={() => selectAllOnPage(pageItems.map((p) => p.id))}
                   selectLimitReached={compareIds.size >= MAX_COMPARE_PRODUCTS}
+                  onQuickDelete={canEditCart ? handleQuickDelete : undefined}
+                  deletingId={deletingId}
                 />
               ) : (
                 <ProductListView
@@ -455,6 +541,8 @@ const Dashboard = () => {
                   onToggleSelect={toggleCompareSelect}
                   onSelectAllPage={() => selectAllOnPage(pageItems.map((p) => p.id))}
                   selectLimitReached={compareIds.size >= MAX_COMPARE_PRODUCTS}
+                  onQuickDelete={canEditCart ? handleQuickDelete : undefined}
+                  deletingId={deletingId}
                 />
               )}
             </div>
@@ -490,6 +578,7 @@ const Dashboard = () => {
           productName={selectedProduct?.productName}
           productImg={selectedProduct?.productImg}
           productPrice={selectedProduct?.productPrice}
+          productPriceValue={selectedProduct?.productPriceValue}
           productId={selectedProduct?.productId}
           productUrl={selectedProduct?.productUrl}
           productDescription={selectedProduct?.productDescription}
@@ -502,6 +591,34 @@ const Dashboard = () => {
           cartId={selectedCart}
           onDelete={handleProductDelete}
           onProductUpdated={handleModalProductUpdated}
+        />
+
+        <ConfirmModal
+          isOpen={Boolean(quickDeleteTarget)}
+          title="Delete this item?"
+          message={
+            quickDeleteTarget
+              ? `"${getProductDisplayName(quickDeleteTarget)}" will be removed from this cart.`
+              : ""
+          }
+          confirmLabel="Delete"
+          confirmingLabel="Deleting…"
+          danger
+          isConfirming={Boolean(deletingId)}
+          onConfirm={confirmQuickDelete}
+          onCancel={() => setQuickDeleteTarget(null)}
+        />
+
+        <ConfirmModal
+          isOpen={bulkDeleteConfirmOpen}
+          title={`Delete ${compareIds.size} item${compareIds.size > 1 ? "s" : ""}?`}
+          message="These items will be removed from this cart. This cannot be undone."
+          confirmLabel="Delete"
+          confirmingLabel="Deleting…"
+          danger
+          isConfirming={isBulkDeleting}
+          onConfirm={confirmDeleteSelected}
+          onCancel={() => setBulkDeleteConfirmOpen(false)}
         />
 
         <ShareCartModal

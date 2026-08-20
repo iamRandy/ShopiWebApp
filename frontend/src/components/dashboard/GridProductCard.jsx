@@ -1,4 +1,4 @@
-import { Check, CheckCheck, ExternalLink } from "lucide-react";
+import { Check, CheckCheck, ExternalLink, Trash2 } from "lucide-react";
 import {
   getProductDisplayName,
   getFormattedProductPrice,
@@ -16,6 +16,8 @@ export default function GridProductCard({
   onToggleSelect,
   onSelectAllPage,
   selectDisabled = false,
+  onQuickDelete,
+  isDeleting = false,
 }) {
   const name = getProductDisplayName(product);
   const price = getFormattedProductPrice(product);
@@ -45,6 +47,11 @@ export default function GridProductCard({
   const handleSelectAllPage = (e) => {
     e.stopPropagation();
     onSelectAllPage();
+  };
+
+  const handleQuickDelete = (e) => {
+    e.stopPropagation();
+    if (!isDeleting) onQuickDelete(product);
   };
 
   return (
@@ -123,6 +130,18 @@ export default function GridProductCard({
         ariaLabelOn="Remove from favorites"
         ariaLabelOff="Add to favorites"
       />
+
+      {onQuickDelete && (
+        <button
+          type="button"
+          onClick={handleQuickDelete}
+          disabled={isDeleting}
+          aria-label="Delete product"
+          className="absolute right-12 top-2.5 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white/80 bg-black/25 text-white opacity-0 backdrop-blur-sm transition-all hover:border-red-400 hover:bg-red-500/85 group-hover/card:opacity-100 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <Trash2 className="h-3.5 w-3.5" strokeWidth={2} />
+        </button>
+      )}
 
       <div className="absolute inset-x-0 bottom-0 p-3">
         <h3 className="line-clamp-2 text-sm font-medium leading-snug text-white">

@@ -1,4 +1,4 @@
-import { Check, CheckCheck, MoreHorizontal } from "lucide-react";
+import { Check, CheckCheck, MoreHorizontal, Trash2 } from "lucide-react";
 import {
   getProductDisplayName,
   getFormattedProductPrice,
@@ -18,6 +18,8 @@ export default function ListProductRow({
   onToggleSelect,
   onSelectAllPage,
   selectDisabled = false,
+  onQuickDelete,
+  isDeleting = false,
 }) {
   const name = getProductDisplayName(product);
   const price = getFormattedProductPrice(product);
@@ -125,17 +127,33 @@ export default function ListProductRow({
       <span className="hidden truncate text-sm text-stone-500 sm:inline dark:text-stone-400">{product.hostname || "—"}</span>
       <span className="text-sm text-stone-400 dark:text-stone-500">{formatRelativeAdded(product.savedAt)}</span>
 
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          onMenu(product);
-        }}
-        className="flex h-8 w-8 items-center justify-center rounded-full text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-700 dark:text-stone-500 dark:hover:bg-white/5 dark:hover:text-stone-300"
-        aria-label="Product options"
-      >
-        <MoreHorizontal className="h-4 w-4" strokeWidth={1.75} />
-      </button>
+      <div className="flex items-center gap-0.5">
+        {onQuickDelete && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!isDeleting) onQuickDelete(product);
+            }}
+            disabled={isDeleting}
+            className="flex h-8 w-8 items-center justify-center rounded-full text-stone-400 opacity-0 transition-colors hover:bg-red-50 hover:text-red-600 group-hover/row:opacity-100 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-red-950/40 dark:hover:text-red-400"
+            aria-label="Delete product"
+          >
+            <Trash2 className="h-4 w-4" strokeWidth={1.75} />
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onMenu(product);
+          }}
+          className="flex h-8 w-8 items-center justify-center rounded-full text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-700 dark:text-stone-500 dark:hover:bg-white/5 dark:hover:text-stone-300"
+          aria-label="Product options"
+        >
+          <MoreHorizontal className="h-4 w-4" strokeWidth={1.75} />
+        </button>
+      </div>
     </div>
   );
 }
