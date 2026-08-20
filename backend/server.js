@@ -251,17 +251,13 @@ app.post("/api/login/google", async (req, res) => {
       return res.status(400).json({ error: "Google API: Invalid token" });
     }
 
-    // Generate refresh token for this user
-    const refreshTokenValue = crypto.randomBytes(64).toString("hex");
-
-    // Save or update user in MongoDB with refresh token
+    // Save or update user in MongoDB
     const filter = { sub: payload.sub }; // Google's unique user ID
     const update = {
       $set: {
         email: payload.email,
         picture: payload.picture,
         lastLogin: new Date(),
-        refreshToken: refreshTokenValue,
       },
       $setOnInsert: {
         carts: [],
@@ -277,6 +273,9 @@ app.post("/api/login/google", async (req, res) => {
 
     // Generate our own JWT tokens
     const { accessToken, refreshToken } = generateTokens(user);
+
+    // Persist the issued refresh token so /api/refresh-token can validate it later
+    await usersCollection.updateOne(filter, { $set: { refreshToken } });
 
     res.status(200).json({
       message: "Login successful",
