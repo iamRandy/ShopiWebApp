@@ -82,9 +82,11 @@ export default function ProductToolbar({
             className="flex h-10 items-center gap-1.5 rounded-xl border-2 border-red-300 bg-red-600 px-3 text-sm font-bold text-white shadow-[3px_3px_0_var(--color-shadow)] transition-transform hover:-translate-y-0.5 hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 dark:border-red-900/70"
           >
             <Trash2 className="h-4 w-4" strokeWidth={2.25} />
-            {isDeletingSelected
-              ? "Deleting…"
-              : `Delete ${compareCount} item${compareCount > 1 ? "s" : ""}`}
+            <span className="hidden sm:inline">
+              {isDeletingSelected
+                ? "Deleting…"
+                : `Delete ${compareCount} item${compareCount > 1 ? "s" : ""}`}
+            </span>
           </button>
         )}
 

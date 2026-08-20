@@ -88,7 +88,9 @@ export default function GridProductCard({
               isSelected
                 ? "border-[#FFBC42] bg-[#FFBC42] text-black opacity-100"
                 : `border-white/80 bg-black/25 text-transparent hover:bg-black/40 ${
-                    selectDisabled ? "cursor-not-allowed opacity-0" : "opacity-0 group-hover/card:opacity-100"
+                    selectDisabled
+                      ? "cursor-not-allowed opacity-0"
+                      : "opacity-100 sm:opacity-0 sm:group-hover/card:opacity-100"
                   }`
             }`}
           >
