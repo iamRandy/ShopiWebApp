@@ -2,6 +2,7 @@ import { Check, CheckCheck, ExternalLink, Trash2 } from "lucide-react";
 import {
   getProductDisplayName,
   getFormattedProductPrice,
+  formatProductPrice,
 } from "../../utils/product";
 import { getAffiliateLink } from "../../utils/affiliate";
 import ProductImage from "../ProductImage";
@@ -18,12 +19,17 @@ export default function GridProductCard({
   selectDisabled = false,
   onQuickDelete,
   isDeleting = false,
+  priceAlert,
 }) {
   const name = getProductDisplayName(product);
   const price = getFormattedProductPrice(product);
   const image =
     product.image || "https://via.placeholder.com/300x300?text=No+Image";
   const isFavorite = Boolean(product.isFavorite);
+  const previousPriceFormatted = priceAlert
+    ? formatProductPrice(priceAlert.previousPrice, product.currency || "$")
+    : null;
+  const priceRose = priceAlert && Number(product.price) > Number(priceAlert.previousPrice);
 
   const handleVisit = (e) => {
     e.stopPropagation();
@@ -74,7 +80,7 @@ export default function GridProductCard({
         loading="lazy"
       />
 
-      <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-black/5" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-black/5 transition-opacity duration-300 group-hover/card:opacity-60" />
 
       <div className="absolute left-2.5 top-2.5 flex gap-1.5">
         <div className="group/select relative">
@@ -155,7 +161,24 @@ export default function GridProductCard({
           </p>
         )}
         <div className="mt-1.5 flex items-center justify-between gap-2">
-          <p className="text-sm font-semibold text-white/95">{price}</p>
+          <div className="flex min-w-0 items-center gap-1.5">
+            {previousPriceFormatted && (
+              <span className="truncate text-xs font-medium text-white/50 line-through">
+                {previousPriceFormatted}
+              </span>
+            )}
+            <p className="truncate text-sm font-semibold text-white/95">{price}</p>
+            {priceAlert && (
+              <span
+                title={priceRose ? "Price increased since last check" : "Price dropped since last check"}
+                className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[10px] font-black leading-none ${
+                  priceRose ? "bg-amber-400 text-amber-950" : "bg-emerald-400 text-emerald-950"
+                }`}
+              >
+                !
+              </span>
+            )}
+          </div>
           <button
             type="button"
             onClick={handleVisit}

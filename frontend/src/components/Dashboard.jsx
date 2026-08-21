@@ -71,8 +71,20 @@ const Dashboard = () => {
   const [quickDeleteTarget, setQuickDeleteTarget] = useState(null);
   const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false);
 
+  // Session-only flags for products whose price changed after a background rescan —
+  // never persisted, cleared on cart switch or reload. productId -> { previousPrice }
+  const [priceAlerts, setPriceAlerts] = useState(() => new Map());
+
+  // Bumped only when the user explicitly turns the page, to let the frozen sort order
+  // (favorites-first, etc.) catch up without reshuffling the page they're currently on.
+  const [resortNonce, setResortNonce] = useState(0);
+
   const selectedCartRef = useRef(selectedCart);
   selectedCartRef.current = selectedCart;
+
+  // Tracks which product ids we've already asked the backend to rescan this session,
+  // so flipping pages/filters back and forth doesn't keep re-requesting the same ones.
+  const rescanRequestedRef = useRef(new Set());
 
   const fetchCarts = useCallback(async (preserveSelection = false) => {
     if (!preserveSelection) setLoading(true);
@@ -178,6 +190,16 @@ const Dashboard = () => {
     );
   };
 
+  const handleProductRescanned = (cartId, productId, previousPrice, product) => {
+    if (cartId !== selectedCartRef.current) return;
+    handleProductUpdated(productId, product);
+    setPriceAlerts((prev) => {
+      const next = new Map(prev);
+      next.set(productId, { previousPrice });
+      return next;
+    });
+  };
+
   const removeProductsFromState = (cartId, idsToRemove) => {
     const idSet = idsToRemove instanceof Set ? idsToRemove : new Set(idsToRemove);
     const stripProducts = (products) => (products || []).filter((p) => !idSet.has(p.id));
@@ -192,6 +214,12 @@ const Dashboard = () => {
     setCompareIds((prev) => {
       if (![...idSet].some((id) => prev.has(id))) return prev;
       const next = new Set(prev);
+      idSet.forEach((id) => next.delete(id));
+      return next;
+    });
+    setPriceAlerts((prev) => {
+      if (![...idSet].some((id) => prev.has(id))) return prev;
+      const next = new Map(prev);
       idSet.forEach((id) => next.delete(id));
       return next;
     });
@@ -258,6 +286,8 @@ const Dashboard = () => {
     setAccessRevoked(false);
     setSelectedCart(cartId);
     setFilters(DEFAULT_FILTERS);
+    setPriceAlerts(new Map());
+    setPage(1);
     const cartFromList = carts.find((c) => c.id === cartId);
     if (cartFromList) {
       setSelectedCartObj(cartFromList);
@@ -406,6 +436,9 @@ const Dashboard = () => {
       if (cartId !== selectedCartRef.current) return;
       handleProductUpdated(productId, product);
     },
+    "product:rescanned": ({ cartId, productId, previousPrice, product }) => {
+      handleProductRescanned(cartId, productId, previousPrice, product);
+    },
     "product:deleted": ({ cartId, productId }) => {
       removeProductsFromState(cartId, [productId]);
     },
@@ -444,12 +477,56 @@ const Dashboard = () => {
   });
 
   const filteredProducts = useProductFilters(rawProducts, filters);
-  const sortedProducts = useMemo(
-    () => sortProducts(filteredProducts),
+
+  // A stable signature of which product ids are visible (order-independent) — unlike
+  // filteredProducts itself, this only changes when the visible SET changes (add/remove,
+  // a filter edit), not when a field on an already-visible product mutates in place.
+  const filteredProductIdsKey = useMemo(
+    () => filteredProducts.map((p) => p.id).join("|"),
     [filteredProducts]
   );
+
+  // Freezes display ORDER against in-place field mutations (favoriting, a background price
+  // rescan, ...) so the grid/list doesn't visibly reshuffle while the user's still looking at
+  // it. Order only refreshes when the visible set of products actually changes, or the user
+  // explicitly turns the page (resortNonce, bumped from the Pagination handler below) or
+  // switches carts (which is itself always a set change, already covered). Product DATA
+  // stays live either way — only the position is frozen.
+  const sortedProductIds = useMemo(
+    () => sortProducts(filteredProducts).map((p) => p.id),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [filteredProductIdsKey, resortNonce]
+  );
+  const sortedProducts = useMemo(() => {
+    const byId = new Map(filteredProducts.map((p) => [p.id, p]));
+    return sortedProductIds.map((id) => byId.get(id)).filter(Boolean);
+  }, [sortedProductIds, filteredProducts]);
+
   const { page, setPage, totalPages, pageItems, hasNext, hasPrev } =
     usePagination(sortedProducts, pageSize);
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+    setResortNonce((n) => n + 1);
+  };
+
+  // Silently ask the backend to refresh prices for whatever's actually on screen right
+  // now (not the whole cart) whenever that set changes — cart open, page turn, filter/sort
+  // change. The backend itself decides which of these are actually stale (>= 2 weeks since
+  // last check); this just avoids re-asking for ids we already asked about this session.
+  const visiblePageProductIds = useMemo(() => pageItems.map((p) => p.id), [pageItems]);
+  useEffect(() => {
+    if (!selectedCart || visiblePageProductIds.length === 0) return;
+
+    const requested = rescanRequestedRef.current;
+    const idsToRequest = visiblePageProductIds.filter((id) => !requested.has(id));
+    if (idsToRequest.length === 0) return;
+
+    idsToRequest.forEach((id) => requested.add(id));
+    authenticatedFetch(`${API_URL}/api/carts/${selectedCart}/products/rescan`, {
+      method: "POST",
+      body: JSON.stringify({ productIds: idsToRequest }),
+    }).catch((error) => console.error("Error requesting price rescan:", error));
+  }, [selectedCart, visiblePageProductIds]);
 
   const storeOptions = useMemo(() => {
     const hosts = new Set();
@@ -529,6 +606,7 @@ const Dashboard = () => {
                   selectLimitReached={compareIds.size >= MAX_COMPARE_PRODUCTS}
                   onQuickDelete={canEditCart ? handleQuickDelete : undefined}
                   deletingId={deletingId}
+                  priceAlerts={priceAlerts}
                 />
               ) : (
                 <ProductListView
@@ -543,6 +621,7 @@ const Dashboard = () => {
                   selectLimitReached={compareIds.size >= MAX_COMPARE_PRODUCTS}
                   onQuickDelete={canEditCart ? handleQuickDelete : undefined}
                   deletingId={deletingId}
+                  priceAlerts={priceAlerts}
                 />
               )}
             </div>
@@ -551,7 +630,7 @@ const Dashboard = () => {
               <Pagination
                 page={page}
                 totalPages={totalPages}
-                onPageChange={setPage}
+                onPageChange={handlePageChange}
                 hasNext={hasNext}
                 hasPrev={hasPrev}
               />

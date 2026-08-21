@@ -18,7 +18,7 @@ export default function ProductToolbar({
   isDeletingSelected = false,
 }) {
   return (
-    <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
       <div className="flex items-center gap-2">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight text-[var(--color-text-primary)] sm:text-3xl">
@@ -42,7 +42,7 @@ export default function ProductToolbar({
         )}
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         {compareCount >= 2 && (
           <div className="flex items-center gap-1 rounded-xl border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-surface)] py-1 pl-3 pr-3 shadow-[3px_3px_0_var(--color-shadow)]">
             <span className="text-sm font-bold text-[var(--color-text-primary)]">

@@ -6,9 +6,12 @@ export function usePagination(items = [], pageSize = PAGE_SIZE) {
 
   const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
 
+  // Depends on the result COUNT, not the `items` array reference — an in-place field
+  // mutation (favoriting, a background price update, ...) produces a new array reference
+  // without changing how many items there are, and shouldn't bounce the user back to page 1.
   useEffect(() => {
     setPage(1);
-  }, [items, pageSize]);
+  }, [items.length, pageSize]);
 
   useEffect(() => {
     if (page > totalPages) {

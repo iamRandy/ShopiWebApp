@@ -9,6 +9,7 @@ const { Server: SocketIOServer } = require("socket.io");
 const jwt = require("jsonwebtoken");
 const { OAuth2Client } = require("google-auth-library");
 const crypto = require("crypto");
+const cheerio = require("cheerio");
 
 dotenv.config();
 
@@ -25,6 +26,9 @@ const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
 // Token expiration times
 const ACCESS_TOKEN_EXPIRY = "2h"; // 2 hours
 const REFRESH_TOKEN_EXPIRY = "7d"; // 7 days
+
+// A product's price is re-checked at most once per this window, and only when visible to a user.
+const STALE_SCAN_MS = 14 * 24 * 60 * 60 * 1000; // 2 weeks
 
 const client = new MongoClient(process.env.MONGODB_URI);
 let usersCollection;
@@ -179,6 +183,125 @@ async function syncSharedCartIdsDisplay(cartId, fields) {
     { $set },
     { arrayFilters: [{ "s.cartId": cartId }] }
   );
+}
+
+// ---------------------------------------------------------------------------
+// Background price rescanning
+// ---------------------------------------------------------------------------
+
+const SCRAPE_TIMEOUT_MS = 9000;
+const SCRAPE_USER_AGENT =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
+
+/** Pulls a numeric price out of schema.org Product/Offer JSON-LD, the same first-choice
+ * strategy the browser extension's scrapers use, since most retailers embed it in
+ * server-rendered HTML for SEO even on otherwise JS-heavy storefronts. */
+function extractJsonLdPrice($) {
+  const blocks = $('script[type="application/ld+json"]').toArray();
+  for (const block of blocks) {
+    let parsed;
+    try {
+      parsed = JSON.parse($(block).contents().text());
+    } catch {
+      continue;
+    }
+
+    const nodes = Array.isArray(parsed)
+      ? parsed
+      : Array.isArray(parsed?.["@graph"])
+        ? parsed["@graph"]
+        : [parsed];
+
+    for (const node of nodes) {
+      if (!node || node["@type"] !== "Product") continue;
+      const offers = Array.isArray(node.offers) ? node.offers[0] : node.offers;
+      const rawPrice = offers?.price;
+      const price =
+        typeof rawPrice === "string" ? Number(rawPrice.replace(/,/g, "").trim()) : Number(rawPrice);
+      if (Number.isFinite(price) && price >= 0) return Math.round(price * 100) / 100;
+    }
+  }
+  return null;
+}
+
+/** Best-effort, lightweight re-scrape: plain HTTP GET + static HTML parse, no headless browser.
+ * Sites that only render price via client JS, or that block non-browser traffic, just fail here
+ * silently — the caller still bumps lastScannedAt so we don't hammer the same URL every cart open. */
+async function scrapeProductPrice(url) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), SCRAPE_TIMEOUT_MS);
+  try {
+    const response = await fetch(url, {
+      headers: { "User-Agent": SCRAPE_USER_AGENT, Accept: "text/html" },
+      signal: controller.signal,
+    });
+    if (!response.ok) return { ok: false };
+
+    const html = await response.text();
+    const $ = cheerio.load(html);
+    const price = extractJsonLdPrice($);
+    return price === null ? { ok: false } : { ok: true, price };
+  } catch {
+    return { ok: false };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+// Caps how many rescans run concurrently server-wide, so a big page of stale products
+// doesn't fire dozens of simultaneous outbound requests at once.
+const MAX_CONCURRENT_SCANS = 4;
+let activeScans = 0;
+const scanQueue = [];
+
+function withScanSlot(fn) {
+  return new Promise((resolve, reject) => {
+    const run = () => {
+      activeScans++;
+      fn()
+        .then(resolve, reject)
+        .finally(() => {
+          activeScans--;
+          const next = scanQueue.shift();
+          if (next) next();
+        });
+    };
+    if (activeScans < MAX_CONCURRENT_SCANS) run();
+    else scanQueue.push(run);
+  });
+}
+
+// Product ids currently mid-scan, so overlapping rescan requests (two tabs on the same
+// cart, or rapidly flipping pages/carts) never scrape the same product twice at once.
+const scanningProductIds = new Set();
+
+/** Persists a completed scan's result and, only if the price actually changed, emits a
+ * live update for whoever currently has the cart open. */
+async function applyRescanResult({ ownerSub, cartId, productId, previousPrice, result }) {
+  const priceChanged =
+    result.ok &&
+    Number.isFinite(result.price) &&
+    (!Number.isFinite(Number(previousPrice)) || Math.abs(result.price - Number(previousPrice)) >= 0.01);
+
+  const $set = { "carts.$[c].products.$[p].lastScannedAt": new Date().toISOString() };
+  if (priceChanged) {
+    $set["carts.$[c].products.$[p].price"] = result.price;
+  }
+
+  await usersCollection.updateOne(
+    { sub: ownerSub },
+    { $set },
+    { arrayFilters: [{ "c.id": cartId }, { "p.id": productId }] }
+  );
+
+  if (!priceChanged) return;
+
+  const user = await usersCollection.findOne({ sub: ownerSub }, { projection: { _id: 0, carts: 1 } });
+  const cart = user?.carts?.find((c) => c.id === cartId);
+  const product = cart?.products?.find((p) => p.id === productId);
+  if (!product) return;
+
+  io.to(room(ownerSub, cartId)).emit("product:rescanned", { cartId, productId, previousPrice, product });
 }
 
 // Middleware to verify JWT token (our own tokens, not Google's)
@@ -675,6 +798,67 @@ app.delete("/api/carts/:cartId/products", verifyToken, async (req, res) => {
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Failed to delete products" });
+  }
+});
+
+// Re-check prices for a set of currently-visible products in a cart. Only products whose
+// price hasn't been checked in STALE_SCAN_MS get scraped; the rest are ignored. Responds
+// immediately with which ids were actually queued — the scraping itself runs after the
+// response is sent and isn't tied to this request's lifecycle.
+app.post("/api/carts/:cartId/products/rescan", verifyToken, async (req, res) => {
+  try {
+    const { cartId } = req.params;
+    const { productIds } = req.body;
+
+    if (!cartId) {
+      return res.status(400).json({ error: "Cart ID is required" });
+    }
+    if (!Array.isArray(productIds) || productIds.length === 0) {
+      return res.status(400).json({ error: "productIds must be a non-empty array" });
+    }
+
+    const access = await resolveCartAccess(req.user.sub, cartId);
+    if (!access.allowed) {
+      return res.status(403).json({ error: "You do not have access to this cart" });
+    }
+
+    const user = await usersCollection.findOne(
+      { sub: access.ownerSub, "carts.id": cartId },
+      { projection: { _id: 0, "carts.$": 1 } }
+    );
+    const cart = user?.carts?.[0];
+    if (!cart) return res.status(404).json({ error: "Cart not found" });
+
+    const requestedIds = new Set(productIds);
+    const now = Date.now();
+    const staleProducts = (cart.products || []).filter(
+      (p) =>
+        requestedIds.has(p.id) &&
+        p.url &&
+        !scanningProductIds.has(p.id) &&
+        (!p.lastScannedAt || now - new Date(p.lastScannedAt).getTime() >= STALE_SCAN_MS)
+    );
+
+    res.json({ queued: staleProducts.map((p) => p.id) });
+
+    staleProducts.forEach((product) => scanningProductIds.add(product.id));
+    staleProducts.forEach((product) => {
+      withScanSlot(async () => {
+        const result = await scrapeProductPrice(product.url);
+        await applyRescanResult({
+          ownerSub: access.ownerSub,
+          cartId,
+          productId: product.id,
+          previousPrice: product.price,
+          result,
+        });
+      })
+        .catch((e) => console.error("Rescan failed for product", product.id, e))
+        .finally(() => scanningProductIds.delete(product.id));
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Failed to queue rescan" });
   }
 });
 

@@ -2,6 +2,7 @@ import { Check, CheckCheck, MoreHorizontal, Trash2 } from "lucide-react";
 import {
   getProductDisplayName,
   getFormattedProductPrice,
+  formatProductPrice,
   formatRelativeAdded,
   getProductDisplayDescription,
 } from "../../utils/product";
@@ -20,6 +21,7 @@ export default function ListProductRow({
   selectDisabled = false,
   onQuickDelete,
   isDeleting = false,
+  priceAlert,
 }) {
   const name = getProductDisplayName(product);
   const price = getFormattedProductPrice(product);
@@ -27,6 +29,23 @@ export default function ListProductRow({
   const image =
     product.image || "https://via.placeholder.com/80x80?text=No+Image";
   const isFavorite = Boolean(product.isFavorite);
+  const previousPriceFormatted = priceAlert
+    ? formatProductPrice(priceAlert.previousPrice, product.currency || "$")
+    : null;
+  const priceRose = priceAlert && Number(product.price) > Number(priceAlert.previousPrice);
+
+  const priceChangeBadge = priceAlert && (
+    <span
+      title={priceRose ? "Price increased since last check" : "Price dropped since last check"}
+      className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[10px] font-black leading-none ${
+        priceRose
+          ? "bg-amber-400 text-amber-950"
+          : "bg-emerald-400 text-emerald-950"
+      }`}
+    >
+      !
+    </span>
+  );
 
   const selectButton = ({ alwaysVisible = false } = {}) => (
     <div className="group/select relative">
@@ -103,7 +122,11 @@ export default function ListProductRow({
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium text-stone-800 dark:text-stone-100">{name}</p>
           <p className="mt-0.5 flex items-center gap-1.5 text-xs text-stone-500 dark:text-stone-400">
+            {previousPriceFormatted && (
+              <span className="text-stone-400 line-through dark:text-stone-500">{previousPriceFormatted}</span>
+            )}
             <span className="font-medium text-stone-700 dark:text-stone-300">{price}</span>
+            {priceChangeBadge}
             <span aria-hidden="true">·</span>
             <span>{formatRelativeAdded(product.savedAt)}</span>
           </p>
@@ -182,7 +205,15 @@ export default function ListProductRow({
           </div>
         </div>
 
-        <span className="text-sm font-medium text-stone-800 dark:text-stone-100">{price}</span>
+        <span className="flex min-w-0 items-center gap-1.5 text-sm">
+          {previousPriceFormatted && (
+            <span className="truncate text-xs text-stone-400 line-through dark:text-stone-500">
+              {previousPriceFormatted}
+            </span>
+          )}
+          <span className="truncate font-medium text-stone-800 dark:text-stone-100">{price}</span>
+          {priceChangeBadge}
+        </span>
         <span className="truncate text-sm text-stone-500 dark:text-stone-400">{product.hostname || "—"}</span>
         <span className="text-sm text-stone-400 dark:text-stone-500">{formatRelativeAdded(product.savedAt)}</span>
 

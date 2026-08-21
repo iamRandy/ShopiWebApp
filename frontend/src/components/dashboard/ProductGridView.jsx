@@ -11,6 +11,7 @@ export default function ProductGridView({
   selectLimitReached = false,
   onQuickDelete,
   deletingId,
+  priceAlerts,
 }) {
   if (products.length === 0) {
     return (
@@ -35,6 +36,7 @@ export default function ProductGridView({
           selectDisabled={selectLimitReached}
           onQuickDelete={onQuickDelete}
           isDeleting={deletingId === product.id}
+          priceAlert={priceAlerts?.get(product.id)}
         />
       ))}
     </div>
