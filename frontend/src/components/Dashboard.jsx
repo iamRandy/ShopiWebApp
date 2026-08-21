@@ -311,6 +311,39 @@ const Dashboard = () => {
     }
   };
 
+  // Quietly re-fetches whatever cart is currently open, merging fresh field values in place
+  // (same shape as a socket "product:updated" push) without resetting filters/page/selection.
+  // Production has no real-time socket layer (see frontend/api/*.js), so a collaborator's
+  // edit to a shared cart would otherwise only show up on your next full cart switch — this
+  // catches it sooner, on the common "switched tabs and came back" case.
+  const refreshSelectedCart = useCallback(async () => {
+    const cartId = selectedCartRef.current;
+    if (!cartId) return;
+    try {
+      const response = await authenticatedFetch(`${API_URL}/api/carts/${cartId}`);
+      if (!response.ok) return;
+      const data = await response.json();
+      if (cartId !== selectedCartRef.current) return; // switched carts while this was in flight
+      setSelectedCartObj(data);
+      setSelectedCartProducts(data?.products || []);
+      setCarts((prev) => prev.map((cart) => (cart.id === cartId ? { ...cart, ...data } : cart)));
+    } catch (error) {
+      console.error("Error refreshing cart:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") refreshSelectedCart();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+    };
+  }, [refreshSelectedCart]);
+
   const handleShareClick = () => setShareModalOpen(true);
 
   const handleCloseShareModal = (result) => {

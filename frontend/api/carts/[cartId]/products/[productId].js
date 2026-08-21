@@ -38,7 +38,7 @@ module.exports = async function handler(req, res) {
     }
 
     if (req.method === "PATCH") {
-      const { nickname, isFavorite, note } = req.body;
+      const { nickname, isFavorite, note, price } = req.body;
 
       if (nickname !== undefined && typeof nickname !== "string") {
         return res.status(400).json({ error: "Nickname must be a string" });
@@ -50,6 +50,15 @@ module.exports = async function handler(req, res) {
 
       if (note !== undefined && typeof note !== "string") {
         return res.status(400).json({ error: "Note must be a string" });
+      }
+
+      let normalizedPrice;
+      if (price !== undefined) {
+        normalizedPrice = typeof price === "string" ? Number(price.replace(/,/g, "").trim()) : Number(price);
+        if (!Number.isFinite(normalizedPrice) || normalizedPrice < 0) {
+          return res.status(400).json({ error: "Price must be a non-negative number" });
+        }
+        normalizedPrice = Math.round(normalizedPrice * 100) / 100;
       }
 
       const trimmedNickname =
@@ -77,6 +86,10 @@ module.exports = async function handler(req, res) {
         } else {
           $unset["carts.$[c].products.$[p].note"] = "";
         }
+      }
+
+      if (normalizedPrice !== undefined) {
+        $set["carts.$[c].products.$[p].price"] = normalizedPrice;
       }
 
       if (Object.keys($set).length === 0 && Object.keys($unset).length === 0) {
