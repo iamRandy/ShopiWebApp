@@ -522,10 +522,26 @@ const Dashboard = () => {
     if (idsToRequest.length === 0) return;
 
     idsToRequest.forEach((id) => requested.add(id));
-    authenticatedFetch(`${API_URL}/api/carts/${selectedCart}/products/rescan`, {
+    const cartId = selectedCart;
+    authenticatedFetch(`${API_URL}/api/carts/${cartId}/products/rescan`, {
       method: "POST",
       body: JSON.stringify({ productIds: idsToRequest }),
-    }).catch((error) => console.error("Error requesting price rescan:", error));
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        // The Vercel deployment's rescan endpoint scrapes synchronously (no background
+        // process / socket push there — see frontend/api/carts/[cartId]/products/rescan.js)
+        // and returns any price changes directly; apply them here. The always-on Express
+        // dev backend instead pushes these via the "product:rescanned" socket event, so
+        // this is a harmless no-op there since `updates` comes back empty.
+        (data?.updates || []).forEach((update) => {
+          handleProductRescanned(cartId, update.productId, update.previousPrice, { price: update.price });
+        });
+      })
+      .catch((error) => console.error("Error requesting price rescan:", error));
+    // handleProductRescanned is intentionally omitted — it's redefined every render, and
+    // this effect should only re-fire when the cart or visible product set actually changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCart, visiblePageProductIds]);
 
   const storeOptions = useMemo(() => {
