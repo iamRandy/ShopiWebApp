@@ -4,9 +4,12 @@ import { authenticatedFetch } from "../utils/api";
 import {
   getProductDisplayName,
   getFormattedProductPrice,
+  getProductNumericPrice,
+  formatProductPrice,
   sortProducts,
 } from "../utils/product";
 import AveeLoader from "./AveeLoader";
+import ConfirmModal from "./ConfirmModal";
 import ProductModal from "./productModal/ProductModal";
 import AppShell from "./dashboard/AppShell";
 import ProductToolbar from "./dashboard/ProductToolbar";
@@ -63,9 +66,25 @@ const Dashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [favoriteLoadingId, setFavoriteLoadingId] = useState(null);
   const [compareIds, setCompareIds] = useState(() => new Set());
+  const [deletingId, setDeletingId] = useState(null);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [quickDeleteTarget, setQuickDeleteTarget] = useState(null);
+  const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false);
+
+  // Session-only flags for products whose price changed after a background rescan —
+  // never persisted, cleared on cart switch or reload. productId -> { previousPrice }
+  const [priceAlerts, setPriceAlerts] = useState(() => new Map());
+
+  // Bumped only when the user explicitly turns the page, to let the frozen sort order
+  // (favorites-first, etc.) catch up without reshuffling the page they're currently on.
+  const [resortNonce, setResortNonce] = useState(0);
 
   const selectedCartRef = useRef(selectedCart);
   selectedCartRef.current = selectedCart;
+
+  // Tracks which product ids we've already asked the backend to rescan this session,
+  // so flipping pages/filters back and forth doesn't keep re-requesting the same ones.
+  const rescanRequestedRef = useRef(new Set());
 
   const fetchCarts = useCallback(async (preserveSelection = false) => {
     if (!preserveSelection) setLoading(true);
@@ -171,12 +190,104 @@ const Dashboard = () => {
     );
   };
 
+  const handleProductRescanned = (cartId, productId, previousPrice, product) => {
+    if (cartId !== selectedCartRef.current) return;
+    handleProductUpdated(productId, product);
+    setPriceAlerts((prev) => {
+      const next = new Map(prev);
+      next.set(productId, { previousPrice });
+      return next;
+    });
+  };
+
+  const removeProductsFromState = (cartId, idsToRemove) => {
+    const idSet = idsToRemove instanceof Set ? idsToRemove : new Set(idsToRemove);
+    const stripProducts = (products) => (products || []).filter((p) => !idSet.has(p.id));
+
+    if (cartId === selectedCartRef.current) {
+      setSelectedCartProducts((prev) => stripProducts(prev));
+      setSelectedCartObj((prev) => (prev ? { ...prev, products: stripProducts(prev.products) } : prev));
+    }
+    setCarts((prev) =>
+      prev.map((cart) => (cart.id === cartId ? { ...cart, products: stripProducts(cart.products) } : cart))
+    );
+    setCompareIds((prev) => {
+      if (![...idSet].some((id) => prev.has(id))) return prev;
+      const next = new Set(prev);
+      idSet.forEach((id) => next.delete(id));
+      return next;
+    });
+    setPriceAlerts((prev) => {
+      if (![...idSet].some((id) => prev.has(id))) return prev;
+      const next = new Map(prev);
+      idSet.forEach((id) => next.delete(id));
+      return next;
+    });
+  };
+
+  const handleQuickDelete = (product) => {
+    if (deletingId || !selectedCart) return;
+    setQuickDeleteTarget(product);
+  };
+
+  const confirmQuickDelete = async () => {
+    const product = quickDeleteTarget;
+    if (!product || deletingId || !selectedCart) return;
+
+    setDeletingId(product.id);
+    try {
+      const response = await authenticatedFetch(
+        `${API_URL}/api/carts/${selectedCart}/products/${product.id}`,
+        { method: "DELETE" }
+      );
+      if (response.ok) {
+        removeProductsFromState(selectedCart, [product.id]);
+      }
+    } catch (error) {
+      console.error("Error deleting product:", error);
+    } finally {
+      setDeletingId(null);
+      setQuickDeleteTarget(null);
+    }
+  };
+
+  const handleDeleteSelected = () => {
+    if (isBulkDeleting || compareIds.size === 0 || !selectedCart) return;
+    setBulkDeleteConfirmOpen(true);
+  };
+
+  const confirmDeleteSelected = async () => {
+    if (isBulkDeleting || compareIds.size === 0 || !selectedCart) return;
+    const ids = [...compareIds];
+
+    setIsBulkDeleting(true);
+    try {
+      const response = await authenticatedFetch(`${API_URL}/api/carts/${selectedCart}/products`, {
+        method: "DELETE",
+        body: JSON.stringify({ productIds: ids }),
+      });
+      if (response.ok) {
+        removeProductsFromState(selectedCart, ids);
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        window.alert(errorData.error || "Failed to delete the selected items. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error deleting selected products:", error);
+    } finally {
+      setIsBulkDeleting(false);
+      setBulkDeleteConfirmOpen(false);
+    }
+  };
+
   const cartSelected = async (cartId) => {
     if (cartId === selectedCartRef.current) return;
 
     setAccessRevoked(false);
     setSelectedCart(cartId);
     setFilters(DEFAULT_FILTERS);
+    setPriceAlerts(new Map());
+    setPage(1);
     const cartFromList = carts.find((c) => c.id === cartId);
     if (cartFromList) {
       setSelectedCartObj(cartFromList);
@@ -199,6 +310,39 @@ const Dashboard = () => {
       setCartSwitching(false);
     }
   };
+
+  // Quietly re-fetches whatever cart is currently open, merging fresh field values in place
+  // (same shape as a socket "product:updated" push) without resetting filters/page/selection.
+  // Production has no real-time socket layer (see frontend/api/*.js), so a collaborator's
+  // edit to a shared cart would otherwise only show up on your next full cart switch — this
+  // catches it sooner, on the common "switched tabs and came back" case.
+  const refreshSelectedCart = useCallback(async () => {
+    const cartId = selectedCartRef.current;
+    if (!cartId) return;
+    try {
+      const response = await authenticatedFetch(`${API_URL}/api/carts/${cartId}`);
+      if (!response.ok) return;
+      const data = await response.json();
+      if (cartId !== selectedCartRef.current) return; // switched carts while this was in flight
+      setSelectedCartObj(data);
+      setSelectedCartProducts(data?.products || []);
+      setCarts((prev) => prev.map((cart) => (cart.id === cartId ? { ...cart, ...data } : cart)));
+    } catch (error) {
+      console.error("Error refreshing cart:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") refreshSelectedCart();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+    };
+  }, [refreshSelectedCart]);
 
   const handleShareClick = () => setShareModalOpen(true);
 
@@ -271,6 +415,7 @@ const Dashboard = () => {
       productImg:
         product.image || "https://via.placeholder.com/300x300?text=No+Image",
       productPrice: getFormattedProductPrice(product),
+      productPriceValue: getProductNumericPrice(product),
       productId: product.id,
       productUrl: product.url,
       productDescription: product.description,
@@ -296,12 +441,17 @@ const Dashboard = () => {
       }
       if (updates.note !== undefined) next.productNote = updates.note;
       if (updates.isFavorite !== undefined) next.productIsFavorite = updates.isFavorite;
+      if (updates.price !== undefined) {
+        next.productPriceValue = updates.price;
+        next.productPrice = formatProductPrice(updates.price, updates.currency || "$");
+      }
       return next;
     });
   };
 
-  const handleProductDelete = () => {
-    window.location.reload();
+  const handleProductDelete = (productId) => {
+    if (!selectedCart) return;
+    removeProductsFromState(selectedCart, [productId]);
   };
 
   const activeCart =
@@ -319,16 +469,14 @@ const Dashboard = () => {
       if (cartId !== selectedCartRef.current) return;
       handleProductUpdated(productId, product);
     },
+    "product:rescanned": ({ cartId, productId, previousPrice, product }) => {
+      handleProductRescanned(cartId, productId, previousPrice, product);
+    },
     "product:deleted": ({ cartId, productId }) => {
-      if (cartId !== selectedCartRef.current) return;
-      setSelectedCartProducts((prev) => prev.filter((p) => p.id !== productId));
-      setCarts((prev) =>
-        prev.map((cart) =>
-          cart.id === cartId
-            ? { ...cart, products: (cart.products || []).filter((p) => p.id !== productId) }
-            : cart
-        )
-      );
+      removeProductsFromState(cartId, [productId]);
+    },
+    "products:deleted": ({ cartId, productIds }) => {
+      removeProductsFromState(cartId, productIds || []);
     },
     "cart:renamed": ({ cartId, name, icon, color }) => {
       const patch = (cart) => (cart.id === cartId ? { ...cart, name, icon, color } : cart);
@@ -362,12 +510,72 @@ const Dashboard = () => {
   });
 
   const filteredProducts = useProductFilters(rawProducts, filters);
-  const sortedProducts = useMemo(
-    () => sortProducts(filteredProducts),
+
+  // A stable signature of which product ids are visible (order-independent) — unlike
+  // filteredProducts itself, this only changes when the visible SET changes (add/remove,
+  // a filter edit), not when a field on an already-visible product mutates in place.
+  const filteredProductIdsKey = useMemo(
+    () => filteredProducts.map((p) => p.id).join("|"),
     [filteredProducts]
   );
+
+  // Freezes display ORDER against in-place field mutations (favoriting, a background price
+  // rescan, ...) so the grid/list doesn't visibly reshuffle while the user's still looking at
+  // it. Order only refreshes when the visible set of products actually changes, or the user
+  // explicitly turns the page (resortNonce, bumped from the Pagination handler below) or
+  // switches carts (which is itself always a set change, already covered). Product DATA
+  // stays live either way — only the position is frozen.
+  const sortedProductIds = useMemo(
+    () => sortProducts(filteredProducts).map((p) => p.id),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [filteredProductIdsKey, resortNonce]
+  );
+  const sortedProducts = useMemo(() => {
+    const byId = new Map(filteredProducts.map((p) => [p.id, p]));
+    return sortedProductIds.map((id) => byId.get(id)).filter(Boolean);
+  }, [sortedProductIds, filteredProducts]);
+
   const { page, setPage, totalPages, pageItems, hasNext, hasPrev } =
     usePagination(sortedProducts, pageSize);
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+    setResortNonce((n) => n + 1);
+  };
+
+  // Silently ask the backend to refresh prices for whatever's actually on screen right
+  // now (not the whole cart) whenever that set changes — cart open, page turn, filter/sort
+  // change. The backend itself decides which of these are actually stale (>= 2 weeks since
+  // last check); this just avoids re-asking for ids we already asked about this session.
+  const visiblePageProductIds = useMemo(() => pageItems.map((p) => p.id), [pageItems]);
+  useEffect(() => {
+    if (!selectedCart || visiblePageProductIds.length === 0) return;
+
+    const requested = rescanRequestedRef.current;
+    const idsToRequest = visiblePageProductIds.filter((id) => !requested.has(id));
+    if (idsToRequest.length === 0) return;
+
+    idsToRequest.forEach((id) => requested.add(id));
+    const cartId = selectedCart;
+    authenticatedFetch(`${API_URL}/api/carts/${cartId}/products/rescan`, {
+      method: "POST",
+      body: JSON.stringify({ productIds: idsToRequest }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        // The Vercel deployment's rescan endpoint scrapes synchronously (no background
+        // process / socket push there — see frontend/api/carts/[cartId]/products/rescan.js)
+        // and returns any price changes directly; apply them here. The always-on Express
+        // dev backend instead pushes these via the "product:rescanned" socket event, so
+        // this is a harmless no-op there since `updates` comes back empty.
+        (data?.updates || []).forEach((update) => {
+          handleProductRescanned(cartId, update.productId, update.previousPrice, { price: update.price });
+        });
+      })
+      .catch((error) => console.error("Error requesting price rescan:", error));
+    // handleProductRescanned is intentionally omitted — it's redefined every render, and
+    // this effect should only re-fire when the cart or visible product set actually changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCart, visiblePageProductIds]);
 
   const storeOptions = useMemo(() => {
     const hosts = new Set();
@@ -410,6 +618,8 @@ const Dashboard = () => {
               maxCompare={MAX_COMPARE_PRODUCTS}
               onCompareNow={handleCompareNow}
               onClearCompare={clearCompareSelection}
+              onDeleteSelected={canEditCart ? handleDeleteSelected : undefined}
+              isDeletingSelected={isBulkDeleting}
             />
 
             {accessRevoked && (
@@ -443,6 +653,9 @@ const Dashboard = () => {
                   onToggleSelect={toggleCompareSelect}
                   onSelectAllPage={() => selectAllOnPage(pageItems.map((p) => p.id))}
                   selectLimitReached={compareIds.size >= MAX_COMPARE_PRODUCTS}
+                  onQuickDelete={canEditCart ? handleQuickDelete : undefined}
+                  deletingId={deletingId}
+                  priceAlerts={priceAlerts}
                 />
               ) : (
                 <ProductListView
@@ -455,6 +668,9 @@ const Dashboard = () => {
                   onToggleSelect={toggleCompareSelect}
                   onSelectAllPage={() => selectAllOnPage(pageItems.map((p) => p.id))}
                   selectLimitReached={compareIds.size >= MAX_COMPARE_PRODUCTS}
+                  onQuickDelete={canEditCart ? handleQuickDelete : undefined}
+                  deletingId={deletingId}
+                  priceAlerts={priceAlerts}
                 />
               )}
             </div>
@@ -463,7 +679,7 @@ const Dashboard = () => {
               <Pagination
                 page={page}
                 totalPages={totalPages}
-                onPageChange={setPage}
+                onPageChange={handlePageChange}
                 hasNext={hasNext}
                 hasPrev={hasPrev}
               />
@@ -490,6 +706,7 @@ const Dashboard = () => {
           productName={selectedProduct?.productName}
           productImg={selectedProduct?.productImg}
           productPrice={selectedProduct?.productPrice}
+          productPriceValue={selectedProduct?.productPriceValue}
           productId={selectedProduct?.productId}
           productUrl={selectedProduct?.productUrl}
           productDescription={selectedProduct?.productDescription}
@@ -502,6 +719,34 @@ const Dashboard = () => {
           cartId={selectedCart}
           onDelete={handleProductDelete}
           onProductUpdated={handleModalProductUpdated}
+        />
+
+        <ConfirmModal
+          isOpen={Boolean(quickDeleteTarget)}
+          title="Delete this item?"
+          message={
+            quickDeleteTarget
+              ? `"${getProductDisplayName(quickDeleteTarget)}" will be removed from this cart.`
+              : ""
+          }
+          confirmLabel="Delete"
+          confirmingLabel="Deleting…"
+          danger
+          isConfirming={Boolean(deletingId)}
+          onConfirm={confirmQuickDelete}
+          onCancel={() => setQuickDeleteTarget(null)}
+        />
+
+        <ConfirmModal
+          isOpen={bulkDeleteConfirmOpen}
+          title={`Delete ${compareIds.size} item${compareIds.size > 1 ? "s" : ""}?`}
+          message="These items will be removed from this cart. This cannot be undone."
+          confirmLabel="Delete"
+          confirmingLabel="Deleting…"
+          danger
+          isConfirming={isBulkDeleting}
+          onConfirm={confirmDeleteSelected}
+          onCancel={() => setBulkDeleteConfirmOpen(false)}
         />
 
         <ShareCartModal

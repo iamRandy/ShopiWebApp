@@ -3,7 +3,9 @@ import { getSocket } from "../utils/socket";
 
 const EVENTS = [
   "product:updated",
+  "product:rescanned",
   "product:deleted",
+  "products:deleted",
   "cart:renamed",
   "cart:deleted",
   "cart:ownershipTransferred",

@@ -28,7 +28,9 @@ export default function FavoriteHeartButton({
       onClick={onToggle}
       disabled={isLoading}
       aria-label={isFavorite ? ariaLabelOn : ariaLabelOff}
-      className={`absolute flex items-center justify-center rounded-full bg-white/85 text-[#FFBC42] backdrop-blur-sm transition-colors hover:bg-white disabled:opacity-60 ${buttonClassName}`}
+      className={`absolute flex items-center justify-center rounded-full bg-white/85 backdrop-blur-sm transition-colors hover:bg-white disabled:opacity-60 ${
+        isFavorite ? "text-[#FFBC42]" : "text-stone-900"
+      } ${buttonClassName}`}
     >
       <motion.span
         className="inline-flex"

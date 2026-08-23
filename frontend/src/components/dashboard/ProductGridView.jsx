@@ -9,6 +9,9 @@ export default function ProductGridView({
   onToggleSelect,
   onSelectAllPage,
   selectLimitReached = false,
+  onQuickDelete,
+  deletingId,
+  priceAlerts,
 }) {
   if (products.length === 0) {
     return (
@@ -31,6 +34,9 @@ export default function ProductGridView({
           onToggleSelect={onToggleSelect}
           onSelectAllPage={onSelectAllPage}
           selectDisabled={selectLimitReached}
+          onQuickDelete={onQuickDelete}
+          isDeleting={deletingId === product.id}
+          priceAlert={priceAlerts?.get(product.id)}
         />
       ))}
     </div>

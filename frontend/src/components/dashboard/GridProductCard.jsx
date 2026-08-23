@@ -1,7 +1,8 @@
-import { Check, CheckCheck, ExternalLink } from "lucide-react";
+import { Check, CheckCheck, ExternalLink, Trash2 } from "lucide-react";
 import {
   getProductDisplayName,
   getFormattedProductPrice,
+  formatProductPrice,
 } from "../../utils/product";
 import { getAffiliateLink } from "../../utils/affiliate";
 import ProductImage from "../ProductImage";
@@ -16,12 +17,19 @@ export default function GridProductCard({
   onToggleSelect,
   onSelectAllPage,
   selectDisabled = false,
+  onQuickDelete,
+  isDeleting = false,
+  priceAlert,
 }) {
   const name = getProductDisplayName(product);
   const price = getFormattedProductPrice(product);
   const image =
     product.image || "https://via.placeholder.com/300x300?text=No+Image";
   const isFavorite = Boolean(product.isFavorite);
+  const previousPriceFormatted = priceAlert
+    ? formatProductPrice(priceAlert.previousPrice, product.currency || "$")
+    : null;
+  const priceRose = priceAlert && Number(product.price) > Number(priceAlert.previousPrice);
 
   const handleVisit = (e) => {
     e.stopPropagation();
@@ -47,6 +55,11 @@ export default function GridProductCard({
     onSelectAllPage();
   };
 
+  const handleQuickDelete = (e) => {
+    e.stopPropagation();
+    if (!isDeleting) onQuickDelete(product);
+  };
+
   return (
     <article
       className="group/card relative aspect-square cursor-pointer overflow-hidden rounded-xl bg-stone-100 transition-shadow hover:shadow-md dark:bg-stone-800"
@@ -67,7 +80,7 @@ export default function GridProductCard({
         loading="lazy"
       />
 
-      <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-black/5" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-black/5 transition-opacity duration-300 group-hover/card:opacity-60" />
 
       <div className="absolute left-2.5 top-2.5 flex gap-1.5">
         <div className="group/select relative">
@@ -81,7 +94,9 @@ export default function GridProductCard({
               isSelected
                 ? "border-[#FFBC42] bg-[#FFBC42] text-black opacity-100"
                 : `border-white/80 bg-black/25 text-transparent hover:bg-black/40 ${
-                    selectDisabled ? "cursor-not-allowed opacity-0" : "opacity-0 group-hover/card:opacity-100"
+                    selectDisabled
+                      ? "cursor-not-allowed opacity-0"
+                      : "opacity-100 sm:opacity-0 sm:group-hover/card:opacity-100"
                   }`
             }`}
           >
@@ -124,6 +139,18 @@ export default function GridProductCard({
         ariaLabelOff="Add to favorites"
       />
 
+      {onQuickDelete && (
+        <button
+          type="button"
+          onClick={handleQuickDelete}
+          disabled={isDeleting}
+          aria-label="Delete product"
+          className="absolute right-12 top-2.5 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white/80 bg-black/25 text-white opacity-0 backdrop-blur-sm transition-all hover:border-red-400 hover:bg-red-500/85 group-hover/card:opacity-100 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <Trash2 className="h-3.5 w-3.5" strokeWidth={2} />
+        </button>
+      )}
+
       <div className="absolute inset-x-0 bottom-0 p-3">
         <h3 className="line-clamp-2 text-sm font-medium leading-snug text-white">
           {name}
@@ -134,7 +161,24 @@ export default function GridProductCard({
           </p>
         )}
         <div className="mt-1.5 flex items-center justify-between gap-2">
-          <p className="text-sm font-semibold text-white/95">{price}</p>
+          <div className="flex min-w-0 items-center gap-1.5">
+            {previousPriceFormatted && (
+              <span className="truncate text-xs font-medium text-white/50 line-through">
+                {previousPriceFormatted}
+              </span>
+            )}
+            <p className="truncate text-sm font-semibold text-white/95">{price}</p>
+            {priceAlert && (
+              <span
+                title={priceRose ? "Price increased since last check" : "Price dropped since last check"}
+                className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[10px] font-black leading-none ${
+                  priceRose ? "bg-amber-400 text-amber-950" : "bg-emerald-400 text-emerald-950"
+                }`}
+              >
+                !
+              </span>
+            )}
+          </div>
           <button
             type="button"
             onClick={handleVisit}

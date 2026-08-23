@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { X, Trash2, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { authenticatedFetch } from "../utils/api";
 import { useNavigate } from "react-router-dom";
+import ConfirmModal from "./ConfirmModal";
 import ModalPortal from "./ModalPortal";
 import {
   POPULAR_CART_ICONS,
@@ -75,6 +76,7 @@ const CartModal = ({
   const [cartIcon, setCartIcon] = useState("ShoppingCart");
   const [cartColor, setCartColor] = useState("#000000");
   const [iconQuery, setIconQuery] = useState("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const carouselRef = useRef(null);
 
   const trimmedQuery = iconQuery.trim();
@@ -114,15 +116,11 @@ const CartModal = ({
 
   if (!isOpen) return null;
 
-  const handleDeleteCart = async () => {
-    if (
-      !window.confirm(
-        "Are you sure you want to delete this cart? This action cannot be undone."
-      )
-    ) {
-      return;
-    }
+  const handleDeleteCart = () => {
+    setShowDeleteConfirm(true);
+  };
 
+  const confirmDeleteCart = async () => {
     setIsSubmitting(true);
     try {
       const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
@@ -132,6 +130,7 @@ const CartModal = ({
       );
 
       if (response.ok) {
+        setShowDeleteConfirm(false);
         onClose();
       } else {
         const errorData = await response.json().catch(() => ({}));
@@ -139,9 +138,11 @@ const CartModal = ({
           "Failed to delete cart: " +
             (errorData.error || errorData.message || "Unknown error")
         );
+        setShowDeleteConfirm(false);
       }
     } catch (error) {
       console.error("Error deleting cart:", error);
+      setShowDeleteConfirm(false);
       if (
         error.message === "No authentication token found" ||
         error.message === "Authentication failed"
@@ -216,6 +217,7 @@ const CartModal = ({
   };
 
   return (
+    <>
     <ModalPortal>
       <div
         className="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4"
@@ -381,6 +383,19 @@ const CartModal = ({
         </div>
       </div>
     </ModalPortal>
+
+    <ConfirmModal
+      isOpen={showDeleteConfirm}
+      title="Delete this cart?"
+      message={`"${originalName || "This cart"}" and everything in it will be permanently deleted.`}
+      confirmLabel="Delete"
+      confirmingLabel="Deleting…"
+      danger
+      isConfirming={isSubmitting}
+      onConfirm={confirmDeleteCart}
+      onCancel={() => setShowDeleteConfirm(false)}
+    />
+    </>
   );
 };
 

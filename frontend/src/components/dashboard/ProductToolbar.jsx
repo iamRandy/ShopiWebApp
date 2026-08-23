@@ -1,4 +1,4 @@
-import { GitCompare, LayoutGrid, List, Share2, SlidersHorizontal, X } from "lucide-react";
+import { GitCompare, LayoutGrid, List, Share2, SlidersHorizontal, Trash2, X } from "lucide-react";
 import { formatItemCount } from "../../utils/product";
 
 export default function ProductToolbar({
@@ -14,9 +14,11 @@ export default function ProductToolbar({
   maxCompare,
   onCompareNow,
   onClearCompare,
+  onDeleteSelected,
+  isDeletingSelected = false,
 }) {
   return (
-    <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
       <div className="flex items-center gap-2">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight text-[var(--color-text-primary)] sm:text-3xl">
@@ -40,9 +42,9 @@ export default function ProductToolbar({
         )}
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         {compareCount >= 2 && (
-          <div className="flex items-center gap-1 rounded-xl border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-surface)] py-1 pl-3 pr-1 shadow-[3px_3px_0_var(--color-shadow)]">
+          <div className="flex items-center gap-1 rounded-xl border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-surface)] py-1 pl-3 pr-3 shadow-[3px_3px_0_var(--color-shadow)]">
             <span className="text-sm font-bold text-[var(--color-text-primary)]">
               {compareCount}
               {maxCompare ? (
@@ -57,15 +59,35 @@ export default function ProductToolbar({
               <GitCompare className="h-4 w-4" strokeWidth={2.25} />
               Compare
             </button>
-            <button
-              type="button"
-              onClick={onClearCompare}
-              aria-label="Clear comparison selection"
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-700 dark:hover:bg-white/5 dark:hover:text-stone-300"
-            >
-              <X className="h-4 w-4" strokeWidth={2.25} />
-            </button>
           </div>
+        )}
+
+        {compareCount >= 1 && (
+          <button
+            type="button"
+            onClick={onClearCompare}
+            aria-label="Unselect all"
+            className="flex h-10 items-center gap-1.5 rounded-xl border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-surface)] px-3 text-sm font-bold text-[var(--color-text-primary)] shadow-[3px_3px_0_var(--color-shadow)] transition-transform hover:-translate-y-0.5"
+          >
+            <X className="h-4 w-4" strokeWidth={2.25} />
+            <span className="hidden sm:inline">Unselect all</span>
+          </button>
+        )}
+
+        {onDeleteSelected && compareCount >= 1 && (
+          <button
+            type="button"
+            onClick={onDeleteSelected}
+            disabled={isDeletingSelected}
+            className="flex h-10 items-center gap-1.5 rounded-xl border-2 border-red-300 bg-red-600 px-3 text-sm font-bold text-white shadow-[3px_3px_0_var(--color-shadow)] transition-transform hover:-translate-y-0.5 hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 dark:border-red-900/70"
+          >
+            <Trash2 className="h-4 w-4" strokeWidth={2.25} />
+            <span className="hidden sm:inline">
+              {isDeletingSelected
+                ? "Deleting…"
+                : `Delete ${compareCount} item${compareCount > 1 ? "s" : ""}`}
+            </span>
+          </button>
         )}
 
         <div className="flex overflow-hidden rounded-xl border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-surface)] shadow-[3px_3px_0_var(--color-shadow)]">

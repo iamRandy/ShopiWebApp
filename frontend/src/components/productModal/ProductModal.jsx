@@ -1,17 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, Copy, ExternalLink, Heart, Trash2, X } from "lucide-react";
+import { Check, Copy, ExternalLink, Heart, Pencil, Trash2, X } from "lucide-react";
 import { getAffiliateLink } from "../../utils/affiliate";
 import { formatRelativeAdded } from "../../utils/product";
 import { authenticatedFetch } from "../../utils/api";
 import { useNavigate } from "react-router-dom";
+import ConfirmModal from "../ConfirmModal";
 import ModalPortal from "../ModalPortal";
 import ProductImage from "../ProductImage";
 import FavoriteHeartButton from "../FavoriteHeartButton";
 import ExpandableText from "./ExpandableText";
-import ProductNicknameForm from "./ProductNicknameForm";
-import ProductNoteForm from "./ProductNoteForm";
-import PencilIconPopover from "./PencilIconPopover";
+import ProductEditForm from "./ProductEditForm";
 
 const ProductModal = ({
   isOpen,
@@ -19,6 +18,7 @@ const ProductModal = ({
   productName,
   productImg,
   productPrice,
+  productPriceValue,
   productId,
   productUrl,
   productDescription,
@@ -33,11 +33,13 @@ const ProductModal = ({
   onProductUpdated,
 }) => {
   const navigate = useNavigate();
-  const [editMode, setEditMode] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [nicknameInput, setNicknameInput] = useState("");
   const [noteInput, setNoteInput] = useState("");
+  const [priceInput, setPriceInput] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isFavoriteSaving, setIsFavoriteSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
   const [deleteError, setDeleteError] = useState(null);
@@ -54,13 +56,18 @@ const ProductModal = ({
     if (isOpen) {
       setNicknameInput(productNickname || "");
       setNoteInput(productNote || "");
-      setEditMode(null);
+      setPriceInput(
+        productPriceValue !== null && productPriceValue !== undefined
+          ? String(productPriceValue)
+          : ""
+      );
+      setIsEditing(false);
       setSaveError(null);
       setDeleteError(null);
       setShowOriginalDescription(false);
       setCopyFeedback(false);
     }
-  }, [isOpen, productNickname, productNote, productId]);
+  }, [isOpen, productNickname, productNote, productPriceValue, productId]);
 
   useEffect(() => {
     return () => {
@@ -71,15 +78,13 @@ const ProductModal = ({
   if (!isOpen) return null;
 
   const showOriginalTitle =
-    originalTitle?.trim() &&
-    originalTitle.trim() !== productName?.trim() &&
-    editMode !== "nickname";
+    originalTitle?.trim() && originalTitle.trim() !== productName?.trim();
 
-  const handleDelete = async () => {
-    if (!window.confirm("Are you sure you want to delete this product?")) {
-      return;
-    }
+  const handleDelete = () => {
+    setShowDeleteConfirm(true);
+  };
 
+  const confirmDelete = async () => {
     setIsDeleting(true);
     setDeleteError(null);
 
@@ -91,14 +96,17 @@ const ProductModal = ({
       );
 
       if (response.ok) {
-        onDelete();
+        setShowDeleteConfirm(false);
+        onDelete(productId);
         onClose();
       } else {
         const errorData = await response.json().catch(() => ({}));
         setDeleteError(errorData.error || "Failed to delete product");
+        setShowDeleteConfirm(false);
       }
     } catch (error) {
       console.error("Error deleting product:", error);
+      setShowDeleteConfirm(false);
       if (
         error.message === "No authentication token found" ||
         error.message === "Authentication failed"
@@ -154,18 +162,33 @@ const ProductModal = ({
     return response.json();
   };
 
-  const handleSaveNickname = async (e) => {
+  const handleSaveEdit = async (e) => {
     e.preventDefault();
+
+    const trimmedPrice = priceInput.trim();
+    const numericPrice = Number(trimmedPrice);
+    if (!trimmedPrice || Number.isNaN(numericPrice) || numericPrice < 0) {
+      setSaveError("Enter a valid price.");
+      return;
+    }
+
     setIsSaving(true);
     setSaveError(null);
 
     try {
-      const data = await patchProduct({ nickname: nicknameInput });
+      const data = await patchProduct({
+        nickname: nicknameInput,
+        note: noteInput,
+        price: numericPrice,
+      });
       onProductUpdated?.(productId, {
         nickname: data.product?.nickname,
         note: data.product?.note,
+        price: data.product?.price,
+        currency: data.product?.currency,
       });
-      setEditMode(null);
+      setIsEditing(false);
+      setShowOriginalDescription(false);
     } catch (error) {
       console.error("Error updating product:", error);
       if (
@@ -175,32 +198,7 @@ const ProductModal = ({
         navigate("/login");
         return;
       }
-      setSaveError(error.message || "Failed to save nickname. Please try again.");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleSaveNote = async (e) => {
-    e.preventDefault();
-    setIsSaving(true);
-    setSaveError(null);
-
-    try {
-      const data = await patchProduct({ note: noteInput });
-      onProductUpdated?.(productId, { note: data.product?.note });
-      setEditMode(null);
-      setShowOriginalDescription(false);
-    } catch (error) {
-      console.error("Error updating product note:", error);
-      if (
-        error.message === "No authentication token found" ||
-        error.message === "Authentication failed"
-      ) {
-        navigate("/login");
-        return;
-      }
-      setSaveError(error.message || "Failed to save note. Please try again.");
+      setSaveError(error.message || "Failed to save changes. Please try again.");
     } finally {
       setIsSaving(false);
     }
@@ -230,36 +228,29 @@ const ProductModal = ({
   const viewingOriginal = hasNote && showOriginalDescription;
 
   const renderDetails = () => {
-    if (editMode === "nickname") {
+    if (isEditing) {
       return (
-        <ProductNicknameForm
+        <ProductEditForm
           nicknameInput={nicknameInput}
-          onChange={(e) => setNicknameInput(e.target.value)}
+          onNicknameChange={(e) => setNicknameInput(e.target.value)}
           originalTitle={originalTitle}
+          priceInput={priceInput}
+          onPriceChange={(e) => setPriceInput(e.target.value)}
+          noteInput={noteInput}
+          onNoteChange={(e) => setNoteInput(e.target.value)}
           saveError={saveError}
           isSaving={isSaving}
-          onSubmit={handleSaveNickname}
+          onSubmit={handleSaveEdit}
           onCancel={() => {
             setNicknameInput(productNickname || "");
-            setSaveError(null);
-            setEditMode(null);
-          }}
-        />
-      );
-    }
-
-    if (editMode === "note") {
-      return (
-        <ProductNoteForm
-          noteInput={noteInput}
-          onChange={(e) => setNoteInput(e.target.value)}
-          saveError={saveError}
-          isSaving={isSaving}
-          onSubmit={handleSaveNote}
-          onCancel={() => {
             setNoteInput(productNote || "");
+            setPriceInput(
+              productPriceValue !== null && productPriceValue !== undefined
+                ? String(productPriceValue)
+                : ""
+            );
             setSaveError(null);
-            setEditMode(null);
+            setIsEditing(false);
           }}
         />
       );
@@ -273,14 +264,6 @@ const ProductModal = ({
             limit={90}
             as="h3"
             className="inline text-lg font-semibold leading-snug text-stone-900 dark:text-stone-50"
-          />
-          <PencilIconPopover
-            label="Rename item?"
-            onClick={() => {
-              setNicknameInput(productNickname || "");
-              setSaveError(null);
-              setEditMode("nickname");
-            }}
           />
         </div>
 
@@ -324,19 +307,9 @@ const ProductModal = ({
             </>
           ) : hasNote ? (
             <>
-              <div className="mb-1 flex items-center gap-1">
-                <p className="text-[11px] font-medium uppercase tracking-wide text-stone-400 dark:text-stone-500">
-                  Note
-                </p>
-                <PencilIconPopover
-                  label="Edit note?"
-                  onClick={() => {
-                    setNoteInput(trimmedNote);
-                    setSaveError(null);
-                    setEditMode("note");
-                  }}
-                />
-              </div>
+              <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-stone-400 dark:text-stone-500">
+                Note
+              </p>
               <ExpandableText
                 text={trimmedNote}
                 limit={140}
@@ -354,19 +327,9 @@ const ProductModal = ({
             </>
           ) : hasDescription ? (
             <>
-              <div className="mb-1 flex items-center gap-1">
-                <p className="text-[11px] font-medium uppercase tracking-wide text-stone-400 dark:text-stone-500">
-                  Description
-                </p>
-                <PencilIconPopover
-                  label="Add note?"
-                  onClick={() => {
-                    setNoteInput("");
-                    setSaveError(null);
-                    setEditMode("note");
-                  }}
-                />
-              </div>
+              <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-stone-400 dark:text-stone-500">
+                Description
+              </p>
               <ExpandableText
                 text={trimmedDescription}
                 limit={140}
@@ -374,19 +337,9 @@ const ProductModal = ({
               />
             </>
           ) : (
-            <div className="flex items-center gap-1">
-              <p className="text-[11px] font-medium uppercase tracking-wide text-stone-400 dark:text-stone-500">
-                Note
-              </p>
-              <PencilIconPopover
-                label="Add note?"
-                onClick={() => {
-                  setNoteInput("");
-                  setSaveError(null);
-                  setEditMode("note");
-                }}
-              />
-            </div>
+            <p className="text-[11px] font-medium uppercase tracking-wide text-stone-400 dark:text-stone-500">
+              Note
+            </p>
           )}
         </div>
       </>
@@ -394,6 +347,7 @@ const ProductModal = ({
   };
 
   return (
+    <>
     <ModalPortal>
       <div
         className="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4"
@@ -413,15 +367,38 @@ const ProductModal = ({
             >
               Product details
             </h2>
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={busy}
-              className="flex h-8 w-8 items-center justify-center rounded-full text-stone-500 transition-colors hover:bg-stone-100 hover:text-stone-800 disabled:opacity-50 dark:hover:bg-white/5 dark:hover:text-stone-200"
-              aria-label="Close"
-            >
-              <X className="h-5 w-5" />
-            </button>
+            <div className="flex items-center gap-1">
+              {!isEditing && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNicknameInput(productNickname || "");
+                    setNoteInput(productNote || "");
+                    setPriceInput(
+                      productPriceValue !== null && productPriceValue !== undefined
+                        ? String(productPriceValue)
+                        : ""
+                    );
+                    setSaveError(null);
+                    setIsEditing(true);
+                  }}
+                  disabled={busy}
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-stone-500 transition-colors hover:bg-stone-100 hover:text-stone-800 disabled:opacity-50 dark:hover:bg-white/5 dark:hover:text-stone-200"
+                  aria-label="Edit product"
+                >
+                  <Pencil className="h-4 w-4" strokeWidth={2} />
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={busy}
+                className="flex h-8 w-8 items-center justify-center rounded-full text-stone-500 transition-colors hover:bg-stone-100 hover:text-stone-800 disabled:opacity-50 dark:hover:bg-white/5 dark:hover:text-stone-200"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto">
@@ -465,7 +442,7 @@ const ProductModal = ({
             </p>
           )}
 
-          {!editMode && (
+          {!isEditing && (
             <div className="shrink-0 space-y-2 border-t border-stone-100 px-5 py-3.5 dark:border-stone-800">
               <div className="grid grid-cols-[1fr_auto] gap-2">
                 <button
@@ -546,6 +523,19 @@ const ProductModal = ({
         </div>
       </div>
     </ModalPortal>
+
+    <ConfirmModal
+      isOpen={showDeleteConfirm}
+      title="Delete this item?"
+      message={`"${productName || "This product"}" will be removed from this cart.`}
+      confirmLabel="Delete"
+      confirmingLabel="Deleting…"
+      danger
+      isConfirming={isDeleting}
+      onConfirm={confirmDelete}
+      onCancel={() => setShowDeleteConfirm(false)}
+    />
+    </>
   );
 };
 
