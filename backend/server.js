@@ -33,6 +33,7 @@ const STALE_SCAN_MS = 14 * 24 * 60 * 60 * 1000; // 2 weeks
 const client = new MongoClient(process.env.MONGODB_URI);
 let usersCollection;
 let cartSharesCollection;
+let tagsCollection;
 
 const httpServer = http.createServer(app);
 const io = new SocketIOServer(httpServer, { cors: { origin: "*" } });
@@ -51,6 +52,7 @@ async function init() {
   const db = client.db("shopi");
   usersCollection = db.collection("users");
   cartSharesCollection = db.collection("cartShares");
+  tagsCollection = db.collection("tags");
   await Promise.all([
     cartSharesCollection.createIndex({ shareToken: 1 }, { unique: true }),
     cartSharesCollection.createIndex({ cartId: 1, ownerSub: 1 }, { unique: true }),
@@ -632,7 +634,7 @@ app.delete("/api/carts/:cartId", verifyToken, async (req, res) => {
 app.patch("/api/carts/:cartId/products/:productId", verifyToken, async (req, res) => {
   try {
     const { cartId, productId } = req.params;
-    const { nickname, isFavorite, note, price } = req.body;
+    const { nickname, isFavorite, note, price, tags } = req.body;
 
     if (!cartId || !productId) {
       return res.status(400).json({ error: "Cart ID and Product ID are required" });
@@ -664,6 +666,15 @@ app.patch("/api/carts/:cartId/products/:productId", verifyToken, async (req, res
       normalizedPrice = Math.round(normalizedPrice * 100) / 100;
     }
 
+    if (tags !== undefined) {
+      if (!Array.isArray(tags) || tags.some((t) => typeof t !== "string")) {
+        return res.status(400).json({ error: "tags must be an array of strings" });
+      }
+      if (tags.length > 10) {
+        return res.status(400).json({ error: "Maximum 10 tags allowed" });
+      }
+    }
+
     const trimmedNickname =
       typeof nickname === "string" ? nickname.trim() : undefined;
     const trimmedNote = typeof note === "string" ? note.trim() : undefined;
@@ -693,6 +704,12 @@ app.patch("/api/carts/:cartId/products/:productId", verifyToken, async (req, res
 
     if (normalizedPrice !== undefined) {
       $set["carts.$[c].products.$[p].price"] = normalizedPrice;
+    }
+
+    if (tags !== undefined) {
+      // An empty array is a meaningful "no tags" state (unlike nickname/note),
+      // so it's always $set, never $unset.
+      $set["carts.$[c].products.$[p].tags"] = tags;
     }
 
     if (Object.keys($set).length === 0 && Object.keys($unset).length === 0) {
@@ -859,6 +876,43 @@ app.post("/api/carts/:cartId/products/rescan", verifyToken, async (req, res) => 
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Failed to queue rescan" });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Tags (read-only here — the canonical list is owned/written by the Chrome
+// extension's own backend; this app only reads the shared `tags` collection)
+// ---------------------------------------------------------------------------
+
+app.get("/api/tags", async (_req, res) => {
+  try {
+    const tags = await tagsCollection.find({}).toArray();
+    res.json({ tags });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Failed to fetch tags" });
+  }
+});
+
+app.get("/api/tags/suggest", async (req, res) => {
+  try {
+    const q = typeof req.query.q === "string" ? req.query.q.trim().toLowerCase() : "";
+    const limit = Number(req.query.limit) || 10;
+    if (!q) return res.json({ tags: [] });
+
+    const all = await tagsCollection.find({}).toArray();
+    const matches = all
+      .filter(
+        (tag) =>
+          tag.slug?.toLowerCase().includes(q) ||
+          tag.label?.toLowerCase().includes(q) ||
+          (tag.aliases || []).some((alias) => alias.toLowerCase().includes(q))
+      )
+      .slice(0, limit);
+    res.json({ tags: matches });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Failed to fetch tag suggestions" });
   }
 });
 

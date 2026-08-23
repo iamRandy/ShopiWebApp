@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { DEFAULT_FILTERS } from "./useProductFilters";
 import ModalPortal from "../ModalPortal";
+import TagPill from "../tags/TagPill";
 
 export default function FilterModal({
   isOpen,
@@ -9,8 +10,18 @@ export default function FilterModal({
   filters,
   onApply,
   storeOptions = [],
+  tagOptions = [],
 }) {
   const [draft, setDraft] = useState(filters);
+
+  const toggleTag = (value) => {
+    setDraft((prev) => ({
+      ...prev,
+      tags: prev.tags.includes(value)
+        ? prev.tags.filter((t) => t !== value)
+        : [...prev.tags, value],
+    }));
+  };
 
   useEffect(() => {
     if (isOpen) setDraft(filters);
@@ -119,6 +130,25 @@ export default function FilterModal({
               ))}
             </datalist>
           </label>
+
+          {tagOptions.length > 0 && (
+            <div>
+              <span className="mb-1.5 block text-sm font-semibold text-stone-700 dark:text-stone-300">
+                Tags
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {tagOptions.map((tag) => (
+                  <TagPill
+                    key={tag.value}
+                    variant="filter"
+                    label={tag.label}
+                    isActive={draft.tags.includes(tag.value)}
+                    onClick={() => toggleTag(tag.value)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex gap-2 border-t-2 border-[var(--color-border-subtle)] px-5 py-4">

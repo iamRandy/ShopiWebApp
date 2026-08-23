@@ -25,6 +25,7 @@ import {
   countActiveFilters,
   DEFAULT_FILTERS,
 } from "./dashboard/useProductFilters";
+import { buildTagLabelLookup } from "../utils/tags";
 import { usePagination } from "./dashboard/usePagination";
 import {
   VIEW_MODE_KEY,
@@ -78,6 +79,7 @@ const Dashboard = () => {
   // Bumped only when the user explicitly turns the page, to let the frozen sort order
   // (favorites-first, etc.) catch up without reshuffling the page they're currently on.
   const [resortNonce, setResortNonce] = useState(0);
+  const [canonicalTags, setCanonicalTags] = useState([]);
 
   const selectedCartRef = useRef(selectedCart);
   selectedCartRef.current = selectedCart;
@@ -123,10 +125,21 @@ const Dashboard = () => {
     }
   }, []);
 
+  const fetchTags = useCallback(async () => {
+    try {
+      const response = await authenticatedFetch(`${API_URL}/api/tags`);
+      const data = await response.json();
+      setCanonicalTags(data.tags || []);
+    } catch (error) {
+      console.error("Error fetching tags:", error);
+    }
+  }, []);
+
   useEffect(() => {
     fetchCarts();
     fetchSharedCarts();
-  }, [fetchCarts, fetchSharedCarts]);
+    fetchTags();
+  }, [fetchCarts, fetchSharedCarts, fetchTags]);
 
   // A cart deep-linked via ?cart=<id> (e.g. after accepting a share invite) gets selected once.
   useEffect(() => {
@@ -425,6 +438,7 @@ const Dashboard = () => {
       productHostname: product.hostname,
       productIsFavorite: Boolean(product.isFavorite),
       productSavedAt: product.savedAt,
+      productTags: product.tags || [],
     });
     setIsModalOpen(true);
   };
@@ -445,6 +459,7 @@ const Dashboard = () => {
         next.productPriceValue = updates.price;
         next.productPrice = formatProductPrice(updates.price, updates.currency || "$");
       }
+      if (updates.tags !== undefined) next.productTags = updates.tags;
       return next;
     });
   };
@@ -585,6 +600,18 @@ const Dashboard = () => {
     return [...hosts].sort();
   }, [rawProducts]);
 
+  const tagLabelBySlug = useMemo(() => buildTagLabelLookup(canonicalTags), [canonicalTags]);
+
+  const tagOptions = useMemo(() => {
+    const seen = new Set();
+    rawProducts.forEach((p) => {
+      (p.tags || []).forEach((t) => seen.add(t));
+    });
+    return [...seen]
+      .map((tag) => ({ value: tag, label: tagLabelBySlug.get(tag) || tag }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [rawProducts, tagLabelBySlug]);
+
   const activeFilterCount = countActiveFilters(filters);
   const showEmptyCart = !loading && rawProducts.length === 0;
 
@@ -656,6 +683,7 @@ const Dashboard = () => {
                   onQuickDelete={canEditCart ? handleQuickDelete : undefined}
                   deletingId={deletingId}
                   priceAlerts={priceAlerts}
+                  tagLabelBySlug={tagLabelBySlug}
                 />
               ) : (
                 <ProductListView
@@ -671,6 +699,7 @@ const Dashboard = () => {
                   onQuickDelete={canEditCart ? handleQuickDelete : undefined}
                   deletingId={deletingId}
                   priceAlerts={priceAlerts}
+                  tagLabelBySlug={tagLabelBySlug}
                 />
               )}
             </div>
@@ -695,6 +724,7 @@ const Dashboard = () => {
           filters={filters}
           onApply={setFilters}
           storeOptions={storeOptions}
+          tagOptions={tagOptions}
         />
 
         <ProductModal
@@ -715,8 +745,10 @@ const Dashboard = () => {
           productHostname={selectedProduct?.productHostname}
           productIsFavorite={selectedProduct?.productIsFavorite}
           productSavedAt={selectedProduct?.productSavedAt}
+          productTags={selectedProduct?.productTags}
           originalTitle={selectedProduct?.originalTitle}
           cartId={selectedCart}
+          tagLabelBySlug={tagLabelBySlug}
           onDelete={handleProductDelete}
           onProductUpdated={handleModalProductUpdated}
         />
