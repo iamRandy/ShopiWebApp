@@ -95,14 +95,27 @@ const Dashboard = () => {
       const data = await response.json();
       setCarts(data);
 
+      // Something has already claimed a selection by the time this resolves —
+      // either a previous selection we're meant to preserve, or a ?cart=<id>
+      // deep link applied synchronously by the effect below (which sets
+      // selectedCart immediately, before any network round-trip, so the ref
+      // already reflects it here regardless of which fetch wins the race).
+      // Never clobber that with the default "first cart" pick.
       const cartIdToKeep = selectedCartRef.current;
-      if (preserveSelection && cartIdToKeep) {
+      if (cartIdToKeep) {
         const current = data.find((c) => c.id === cartIdToKeep);
         if (current) {
           setSelectedCartObj(current);
           setSelectedCartProducts(current.products || []);
           return;
         }
+        if (!preserveSelection) {
+          // Not among the owned carts we just fetched (e.g. a shared-cart deep
+          // link) — leave it alone rather than overwriting it with the default.
+          return;
+        }
+        // preserveSelection was requested but that cart no longer exists
+        // (e.g. it was deleted) — fall through to the default below.
       }
 
       setSelectedCart(data?.[0]?.id || null);
@@ -183,7 +196,7 @@ const Dashboard = () => {
 
   const handleCompareNow = () => {
     const products = selectedCartProducts.filter((p) => compareIds.has(p.id));
-    navigate("/home/compare", { state: { products } });
+    navigate(`/home/compare?cart=${selectedCart}`, { state: { products } });
   };
 
   const handleProductUpdated = (productId, updates) => {

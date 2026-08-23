@@ -123,7 +123,7 @@ function AppearanceSection() {
   );
 }
 
-export default function SettingsPage() {
+export default function SettingsPage({ selectedCartId }) {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
   const [loading, setLoading] = useState(true);
@@ -316,7 +316,7 @@ export default function SettingsPage() {
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-6 sm:px-6 lg:px-8">
       <Link
-        to="/home"
+        to={selectedCartId ? `/home?cart=${selectedCartId}` : "/home"}
         className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-stone-600 transition-colors hover:text-[var(--color-text-primary)] dark:text-stone-400"
       >
         <ArrowLeft className="h-4 w-4" />

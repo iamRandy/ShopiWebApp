@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { useLocation, useNavigate, Link } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams, Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import AppShell from "../components/dashboard/AppShell";
 import SelectedProductsGrid from "../components/compare/SelectedProductsGrid";
@@ -12,9 +12,13 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 export default function Compare() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const [sessionReady, setSessionReady] = useState(false);
   const [carts, setCarts] = useState([]);
-  const [selectedCartId, setSelectedCartId] = useState(null);
+  // Seeded from ?cart=<id> so arriving here from the dashboard (or navigating
+  // to settings/back) keeps the same cart selected instead of always falling
+  // back to the first one.
+  const [selectedCartId, setSelectedCartId] = useState(() => searchParams.get("cart") || null);
   const [comparedProducts, setComparedProducts] = useState(location.state?.products ?? []);
 
   const fetchCarts = useCallback(async () => {
@@ -58,7 +62,7 @@ export default function Compare() {
     } catch (error) {
       console.error("Error selecting cart:", error);
     }
-    navigate("/home");
+    navigate(`/home?cart=${cartId}`);
   };
 
   if (!sessionReady) {
@@ -84,7 +88,7 @@ export default function Compare() {
             No products selected for comparison.
           </p>
           <Link
-            to="/home"
+            to={selectedCartId ? `/home?cart=${selectedCartId}` : "/home"}
             className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#c47f00] hover:underline dark:text-[#FFBC42]"
           >
             <ArrowLeft className="h-3.5 w-3.5" strokeWidth={2.25} />
@@ -99,7 +103,7 @@ export default function Compare() {
     <AppShell sidebarProps={sidebarProps}>
       <div className="px-4 py-6 sm:px-6 lg:px-8">
         <Link
-          to="/home"
+          to={selectedCartId ? `/home?cart=${selectedCartId}` : "/home"}
           className="mb-3 inline-flex items-center gap-1.5 text-sm font-semibold text-stone-500 hover:text-[var(--color-text-primary)] dark:text-stone-400"
         >
           <ArrowLeft className="h-3.5 w-3.5" strokeWidth={2.25} />
@@ -120,7 +124,7 @@ export default function Compare() {
           onRemove={(id) =>
             setComparedProducts((prev) => prev.filter((p) => p.id !== id))
           }
-          onClear={() => navigate("/home")}
+          onClear={() => navigate(selectedCartId ? `/home?cart=${selectedCartId}` : "/home")}
         />
       </div>
     </AppShell>

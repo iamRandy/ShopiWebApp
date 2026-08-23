@@ -81,7 +81,7 @@ export default function DashboardSidebar({
             title="Settings"
             onClick={() => {
               onMobileClose?.();
-              navigate("/home/settings");
+              navigate(selectedCartId ? `/home/settings?cart=${selectedCartId}` : "/home/settings");
             }}
             className="flex h-9 w-9 items-center justify-center rounded-lg border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-surface)] text-[var(--color-text-primary)] shadow-[2px_2px_0_var(--color-shadow)] transition-transform hover:-translate-y-0.5"
           >
