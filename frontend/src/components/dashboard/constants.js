@@ -1,4 +1,4 @@
-export const APP_VERSION = "v0.1";
+export const APP_VERSION = "v0.12";
 export const GRID_PAGE_SIZE = 8;
 export const LIST_PAGE_SIZE = 12;
 export const PAGE_SIZE = LIST_PAGE_SIZE;

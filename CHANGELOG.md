@@ -4,6 +4,7 @@ Notable changes to the ShopiWebApp frontend and backend. This project ships cont
 
 ## Unreleased
 
+- Active filters now show as removable pills directly next to the Filter button (keyword, store, price range, and each tag individually), each with its own "×" to clear just that one criterion; wraps onto multiple lines alongside the other toolbar buttons on narrow screens.
 - Reworked the banner solid-color presets to a warm spectrum (red through pink) plus black and white, and the cart banner/title/icon/view-toggle/Share button now pick dark or light text automatically per-cart based on the actual WCAG contrast ratio against the chosen background (color or gradient), instead of always assuming white text — so light presets like yellow or white stay readable instead of washing out.
 - Fixed a leftover, unscoped `h1 { font-size: 3.2em }` rule in `index.css` (dead Vite-scaffold CSS, same category as the earlier `a { color: black }` bug) that was silently overriding every heading's actual size app-wide, including the new cart banner title, no matter what Tailwind text-size class was applied to it.
 - The cart banner now spans the full width of the content area with no top padding, edge-to-edge like the rest of the app's neo-brutalist bordered look intentionally dropped for this one element (no border/shadow/rounded corners) to match the reference design; the cart name starts smaller on mobile and only truncates with "…" if it still doesn't fit at that size.

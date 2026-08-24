@@ -1,8 +1,11 @@
 import { GitCompare, SlidersHorizontal, Trash2, X } from "lucide-react";
+import TagPill from "../tags/TagPill";
 
 export default function ProductToolbar({
   onFilterOpen,
   activeFilterCount = 0,
+  filterChips = [],
+  onRemoveFilterChip,
   compareCount = 0,
   maxCompare,
   onCompareNow,
@@ -28,6 +31,14 @@ export default function ProductToolbar({
             </span>
           )}
         </button>
+
+        {filterChips.map((chip) => (
+          <TagPill
+            key={chip.id}
+            label={chip.label}
+            onRemove={() => onRemoveFilterChip?.(chip.id)}
+          />
+        ))}
 
         {onDeleteSelected && compareCount >= 1 && (
           <button

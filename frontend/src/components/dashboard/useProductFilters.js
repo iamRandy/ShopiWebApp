@@ -68,4 +68,49 @@ export function countActiveFilters(filters = DEFAULT_FILTERS) {
   return count;
 }
 
+/** One removable chip per active filter criterion — price min/max collapse into a single
+ * range chip (they're one logical filter), while each tag gets its own chip since they're
+ * independently removable. */
+export function getActiveFilterChips(filters = DEFAULT_FILTERS, tagLabelBySlug) {
+  const chips = [];
+
+  if (filters.keyword.trim()) {
+    chips.push({ id: "keyword", label: `"${filters.keyword.trim()}"` });
+  }
+
+  if (filters.store.trim()) {
+    chips.push({ id: "store", label: filters.store.trim() });
+  }
+
+  if (filters.priceMin !== "" || filters.priceMax !== "") {
+    let label;
+    if (filters.priceMin !== "" && filters.priceMax !== "") {
+      label = `$${filters.priceMin}–$${filters.priceMax}`;
+    } else if (filters.priceMin !== "") {
+      label = `≥ $${filters.priceMin}`;
+    } else {
+      label = `≤ $${filters.priceMax}`;
+    }
+    chips.push({ id: "price", label });
+  }
+
+  filters.tags.forEach((tag) => {
+    chips.push({ id: `tag:${tag}`, label: tagLabelBySlug?.get(tag) || tag });
+  });
+
+  return chips;
+}
+
+/** Returns filters with the single criterion behind `chipId` (from getActiveFilterChips) cleared. */
+export function removeFilterChip(filters, chipId) {
+  if (chipId === "keyword") return { ...filters, keyword: "" };
+  if (chipId === "store") return { ...filters, store: "" };
+  if (chipId === "price") return { ...filters, priceMin: "", priceMax: "" };
+  if (chipId.startsWith("tag:")) {
+    const tag = chipId.slice(4);
+    return { ...filters, tags: filters.tags.filter((t) => t !== tag) };
+  }
+  return filters;
+}
+
 export { DEFAULT_FILTERS };

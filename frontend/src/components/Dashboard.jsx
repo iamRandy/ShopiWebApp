@@ -24,6 +24,8 @@ import useSharedCartEvents from "../hooks/useSharedCartEvents";
 import {
   useProductFilters,
   countActiveFilters,
+  getActiveFilterChips,
+  removeFilterChip,
   DEFAULT_FILTERS,
 } from "./dashboard/useProductFilters";
 import { buildTagLabelLookup } from "../utils/tags";
@@ -629,6 +631,12 @@ const Dashboard = () => {
   }, [rawProducts, tagLabelBySlug]);
 
   const activeFilterCount = countActiveFilters(filters);
+  const filterChips = useMemo(
+    () => getActiveFilterChips(filters, tagLabelBySlug),
+    [filters, tagLabelBySlug]
+  );
+  const handleRemoveFilterChip = (chipId) =>
+    setFilters((prev) => removeFilterChip(prev, chipId));
   const showEmptyCart = !loading && rawProducts.length === 0;
 
   const sidebarProps = {
@@ -662,6 +670,8 @@ const Dashboard = () => {
               <ProductToolbar
                 onFilterOpen={() => setFilterModalOpen(true)}
                 activeFilterCount={activeFilterCount}
+                filterChips={filterChips}
+                onRemoveFilterChip={handleRemoveFilterChip}
                 compareCount={compareIds.size}
                 maxCompare={MAX_COMPARE_PRODUCTS}
                 onCompareNow={handleCompareNow}
