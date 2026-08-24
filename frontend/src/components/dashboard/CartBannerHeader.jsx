@@ -31,7 +31,7 @@ export default function CartBannerHeader({
             <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8" />
           )}
         </span>
-        <h1 className="truncate text-xl font-extrabold tracking-tight sm:text-2xl md:text-3xl lg:text-4xl">
+        <h1 className="truncate text-xl font-extrabold leading-snug tracking-tight sm:text-2xl md:text-3xl lg:text-4xl">
           {cartName}
         </h1>
       </div>

@@ -19,6 +19,10 @@
         }
     ],
     "rewrites": [
+        { "source": "/api/login/google", "destination": "/api/auth?action=login-google" },
+        { "source": "/api/logout", "destination": "/api/auth?action=logout" },
+        { "source": "/api/refresh-token", "destination": "/api/auth?action=refresh-token" },
+        { "source": "/api/tags/suggest", "destination": "/api/tags?action=suggest" },
         { "source": "/((?!api).*)", "destination": "/" }
     ]
 }
