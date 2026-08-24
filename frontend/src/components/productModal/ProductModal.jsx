@@ -11,6 +11,7 @@ import ProductImage from "../ProductImage";
 import FavoriteHeartButton from "../FavoriteHeartButton";
 import ExpandableText from "./ExpandableText";
 import ProductEditForm from "./ProductEditForm";
+import TagCarousel from "../tags/TagCarousel";
 
 const ProductModal = ({
   isOpen,
@@ -27,8 +28,10 @@ const ProductModal = ({
   productHostname,
   productIsFavorite,
   productSavedAt,
+  productTags,
   originalTitle,
   cartId,
+  tagLabelBySlug,
   onDelete,
   onProductUpdated,
 }) => {
@@ -37,6 +40,8 @@ const ProductModal = ({
   const [nicknameInput, setNicknameInput] = useState("");
   const [noteInput, setNoteInput] = useState("");
   const [priceInput, setPriceInput] = useState("");
+  const [tags, setTags] = useState(productTags || []);
+  const [tagsError, setTagsError] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -62,12 +67,14 @@ const ProductModal = ({
           : ""
       );
       setIsEditing(false);
+      setTags(productTags || []);
+      setTagsError(null);
       setSaveError(null);
       setDeleteError(null);
       setShowOriginalDescription(false);
       setCopyFeedback(false);
     }
-  }, [isOpen, productNickname, productNote, productPriceValue, productId]);
+  }, [isOpen, productNickname, productNote, productPriceValue, productTags, productId]);
 
   useEffect(() => {
     return () => {
@@ -222,6 +229,38 @@ const ProductModal = ({
     } finally {
       setIsFavoriteSaving(false);
     }
+  };
+
+  const updateTags = async (nextTags, previousTags) => {
+    setTags(nextTags);
+    setTagsError(null);
+    try {
+      const data = await patchProduct({ tags: nextTags });
+      onProductUpdated?.(productId, { tags: data.product?.tags });
+    } catch (error) {
+      console.error("Error updating tags:", error);
+      setTags(previousTags);
+      if (
+        error.message === "No authentication token found" ||
+        error.message === "Authentication failed"
+      ) {
+        navigate("/login");
+        return;
+      }
+      setTagsError("Failed to update tags. Please try again.");
+    }
+  };
+
+  const handleAddTag = (tagValue) => {
+    if (tags.includes(tagValue) || tags.length >= 10) return;
+    updateTags([...tags, tagValue], tags);
+  };
+
+  const handleRemoveTag = (tagValue) => {
+    updateTags(
+      tags.filter((t) => t !== tagValue),
+      tags
+    );
   };
 
   const busy = isSaving || isDeleting;
@@ -399,6 +438,21 @@ const ProductModal = ({
                 <X className="h-5 w-5" />
               </button>
             </div>
+          </div>
+
+          <div className="shrink-0 border-b border-stone-100 px-5 py-3 dark:border-stone-800">
+            <TagCarousel
+              tags={tags}
+              onAdd={handleAddTag}
+              onRemove={handleRemoveTag}
+              maxTags={10}
+              tagLabelBySlug={tagLabelBySlug}
+            />
+            {tagsError && (
+              <p className="mt-1.5 text-xs text-red-600 dark:text-red-300" role="alert">
+                {tagsError}
+              </p>
+            )}
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto">

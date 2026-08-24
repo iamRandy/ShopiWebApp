@@ -38,7 +38,7 @@ module.exports = async function handler(req, res) {
     }
 
     if (req.method === "PATCH") {
-      const { nickname, isFavorite, note, price } = req.body;
+      const { nickname, isFavorite, note, price, tags } = req.body;
 
       if (nickname !== undefined && typeof nickname !== "string") {
         return res.status(400).json({ error: "Nickname must be a string" });
@@ -59,6 +59,15 @@ module.exports = async function handler(req, res) {
           return res.status(400).json({ error: "Price must be a non-negative number" });
         }
         normalizedPrice = Math.round(normalizedPrice * 100) / 100;
+      }
+
+      if (tags !== undefined) {
+        if (!Array.isArray(tags) || tags.some((t) => typeof t !== "string")) {
+          return res.status(400).json({ error: "tags must be an array of strings" });
+        }
+        if (tags.length > 10) {
+          return res.status(400).json({ error: "Maximum 10 tags allowed" });
+        }
       }
 
       const trimmedNickname =
@@ -90,6 +99,12 @@ module.exports = async function handler(req, res) {
 
       if (normalizedPrice !== undefined) {
         $set["carts.$[c].products.$[p].price"] = normalizedPrice;
+      }
+
+      if (tags !== undefined) {
+        // An empty array is a meaningful "no tags" state (unlike nickname/note),
+        // so it's always $set, never $unset.
+        $set["carts.$[c].products.$[p].tags"] = tags;
       }
 
       if (Object.keys($set).length === 0 && Object.keys($unset).length === 0) {

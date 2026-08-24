@@ -7,6 +7,7 @@ import {
 import { getAffiliateLink } from "../../utils/affiliate";
 import ProductImage from "../ProductImage";
 import FavoriteHeartButton from "../FavoriteHeartButton";
+import TagPill from "../tags/TagPill";
 
 export default function GridProductCard({
   product,
@@ -20,6 +21,7 @@ export default function GridProductCard({
   onQuickDelete,
   isDeleting = false,
   priceAlert,
+  tagLabelBySlug,
 }) {
   const name = getProductDisplayName(product);
   const price = getFormattedProductPrice(product);
@@ -30,6 +32,8 @@ export default function GridProductCard({
     ? formatProductPrice(priceAlert.previousPrice, product.currency || "$")
     : null;
   const priceRose = priceAlert && Number(product.price) > Number(priceAlert.previousPrice);
+  const tags = product.tags || [];
+  const firstTagLabel = tags.length > 0 ? tagLabelBySlug?.get(tags[0]) || tags[0] : null;
 
   const handleVisit = (e) => {
     e.stopPropagation();
@@ -159,6 +163,14 @@ export default function GridProductCard({
           <p className="mt-0.5 truncate text-[10px] font-medium uppercase tracking-wide text-white/60">
             {product.hostname}
           </p>
+        )}
+        {firstTagLabel && (
+          <div className="max-h-0 overflow-hidden opacity-0 transition-all duration-200 group-hover/card:mt-1 group-hover/card:max-h-6 group-hover/card:opacity-100">
+            <div className="flex items-center gap-1">
+              <TagPill variant="compact" label={firstTagLabel} />
+              {tags.length > 1 && <span className="text-[10px] text-white/70">…</span>}
+            </div>
+          </div>
         )}
         <div className="mt-1.5 flex items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-1.5">

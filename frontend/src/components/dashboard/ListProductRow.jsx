@@ -8,6 +8,7 @@ import {
 } from "../../utils/product";
 import ProductImage from "../ProductImage";
 import FavoriteHeartButton from "../FavoriteHeartButton";
+import TagPill from "../tags/TagPill";
 
 export default function ListProductRow({
   product,
@@ -22,6 +23,7 @@ export default function ListProductRow({
   onQuickDelete,
   isDeleting = false,
   priceAlert,
+  tagLabelBySlug,
 }) {
   const name = getProductDisplayName(product);
   const price = getFormattedProductPrice(product);
@@ -29,6 +31,8 @@ export default function ListProductRow({
   const image =
     product.image || "https://via.placeholder.com/80x80?text=No+Image";
   const isFavorite = Boolean(product.isFavorite);
+  const tags = product.tags || [];
+  const firstTagLabel = tags.length > 0 ? tagLabelBySlug?.get(tags[0]) || tags[0] : null;
   const previousPriceFormatted = priceAlert
     ? formatProductPrice(priceAlert.previousPrice, product.currency || "$")
     : null;
@@ -130,6 +134,14 @@ export default function ListProductRow({
             <span aria-hidden="true">·</span>
             <span>{formatRelativeAdded(product.savedAt)}</span>
           </p>
+          {firstTagLabel && (
+            <div className="mt-1 flex items-center gap-1">
+              <TagPill variant="compact" label={firstTagLabel} />
+              {tags.length > 1 && (
+                <span className="text-[10px] text-stone-400 dark:text-stone-500">…</span>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="flex shrink-0 items-center gap-0.5">
@@ -201,6 +213,16 @@ export default function ListProductRow({
             <p className="truncate text-sm font-medium text-stone-800 dark:text-stone-100">{name}</p>
             {displayDescription && (
               <p className="line-clamp-1 text-xs text-stone-500 dark:text-stone-400">{displayDescription}</p>
+            )}
+            {firstTagLabel && (
+              <div className="max-h-0 overflow-hidden opacity-0 transition-all duration-200 group-hover/row:mt-0.5 group-hover/row:max-h-6 group-hover/row:opacity-100">
+                <div className="flex items-center gap-1">
+                  <TagPill variant="compact" label={firstTagLabel} />
+                  {tags.length > 1 && (
+                    <span className="text-[10px] text-stone-400 dark:text-stone-500">…</span>
+                  )}
+                </div>
+              </div>
             )}
           </div>
         </div>

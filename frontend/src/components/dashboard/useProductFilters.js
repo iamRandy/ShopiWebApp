@@ -5,6 +5,7 @@ const DEFAULT_FILTERS = {
   priceMin: "",
   priceMax: "",
   store: "",
+  tags: [],
 };
 
 export function useProductFilters(products = [], filters = DEFAULT_FILTERS) {
@@ -47,6 +48,11 @@ export function useProductFilters(products = [], filters = DEFAULT_FILTERS) {
         if (max !== null && price > max) return false;
       }
 
+      if (filters.tags.length > 0) {
+        const productTags = product.tags || [];
+        if (!filters.tags.some((t) => productTags.includes(t))) return false;
+      }
+
       return true;
     });
   }, [products, filters]);
@@ -58,6 +64,7 @@ export function countActiveFilters(filters = DEFAULT_FILTERS) {
   if (filters.store.trim()) count += 1;
   if (filters.priceMin !== "") count += 1;
   if (filters.priceMax !== "") count += 1;
+  if (filters.tags.length > 0) count += 1;
   return count;
 }
 

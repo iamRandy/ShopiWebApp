@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import AppShell from "../components/dashboard/AppShell";
 import SettingsPage from "../components/settings/SettingsPage";
 import { authenticatedFetch, ensureValidSession } from "../utils/api";
@@ -8,9 +8,12 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 export default function Settings() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [sessionReady, setSessionReady] = useState(false);
   const [carts, setCarts] = useState([]);
-  const [selectedCartId, setSelectedCartId] = useState(null);
+  // Seeded from ?cart=<id> so arriving from the dashboard (or compare) keeps
+  // the same cart selected instead of always falling back to the first one.
+  const [selectedCartId, setSelectedCartId] = useState(() => searchParams.get("cart") || null);
 
   const fetchCarts = useCallback(async () => {
     try {
@@ -53,7 +56,7 @@ export default function Settings() {
     } catch (error) {
       console.error("Error selecting cart:", error);
     }
-    navigate("/home");
+    navigate(`/home?cart=${cartId}`);
   };
 
   if (!sessionReady) {
@@ -73,7 +76,7 @@ export default function Settings() {
 
   return (
     <AppShell sidebarProps={sidebarProps}>
-      <SettingsPage />
+      <SettingsPage selectedCartId={selectedCartId} />
     </AppShell>
   );
 }
