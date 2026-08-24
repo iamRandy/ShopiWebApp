@@ -10,6 +10,30 @@ import {
   formatCartIconLabel,
   searchCartIcons,
 } from "../utils/cartIcons";
+import {
+  BANNER_GRADIENTS,
+  PRESET_BANNER_COLORS,
+  getCartBannerBackground,
+  getCartBannerTone,
+} from "../utils/cartBanners";
+
+function GradientOptionButton({ gradient, selected, onSelect }) {
+  return (
+    <button
+      type="button"
+      className={`flex aspect-square items-center justify-center rounded-xl border-2 transition-all ${
+        selected
+          ? "border-[#FFBC42]"
+          : "border-transparent hover:border-stone-300 dark:hover:border-stone-600"
+      }`}
+      style={{ background: gradient.css }}
+      onClick={onSelect}
+      aria-label={gradient.label}
+      aria-pressed={selected}
+      title={gradient.label}
+    />
+  );
+}
 
 function IconOptionButton({ iconName, selected, onSelect, className = "" }) {
   return (
@@ -75,9 +99,17 @@ const CartModal = ({
   const [cartName, setCartName] = useState("");
   const [cartIcon, setCartIcon] = useState("ShoppingCart");
   const [cartColor, setCartColor] = useState("#000000");
+  const [bannerType, setBannerType] = useState("color");
+  const [bannerGradient, setBannerGradient] = useState(BANNER_GRADIENTS[0].key);
   const [iconQuery, setIconQuery] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const carouselRef = useRef(null);
+
+  const bannerTone = useMemo(
+    () => getCartBannerTone({ color: cartColor, bannerType, bannerGradient }),
+    [cartColor, bannerType, bannerGradient]
+  );
+  const bannerContentColor = bannerTone === "dark" ? "text-[#1a1a1a]" : "text-white";
 
   const trimmedQuery = iconQuery.trim();
   const searchResults = trimmedQuery ? searchCartIcons(iconQuery) : null;
@@ -107,10 +139,14 @@ const CartModal = ({
       setCartName("");
       setCartIcon(cartData.icon || "ShoppingCart");
       setCartColor(cartData.color || "#000000");
+      setBannerType(cartData.bannerType || "color");
+      setBannerGradient(cartData.bannerGradient || BANNER_GRADIENTS[0].key);
     } else {
       setCartName("");
       setCartIcon("ShoppingCart");
       setCartColor("#000000");
+      setBannerType("color");
+      setBannerGradient(BANNER_GRADIENTS[0].key);
     }
   }, [isOpen, isEditMode, cartData]);
 
@@ -187,6 +223,8 @@ const CartModal = ({
           name: resolvedName,
           icon: cartIcon,
           color: cartColor,
+          bannerType,
+          bannerGradient: bannerType === "gradient" ? bannerGradient : null,
         }),
       });
 
@@ -336,6 +374,102 @@ const CartModal = ({
                         No icons found for &ldquo;{trimmedQuery}&rdquo;
                       </p>
                     )}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <span className="mb-2 block text-sm font-medium text-stone-700 dark:text-stone-300">
+                  Banner
+                </span>
+
+                <div
+                  className="relative mb-3 flex h-16 items-center gap-2 overflow-hidden rounded-xl px-3"
+                  style={{
+                    background: getCartBannerBackground({
+                      color: cartColor,
+                      bannerType,
+                      bannerGradient,
+                    }),
+                  }}
+                >
+                  {bannerTone === "light" && <div className="absolute inset-0 bg-black/30" />}
+                  <span className={`relative shrink-0 ${bannerContentColor}`}>
+                    {getCartIcon(cartIcon, { className: "h-5 w-5" })}
+                  </span>
+                  <span className={`relative truncate text-sm font-bold ${bannerContentColor}`}>
+                    {cartName.trim() || namePlaceholder}
+                  </span>
+                </div>
+
+                <div className="mb-3 flex overflow-hidden rounded-xl border border-stone-200 dark:border-stone-700">
+                  <button
+                    type="button"
+                    onClick={() => setBannerType("color")}
+                    aria-pressed={bannerType === "color"}
+                    className={`flex-1 py-1.5 text-sm font-medium transition-colors ${
+                      bannerType === "color"
+                        ? "bg-[#FFBC42]/40 text-stone-900 dark:text-stone-50"
+                        : "text-stone-600 hover:bg-stone-50 dark:text-stone-400 dark:hover:bg-white/5"
+                    }`}
+                  >
+                    Color
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBannerType("gradient")}
+                    aria-pressed={bannerType === "gradient"}
+                    className={`flex-1 border-l border-stone-200 py-1.5 text-sm font-medium transition-colors dark:border-stone-700 ${
+                      bannerType === "gradient"
+                        ? "bg-[#FFBC42]/40 text-stone-900 dark:text-stone-50"
+                        : "text-stone-600 hover:bg-stone-50 dark:text-stone-400 dark:hover:bg-white/5"
+                    }`}
+                  >
+                    Gradient
+                  </button>
+                </div>
+
+                {bannerType === "color" ? (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <input
+                      type="color"
+                      value={cartColor}
+                      onChange={(e) => setCartColor(e.target.value)}
+                      aria-label="Custom banner color"
+                      className="h-9 w-9 shrink-0 cursor-pointer rounded-lg border border-stone-200 bg-transparent p-0.5 dark:border-stone-700"
+                    />
+                    {PRESET_BANNER_COLORS.map((presetColor) => {
+                      const isSelected = cartColor.toLowerCase() === presetColor.toLowerCase();
+                      const isNearWhite = presetColor.toLowerCase() === "#ffffff";
+                      return (
+                        <button
+                          key={presetColor}
+                          type="button"
+                          onClick={() => setCartColor(presetColor)}
+                          aria-label={`Use color ${presetColor}`}
+                          aria-pressed={isSelected}
+                          className={`h-8 w-8 shrink-0 rounded-full border-2 transition-all ${
+                            isSelected
+                              ? "border-[#FFBC42]"
+                              : isNearWhite
+                                ? "border-stone-300 hover:border-stone-400 dark:border-stone-600"
+                                : "border-transparent hover:border-stone-300 dark:hover:border-stone-600"
+                          }`}
+                          style={{ backgroundColor: presetColor }}
+                        />
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-4 gap-2">
+                    {BANNER_GRADIENTS.map((gradient) => (
+                      <GradientOptionButton
+                        key={gradient.key}
+                        gradient={gradient}
+                        selected={bannerGradient === gradient.key}
+                        onSelect={() => setBannerGradient(gradient.key)}
+                      />
+                    ))}
                   </div>
                 )}
               </div>

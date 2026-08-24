@@ -41,10 +41,13 @@ module.exports = async function handler(req, res) {
     }
   } else if (req.method === "POST") {
     try {
-      const { name, icon } = req.body;
+      const { name, icon, color, bannerType, bannerGradient } = req.body;
       const newCart = {
         name,
         icon,
+        color: color || "#000000",
+        bannerType: bannerType || "color",
+        bannerGradient: bannerType === "gradient" ? bannerGradient || null : null,
         id: crypto.randomUUID(),
         products: [], // Initialize empty products array
       };

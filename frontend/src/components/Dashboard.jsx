@@ -13,6 +13,7 @@ import ConfirmModal from "./ConfirmModal";
 import ProductModal from "./productModal/ProductModal";
 import AppShell from "./dashboard/AppShell";
 import ProductToolbar from "./dashboard/ProductToolbar";
+import CartBannerHeader from "./dashboard/CartBannerHeader";
 import ProductGridView from "./dashboard/ProductGridView";
 import ProductListView from "./dashboard/ProductListView";
 import FilterModal from "./dashboard/FilterModal";
@@ -456,7 +457,6 @@ const Dashboard = () => {
 
   const activeCart =
     selectedCartObj || carts.find((c) => c.id === selectedCart) || null;
-  const cartTitle = activeCart?.name || "Unnamed cart";
   const rawProducts = selectedCartProducts ?? [];
   const isOwnedCart = Boolean(activeCart) && (!activeCart.myRole || activeCart.myRole === "owner");
   const canEditCart = isOwnedCart || activeCart?.myRole === "edit";
@@ -478,10 +478,13 @@ const Dashboard = () => {
     "products:deleted": ({ cartId, productIds }) => {
       removeProductsFromState(cartId, productIds || []);
     },
-    "cart:renamed": ({ cartId, name, icon, color }) => {
-      const patch = (cart) => (cart.id === cartId ? { ...cart, name, icon, color } : cart);
+    "cart:renamed": ({ cartId, name, icon, color, bannerType, bannerGradient }) => {
+      const patch = (cart) =>
+        cart.id === cartId ? { ...cart, name, icon, color, bannerType, bannerGradient } : cart;
       setCarts((prev) => prev.map(patch));
-      setSelectedCartObj((prev) => (prev?.id === cartId ? { ...prev, name, icon, color } : prev));
+      setSelectedCartObj((prev) =>
+        prev?.id === cartId ? { ...prev, name, icon, color, bannerType, bannerGradient } : prev
+      );
       setSharedCarts((prev) =>
         prev.map((c) => (c.cartId === cartId ? { ...c, cartName: name, cartIcon: icon, cartColor: color } : c))
       );
@@ -600,90 +603,98 @@ const Dashboard = () => {
 
   return (
     <AppShell sidebarProps={sidebarProps}>
-      <div className="relative flex min-h-0 flex-1 flex-col px-4 py-6 sm:px-6 lg:px-8">
+      <div className="relative flex min-h-0 flex-1 flex-col">
         {loading ? (
-          <AveeLoader message="Loading cart…" />
+          <div className="flex flex-1 items-center justify-center px-4 py-6 sm:px-6 lg:px-8">
+            <AveeLoader message="Loading cart…" />
+          </div>
         ) : (
           <>
-            <ProductToolbar
-              title={cartTitle}
-              itemCount={rawProducts.length}
+            <CartBannerHeader
+              cart={activeCart}
               viewMode={viewMode}
               onViewModeChange={handleViewModeChange}
-              onFilterOpen={() => setFilterModalOpen(true)}
-              activeFilterCount={activeFilterCount}
               canShare={canShare}
               onShareClick={handleShareClick}
-              compareCount={compareIds.size}
-              maxCompare={MAX_COMPARE_PRODUCTS}
-              onCompareNow={handleCompareNow}
-              onClearCompare={clearCompareSelection}
-              onDeleteSelected={canEditCart ? handleDeleteSelected : undefined}
-              isDeletingSelected={isBulkDeleting}
             />
 
-            {accessRevoked && (
-              <div className="mb-4 rounded-xl border-2 border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
-                You no longer have access to this cart.
-              </div>
-            )}
+            <div className="flex min-h-0 flex-1 flex-col px-4 pb-6 sm:px-6 lg:px-8">
+              <ProductToolbar
+                onFilterOpen={() => setFilterModalOpen(true)}
+                activeFilterCount={activeFilterCount}
+                compareCount={compareIds.size}
+                maxCompare={MAX_COMPARE_PRODUCTS}
+                onCompareNow={handleCompareNow}
+                onClearCompare={clearCompareSelection}
+                onDeleteSelected={canEditCart ? handleDeleteSelected : undefined}
+                isDeletingSelected={isBulkDeleting}
+                showingCount={pageItems.length}
+                totalCount={sortedProducts.length}
+              />
 
-            <div className="flex-1">
-              {showEmptyCart ? (
-                <div className="flex min-h-[12rem] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-stone-300 bg-[var(--color-bg-surface)]/50 p-8 text-center dark:border-stone-700">
-                  <p className="text-stone-500 dark:text-stone-400">
-                    No products saved yet. Use the extension to save some products!
-                  </p>
-                  <a
-                    href="https://chromewebstore.google.com/detail/chaos-cart-saver/bjofoogkolnnpldckgedhdeekajhnpcb?authuser=0&hl=en"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-2 text-sm font-semibold text-[#c47f00] hover:underline dark:text-[#FFBC42]"
-                  >
-                    Need help?
-                  </a>
+              {accessRevoked && (
+                <div className="mb-4 rounded-xl border-2 border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+                  You no longer have access to this cart.
                 </div>
-              ) : viewMode === "grid" ? (
-                <ProductGridView
-                  products={pageItems}
-                  onFavoriteToggle={canEditCart ? handleFavoriteToggle : undefined}
-                  onOpen={openProductModal}
-                  favoriteLoadingId={favoriteLoadingId}
-                  selectedIds={compareIds}
-                  onToggleSelect={toggleCompareSelect}
-                  onSelectAllPage={() => selectAllOnPage(pageItems.map((p) => p.id))}
-                  selectLimitReached={compareIds.size >= MAX_COMPARE_PRODUCTS}
-                  onQuickDelete={canEditCart ? handleQuickDelete : undefined}
-                  deletingId={deletingId}
-                  priceAlerts={priceAlerts}
-                />
-              ) : (
-                <ProductListView
-                  products={pageItems}
-                  onFavoriteToggle={canEditCart ? handleFavoriteToggle : undefined}
-                  onOpen={openProductModal}
-                  onMenu={openProductModal}
-                  favoriteLoadingId={favoriteLoadingId}
-                  selectedIds={compareIds}
-                  onToggleSelect={toggleCompareSelect}
-                  onSelectAllPage={() => selectAllOnPage(pageItems.map((p) => p.id))}
-                  selectLimitReached={compareIds.size >= MAX_COMPARE_PRODUCTS}
-                  onQuickDelete={canEditCart ? handleQuickDelete : undefined}
-                  deletingId={deletingId}
-                  priceAlerts={priceAlerts}
+              )}
+
+              <div className="flex-1">
+                {showEmptyCart ? (
+                  <div className="flex min-h-[12rem] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-stone-300 bg-[var(--color-bg-surface)]/50 p-8 text-center dark:border-stone-700">
+                    <p className="text-stone-500 dark:text-stone-400">
+                      No products saved yet. Use the extension to save some products!
+                    </p>
+                    <a
+                      href="https://chromewebstore.google.com/detail/chaos-cart-saver/bjofoogkolnnpldckgedhdeekajhnpcb?authuser=0&hl=en"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 text-sm font-semibold text-[#c47f00] hover:underline dark:text-[#FFBC42]"
+                    >
+                      Need help?
+                    </a>
+                  </div>
+                ) : viewMode === "grid" ? (
+                  <ProductGridView
+                    products={pageItems}
+                    onFavoriteToggle={canEditCart ? handleFavoriteToggle : undefined}
+                    onOpen={openProductModal}
+                    favoriteLoadingId={favoriteLoadingId}
+                    selectedIds={compareIds}
+                    onToggleSelect={toggleCompareSelect}
+                    onSelectAllPage={() => selectAllOnPage(pageItems.map((p) => p.id))}
+                    selectLimitReached={compareIds.size >= MAX_COMPARE_PRODUCTS}
+                    onQuickDelete={canEditCart ? handleQuickDelete : undefined}
+                    deletingId={deletingId}
+                    priceAlerts={priceAlerts}
+                  />
+                ) : (
+                  <ProductListView
+                    products={pageItems}
+                    onFavoriteToggle={canEditCart ? handleFavoriteToggle : undefined}
+                    onOpen={openProductModal}
+                    onMenu={openProductModal}
+                    favoriteLoadingId={favoriteLoadingId}
+                    selectedIds={compareIds}
+                    onToggleSelect={toggleCompareSelect}
+                    onSelectAllPage={() => selectAllOnPage(pageItems.map((p) => p.id))}
+                    selectLimitReached={compareIds.size >= MAX_COMPARE_PRODUCTS}
+                    onQuickDelete={canEditCart ? handleQuickDelete : undefined}
+                    deletingId={deletingId}
+                    priceAlerts={priceAlerts}
+                  />
+                )}
+              </div>
+
+              {!showEmptyCart && (
+                <Pagination
+                  page={page}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                  hasNext={hasNext}
+                  hasPrev={hasPrev}
                 />
               )}
             </div>
-
-            {!showEmptyCart && (
-              <Pagination
-                page={page}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-                hasNext={hasNext}
-                hasPrev={hasPrev}
-              />
-            )}
           </>
         )}
 

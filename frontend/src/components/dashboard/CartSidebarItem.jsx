@@ -108,12 +108,20 @@ export default function CartSidebarItem({
         {cartName}
       </span>
       {!isShared && (
-        <span className="text-xs font-bold tabular-nums text-stone-500 dark:text-stone-400">{count}</span>
+        <span
+          className={`text-xs font-bold tabular-nums text-stone-500 transition-opacity dark:text-stone-400 ${
+            selected ? "opacity-0" : "opacity-100 group-hover:opacity-0"
+          }`}
+        >
+          {count}
+        </span>
       )}
       <button
         type="button"
         onClick={handleTrailingClick}
-        className="absolute right-1 top-1/2 flex -translate-y-1/2 rounded-full bg-[var(--color-bg-surface)] p-1 text-stone-600 opacity-0 shadow-sm transition-opacity hover:text-[var(--color-text-primary)] group-hover:opacity-100 dark:text-stone-400"
+        className={`absolute right-1 top-1/2 flex -translate-y-1/2 rounded-full bg-[var(--color-bg-surface)] p-1 text-stone-600 shadow-sm transition-opacity hover:text-[var(--color-text-primary)] group-hover:opacity-100 dark:text-stone-400 ${
+          selected ? "opacity-100" : "opacity-0"
+        }`}
         title={trailingTitle}
       >
         {isShared ? <X className="h-4 w-4" /> : <MoreHorizontal className="h-4 w-4" />}

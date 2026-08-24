@@ -52,7 +52,7 @@ module.exports = async function handler(req, res) {
     }
   } else if (req.method === "PUT") {
     try {
-      const { name, icon, color } = req.body;
+      const { name, icon, color, bannerType, bannerGradient } = req.body;
 
       const access = await resolveCartAccess(usersCollection, cartSharesCollection, req.user.sub, cartId);
       if (!access.allowed || access.role === "view") {
@@ -67,6 +67,8 @@ module.exports = async function handler(req, res) {
             "carts.$.name": name,
             "carts.$.icon": icon,
             ...(color && { "carts.$.color": color }),
+            ...(bannerType && { "carts.$.bannerType": bannerType }),
+            ...(bannerType === "gradient" && { "carts.$.bannerGradient": bannerGradient || null }),
           },
         }
       );
@@ -82,6 +84,8 @@ module.exports = async function handler(req, res) {
           cartName: updatedCart.name,
           cartIcon: updatedCart.icon,
           ...(updatedCart.color && { cartColor: updatedCart.color }),
+          ...(updatedCart.bannerType && { bannerType: updatedCart.bannerType }),
+          ...(updatedCart.bannerGradient && { bannerGradient: updatedCart.bannerGradient }),
         });
 
         res.json(updatedCart);

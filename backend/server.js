@@ -487,10 +487,13 @@ app.get("/api/carts", verifyToken, async (req, res) => {
 
 app.post("/api/carts", verifyToken, async (req, res) => {
   try {
-    const { name, icon } = req.body;
+    const { name, icon, color, bannerType, bannerGradient } = req.body;
     const newCart = {
       name,
       icon,
+      color: color || "#000000",
+      bannerType: bannerType || "color",
+      bannerGradient: bannerType === "gradient" ? bannerGradient || null : null,
       id: crypto.randomUUID(),
       products: [], // Initialize empty products array
     };
@@ -526,7 +529,7 @@ app.post("/api/carts/selectCart", verifyToken, async (req, res) => {
 app.put("/api/carts/:cartId", verifyToken, async (req, res) => {
   try {
     const { cartId } = req.params;
-    const { name, icon, color } = req.body;
+    const { name, icon, color, bannerType, bannerGradient } = req.body;
 
     if (!cartId) {
       return res.status(400).json({ error: "Cart ID is required" });
@@ -545,6 +548,8 @@ app.put("/api/carts/:cartId", verifyToken, async (req, res) => {
           "carts.$.name": name,
           "carts.$.icon": icon,
           ...(color && { "carts.$.color": color }),
+          ...(bannerType && { "carts.$.bannerType": bannerType }),
+          ...(bannerType === "gradient" && { "carts.$.bannerGradient": bannerGradient || null }),
         },
       }
     );
@@ -561,12 +566,16 @@ app.put("/api/carts/:cartId", verifyToken, async (req, res) => {
         cartName: updatedCart.name,
         cartIcon: updatedCart.icon,
         ...(updatedCart.color && { cartColor: updatedCart.color }),
+        ...(updatedCart.bannerType && { bannerType: updatedCart.bannerType }),
+        ...(updatedCart.bannerGradient && { bannerGradient: updatedCart.bannerGradient }),
       });
       io.to(room(access.ownerSub, cartId)).emit("cart:renamed", {
         cartId,
         name: updatedCart.name,
         icon: updatedCart.icon,
         color: updatedCart.color,
+        bannerType: updatedCart.bannerType,
+        bannerGradient: updatedCart.bannerGradient,
       });
 
       res.json(updatedCart);
