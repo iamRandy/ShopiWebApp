@@ -10,7 +10,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
 
 // Token expiration times
-const ACCESS_TOKEN_EXPIRY = "15m"; // 15 minutes
+const ACCESS_TOKEN_EXPIRY = "2h"; // 2 hours
 const REFRESH_TOKEN_EXPIRY = "7d"; // 7 days
 
 // Generate tokens

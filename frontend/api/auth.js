@@ -1,5 +1,4 @@
 const jwt = require("jsonwebtoken");
-const crypto = require("crypto");
 const { connectToDatabase } = require("./_lib/db");
 const { verifyToken, generateTokens, oauth_client, client_id, REFRESH_TOKEN_SECRET } = require("./_lib/auth");
 
@@ -25,7 +24,6 @@ async function loginGoogle(req, res) {
     }
 
     const { usersCollection } = await connectToDatabase();
-    const refreshTokenValue = crypto.randomBytes(64).toString("hex");
 
     const filter = { sub: payload.sub };
     const update = {
@@ -33,7 +31,6 @@ async function loginGoogle(req, res) {
         email: payload.email,
         picture: payload.picture,
         lastLogin: new Date(),
-        refreshToken: refreshTokenValue,
       },
       $setOnInsert: {
         carts: [],
@@ -46,6 +43,9 @@ async function loginGoogle(req, res) {
 
     const user = await usersCollection.findOne({ sub: payload.sub });
     const { accessToken, refreshToken } = generateTokens(user);
+
+    // Persist the issued refresh token so /api/refresh-token can validate it later
+    await usersCollection.updateOne(filter, { $set: { refreshToken } });
 
     res.status(200).json({
       message: "Login successful",
