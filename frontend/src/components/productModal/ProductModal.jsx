@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useAnimation } from "framer-motion";
-import { Check, Copy, ExternalLink, Heart, Pencil, RefreshCw, Trash2, X } from "lucide-react";
+import { Check, Copy, ExternalLink, Pencil, RefreshCw, Trash2, X } from "lucide-react";
 import { getAffiliateLink } from "../../utils/affiliate";
 import { formatRelativeAdded } from "../../utils/product";
 import { authenticatedFetch } from "../../utils/api";
@@ -547,21 +547,7 @@ const ProductModal = ({
 
           {!isEditing && (
             <div className="shrink-0 space-y-2 border-t border-stone-100 px-5 py-3.5 dark:border-stone-800">
-              <div className="grid grid-cols-[auto_1fr_auto] gap-2">
-                <button
-                  type="button"
-                  onClick={handleRefreshPrice}
-                  disabled={!productUrl || busy || isCheckingPrice}
-                  title="Check current price"
-                  aria-label="Refresh price"
-                  className="flex items-center justify-center rounded-xl border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-surface)] px-3.5 text-stone-700 transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 dark:text-stone-200"
-                >
-                  <RefreshCw
-                    className={`h-4 w-4 ${isCheckingPrice ? "animate-spin" : ""}`}
-                    strokeWidth={2}
-                  />
-                </button>
-
+              <div className="grid grid-cols-[1fr_auto] gap-2">
                 <button
                   type="button"
                   onClick={handleVisitProduct}
@@ -609,20 +595,16 @@ const ProductModal = ({
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  onClick={handleToggleFavorite}
-                  disabled={isFavoriteSaving}
-                  className={`flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
-                    productIsFavorite
-                      ? "border-[#FFBC42]/60 bg-[#FFBC42]/10 text-stone-900 dark:text-stone-50"
-                      : "border-stone-200 text-stone-600 hover:bg-stone-50 dark:border-stone-700 dark:text-stone-300 dark:hover:bg-white/5"
-                  }`}
+                  onClick={handleRefreshPrice}
+                  disabled={!productUrl || busy || isCheckingPrice}
+                  title="Check current price"
+                  className="flex items-center justify-center gap-1.5 rounded-xl border border-stone-200 px-3 py-2.5 text-sm font-medium text-stone-600 transition-colors hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-stone-700 dark:text-stone-300 dark:hover:bg-white/5"
                 >
-                  <Heart
-                    className="h-4 w-4"
-                    fill={productIsFavorite ? "currentColor" : "none"}
+                  <RefreshCw
+                    className={`h-4 w-4 ${isCheckingPrice ? "animate-spin" : ""}`}
                     strokeWidth={2}
                   />
-                  {productIsFavorite ? "Favorited" : "Favorite"}
+                  {isCheckingPrice ? "Checking…" : "Refresh price"}
                 </button>
 
                 <button
