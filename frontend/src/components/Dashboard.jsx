@@ -455,6 +455,11 @@ const Dashboard = () => {
       productIsFavorite: Boolean(product.isFavorite),
       productSavedAt: product.savedAt,
       productTags: product.tags || [],
+      productLastManualCheckAt: product.lastManualPriceCheckAt || null,
+      productPriceBeforeManualCheck:
+        product.priceBeforeManualCheck !== undefined && product.priceBeforeManualCheck !== null
+          ? Number(product.priceBeforeManualCheck)
+          : null,
     });
     setIsModalOpen(true);
   };
@@ -476,6 +481,12 @@ const Dashboard = () => {
         next.productPrice = formatProductPrice(updates.price, updates.currency || "$");
       }
       if (updates.tags !== undefined) next.productTags = updates.tags;
+      if (updates.lastManualPriceCheckAt !== undefined) {
+        next.productLastManualCheckAt = updates.lastManualPriceCheckAt;
+      }
+      if (updates.priceBeforeManualCheck !== undefined) {
+        next.productPriceBeforeManualCheck = updates.priceBeforeManualCheck;
+      }
       return next;
     });
   };
@@ -678,6 +689,7 @@ const Dashboard = () => {
                 onClearCompare={clearCompareSelection}
                 onDeleteSelected={canEditCart ? handleDeleteSelected : undefined}
                 isDeletingSelected={isBulkDeleting}
+                onSelectAllPage={() => selectAllOnPage(pageItems.map((p) => p.id))}
                 showingCount={pageItems.length}
                 totalCount={sortedProducts.length}
               />
@@ -717,6 +729,8 @@ const Dashboard = () => {
                     deletingId={deletingId}
                     priceAlerts={priceAlerts}
                     tagLabelBySlug={tagLabelBySlug}
+                    cartId={selectedCart}
+                    onPriceChecked={handleProductUpdated}
                   />
                 ) : (
                   <ProductListView
@@ -780,6 +794,8 @@ const Dashboard = () => {
           productIsFavorite={selectedProduct?.productIsFavorite}
           productSavedAt={selectedProduct?.productSavedAt}
           productTags={selectedProduct?.productTags}
+          productLastManualCheckAt={selectedProduct?.productLastManualCheckAt}
+          productPriceBeforeManualCheck={selectedProduct?.productPriceBeforeManualCheck}
           originalTitle={selectedProduct?.originalTitle}
           cartId={selectedCart}
           tagLabelBySlug={tagLabelBySlug}

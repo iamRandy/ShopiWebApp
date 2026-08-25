@@ -1,7 +1,7 @@
 const { connectToDatabase } = require("../../../_lib/db");
 const { verifyToken } = require("../../../_lib/auth");
 const { resolveCartAccess } = require("../../../_lib/cartAccess");
-const { scrapeProductPrice } = require("../../../_lib/priceScraper");
+const { scrapeProductPriceGuarded } = require("../../../_lib/priceScraper");
 
 // A product's price is re-checked at most once per this window, and only when visible to a user.
 const STALE_SCAN_MS = 14 * 24 * 60 * 60 * 1000; // 2 weeks
@@ -49,7 +49,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { usersCollection, cartSharesCollection } = await connectToDatabase();
+    const { usersCollection, cartSharesCollection, blockedHostsCollection } = await connectToDatabase();
     const access = await resolveCartAccess(usersCollection, cartSharesCollection, req.user.sub, cartId);
     if (!access.allowed) {
       return res.status(403).json({ error: "You do not have access to this cart" });
@@ -75,7 +75,7 @@ module.exports = async function handler(req, res) {
 
     const updates = await Promise.all(
       staleProducts.map(async (product) => {
-        const result = await scrapeProductPrice(product.url, SCRAPE_TIMEOUT_MS);
+        const result = await scrapeProductPriceGuarded(blockedHostsCollection, product.url, SCRAPE_TIMEOUT_MS);
         const priceChanged =
           result.ok &&
           Number.isFinite(result.price) &&

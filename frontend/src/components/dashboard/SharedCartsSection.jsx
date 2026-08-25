@@ -71,7 +71,7 @@ export default function SharedCartsSection({
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="w-full overflow-hidden"
+            className="-mr-1 w-full overflow-hidden pb-1 pr-1"
           >
             <div className={`flex w-full flex-col gap-1 ${collapsed ? "items-center" : ""}`}>
               {sharedCarts.map((shared) => (
@@ -82,6 +82,8 @@ export default function SharedCartsSection({
                     name: shared.cartName,
                     icon: shared.cartIcon,
                     color: shared.cartColor,
+                    bannerType: shared.bannerType,
+                    bannerGradient: shared.bannerGradient,
                   }}
                   variant="shared"
                   selected={selectedCartId === shared.cartId}

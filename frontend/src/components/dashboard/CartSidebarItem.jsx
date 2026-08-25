@@ -2,6 +2,7 @@ import { useState } from "react";
 import { MoreHorizontal, X } from "lucide-react";
 import { ShoppingCart } from "lucide-react";
 import { getCartIcon } from "../../utils/cartIcons";
+import { getCartBannerBackground, getCartBannerTone } from "../../utils/cartBanners";
 import ConfirmModal from "../ConfirmModal";
 
 export default function CartSidebarItem({
@@ -17,6 +18,16 @@ export default function CartSidebarItem({
   const count = cart.products?.length ?? 0;
   const cartName = cart.name || "Unnamed Cart";
   const isShared = variant === "shared";
+
+  // Selected state borrows the cart's own banner (color or gradient) so the sidebar
+  // highlight matches the banner shown once that cart is open, instead of a fixed brand color.
+  const bannerBackground = selected ? getCartBannerBackground(cart) : null;
+  const bannerTone = selected ? getCartBannerTone(cart) : null;
+  const contentColorClass = selected
+    ? bannerTone === "dark"
+      ? "text-[#1a1a1a]"
+      : "text-white"
+    : "text-stone-700 dark:text-stone-300";
 
   const handleTrailingClick = (e) => {
     e.stopPropagation();
@@ -55,13 +66,17 @@ export default function CartSidebarItem({
           onClick={() => onSelect(cart.id)}
           title={`${cartName} (${count})`}
           aria-label={`${cartName}, ${count} items`}
-          className={`flex w-full items-center justify-center rounded-xl border-2 p-2.5 transition-all ${
+          style={selected ? { background: bannerBackground } : undefined}
+          className={`relative flex w-full items-center justify-center overflow-hidden rounded-xl border-2 p-2.5 transition-all ${
             selected
-              ? "border-[var(--color-border-strong)] bg-[#FFBC42]/30 shadow-[3px_3px_0_var(--color-shadow)]"
+              ? "border-[var(--color-border-strong)] shadow-[3px_3px_0_var(--color-shadow)]"
               : "border-transparent bg-transparent hover:border-[var(--color-border-subtle)] hover:bg-[var(--color-bg-surface)]/80"
           }`}
         >
-          <span className="text-stone-700 dark:text-stone-300">
+          {selected && bannerTone === "light" && (
+            <span className="absolute inset-0 bg-black/30" />
+          )}
+          <span className={`relative ${contentColorClass}`}>
             {getCartIcon(cart.icon, { className: "h-5 w-5" }) || (
               <ShoppingCart className="h-5 w-5" />
             )}
@@ -70,7 +85,7 @@ export default function CartSidebarItem({
         <button
           type="button"
           onClick={handleTrailingClick}
-          className="absolute -right-0.5 -top-0.5 flex rounded-full bg-[var(--color-bg-surface)] p-0.5 text-stone-600 opacity-0 shadow-sm transition-opacity hover:text-[var(--color-text-primary)] group-hover:opacity-100 dark:text-stone-400"
+          className="absolute right-0.5 top-0.5 flex rounded-full bg-[var(--color-bg-surface)] p-0.5 text-stone-600 opacity-0 shadow-sm transition-opacity hover:text-[var(--color-text-primary)] group-hover:opacity-100 dark:text-stone-400"
           title={trailingTitle}
           aria-label={trailingAriaLabel}
         >
@@ -84,9 +99,10 @@ export default function CartSidebarItem({
   return (
     <>
     <div
-      className={`group relative flex cursor-pointer items-center gap-2 rounded-xl border-2 px-3 py-2.5 transition-all ${
+      style={selected ? { background: bannerBackground } : undefined}
+      className={`group relative flex cursor-pointer items-center gap-2 overflow-hidden rounded-xl border-2 px-3 py-2.5 transition-all ${
         selected
-          ? "border-[var(--color-border-strong)] bg-[#FFBC42]/30 shadow-[3px_3px_0_var(--color-shadow)]"
+          ? "border-[var(--color-border-strong)] shadow-[3px_3px_0_var(--color-shadow)]"
           : "border-transparent bg-transparent hover:border-[var(--color-border-subtle)] hover:bg-[var(--color-bg-surface)]/80"
       }`}
       onClick={() => onSelect(cart.id)}
@@ -99,12 +115,19 @@ export default function CartSidebarItem({
         }
       }}
     >
-      <span className="flex-shrink-0 text-stone-700 dark:text-stone-300">
+      {selected && bannerTone === "light" && (
+        <span className="absolute inset-0 bg-black/30" />
+      )}
+      <span className={`relative flex-shrink-0 ${contentColorClass}`}>
         {getCartIcon(cart.icon, { className: "h-5 w-5" }) || (
           <ShoppingCart className="h-5 w-5" />
         )}
       </span>
-      <span className="min-w-0 flex-1 truncate text-sm font-semibold text-[var(--color-text-primary)]">
+      <span
+        className={`relative min-w-0 flex-1 truncate text-sm font-semibold ${
+          selected ? contentColorClass : "text-[var(--color-text-primary)]"
+        }`}
+      >
         {cartName}
       </span>
       {!isShared && (

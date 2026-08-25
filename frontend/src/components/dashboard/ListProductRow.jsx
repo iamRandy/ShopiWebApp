@@ -124,7 +124,7 @@ export default function ListProductRow({
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium text-stone-800 dark:text-stone-100">{name}</p>
+          <p className="truncate text-xs font-medium text-stone-800 dark:text-stone-100">{name}</p>
           <p className="mt-0.5 flex items-center gap-1.5 text-xs text-stone-500 dark:text-stone-400">
             {previousPriceFormatted && (
               <span className="text-stone-400 line-through dark:text-stone-500">{previousPriceFormatted}</span>

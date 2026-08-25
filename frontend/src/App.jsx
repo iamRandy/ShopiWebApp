@@ -10,6 +10,7 @@ import Compare from "./pages/Compare";
 import Landing from "./pages/Landing";
 import Privacy from "./pages/Privacy";
 import SharedCart from "./pages/SharedCart";
+import { ToastProvider } from "./context/ToastContext";
 
 /**
  * SPA navigations keep window scrollY. Reset to top on each location update.
@@ -27,16 +28,18 @@ function ScrollToTop() {
 function App() {
   return (
     <BrowserRouter>
-      <ScrollToTop />
-      <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/home" element={<Home />} />
-        <Route path="/home/settings" element={<Settings />} />
-        <Route path="/home/compare" element={<Compare />} />
-        <Route path="/privacy" element={<Privacy />} />
-        <Route path="/shared/:token" element={<SharedCart />} />
-      </Routes>
+      <ToastProvider>
+        <ScrollToTop />
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/home" element={<Home />} />
+          <Route path="/home/settings" element={<Settings />} />
+          <Route path="/home/compare" element={<Compare />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/shared/:token" element={<SharedCart />} />
+        </Routes>
+      </ToastProvider>
     </BrowserRouter>
   );
 }

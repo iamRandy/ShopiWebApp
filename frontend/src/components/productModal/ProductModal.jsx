@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { Check, Copy, ExternalLink, Heart, Pencil, Trash2, X } from "lucide-react";
+import { AnimatePresence, motion, useAnimation } from "framer-motion";
+import { Check, Copy, ExternalLink, Heart, Pencil, RefreshCw, Trash2, X } from "lucide-react";
 import { getAffiliateLink } from "../../utils/affiliate";
 import { formatRelativeAdded } from "../../utils/product";
 import { authenticatedFetch } from "../../utils/api";
 import { useNavigate } from "react-router-dom";
+import usePriceCheck from "../../hooks/usePriceCheck";
 import ConfirmModal from "../ConfirmModal";
 import ModalPortal from "../ModalPortal";
 import ProductImage from "../ProductImage";
@@ -12,6 +13,8 @@ import FavoriteHeartButton from "../FavoriteHeartButton";
 import ExpandableText from "./ExpandableText";
 import ProductEditForm from "./ProductEditForm";
 import TagCarousel from "../tags/TagCarousel";
+
+const PRICE_CHECK_COLORS = { up: "#dc2626", down: "#16a34a", same: "#2563eb" };
 
 const ProductModal = ({
   isOpen,
@@ -29,6 +32,8 @@ const ProductModal = ({
   productIsFavorite,
   productSavedAt,
   productTags,
+  productLastManualCheckAt,
+  productPriceBeforeManualCheck,
   originalTitle,
   cartId,
   tagLabelBySlug,
@@ -36,6 +41,19 @@ const ProductModal = ({
   onProductUpdated,
 }) => {
   const navigate = useNavigate();
+  const { isChecking: isCheckingPrice, checkErrorReason: priceCheckErrorReason, checkPrice } = usePriceCheck({
+    cartId,
+    product: {
+      id: productId,
+      url: productUrl,
+      price: productPriceValue,
+      lastManualPriceCheckAt: productLastManualCheckAt,
+      priceBeforeManualCheck: productPriceBeforeManualCheck,
+    },
+    onUpdated: onProductUpdated,
+  });
+  const priceControls = useAnimation();
+  const priceRef = useRef(null);
   const [isEditing, setIsEditing] = useState(false);
   const [nicknameInput, setNicknameInput] = useState("");
   const [noteInput, setNoteInput] = useState("");
@@ -131,6 +149,23 @@ const ProductModal = ({
     if (productUrl) {
       window.open(getAffiliateLink(productUrl), "_blank", "noopener,noreferrer");
     }
+  };
+
+  const playPriceCheckAnimation = (direction) => {
+    const baseColor = priceRef.current ? getComputedStyle(priceRef.current).color : undefined;
+    const flash = PRICE_CHECK_COLORS[direction] || PRICE_CHECK_COLORS.same;
+    priceControls.start({
+      scale: [1, 1.18, 0.98, 1.05, 1],
+      y: [0, 0, -8, 2, 0],
+      color: [baseColor, baseColor, flash, flash, baseColor],
+      transition: { duration: 0.7, times: [0, 0.15, 0.4, 0.7, 1], ease: "easeOut" },
+    });
+  };
+
+  const handleRefreshPrice = async () => {
+    if (busy) return;
+    const result = await checkPrice();
+    if (result) playPriceCheckAnimation(result.direction);
   };
 
   const handleCopyLink = async () => {
@@ -313,15 +348,29 @@ const ProductModal = ({
         )}
 
         <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-          <span className="text-lg font-semibold text-stone-900 dark:text-stone-50">
+          <motion.span
+            ref={priceRef}
+            animate={priceControls}
+            className="inline-block text-lg font-semibold text-stone-900 dark:text-stone-50"
+          >
             {productPrice}
-          </span>
+          </motion.span>
           {productSavedAt && (
             <span className="text-sm text-stone-400">
               · Saved {formatRelativeAdded(productSavedAt)}
             </span>
           )}
         </div>
+
+        {priceCheckErrorReason === "blocked" && (
+          <p className="mt-1 text-sm text-stone-400">
+            {productHostname || "This site"} blocks automated price checks — visit the page and
+            update the price manually.
+          </p>
+        )}
+        {priceCheckErrorReason === "error" && (
+          <p className="mt-1 text-sm text-stone-400">Could not check price. Try again shortly.</p>
+        )}
 
         <div className="mt-4 border-t border-stone-100 pt-4 dark:border-stone-800">
           {viewingOriginal ? (
@@ -498,7 +547,21 @@ const ProductModal = ({
 
           {!isEditing && (
             <div className="shrink-0 space-y-2 border-t border-stone-100 px-5 py-3.5 dark:border-stone-800">
-              <div className="grid grid-cols-[1fr_auto] gap-2">
+              <div className="grid grid-cols-[auto_1fr_auto] gap-2">
+                <button
+                  type="button"
+                  onClick={handleRefreshPrice}
+                  disabled={!productUrl || busy || isCheckingPrice}
+                  title="Check current price"
+                  aria-label="Refresh price"
+                  className="flex items-center justify-center rounded-xl border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-surface)] px-3.5 text-stone-700 transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 dark:text-stone-200"
+                >
+                  <RefreshCw
+                    className={`h-4 w-4 ${isCheckingPrice ? "animate-spin" : ""}`}
+                    strokeWidth={2}
+                  />
+                </button>
+
                 <button
                   type="button"
                   onClick={handleVisitProduct}

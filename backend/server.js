@@ -30,10 +30,20 @@ const REFRESH_TOKEN_EXPIRY = "7d"; // 7 days
 // A product's price is re-checked at most once per this window, and only when visible to a user.
 const STALE_SCAN_MS = 14 * 24 * 60 * 60 * 1000; // 2 weeks
 
+// A user-triggered manual price check is throttled independently of STALE_SCAN_MS (and only
+// armed on success — see the check-price route) so a failed check never blocks an immediate retry.
+const MANUAL_CHECK_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
+
+// Once a hostname is seen serving a bot-check page, skip re-hitting it (for any product on that
+// domain, manual or background) for this long — avoids repeatedly bothering a site we already
+// know is blocking us. Short enough that a lifted block gets retried on its own eventually.
+const BLOCKED_HOST_TTL_SECONDS = 6 * 60 * 60; // 6 hours
+
 const client = new MongoClient(process.env.MONGODB_URI);
 let usersCollection;
 let cartSharesCollection;
 let tagsCollection;
+let blockedHostsCollection;
 
 const httpServer = http.createServer(app);
 const io = new SocketIOServer(httpServer, { cors: { origin: "*" } });
@@ -53,11 +63,14 @@ async function init() {
   usersCollection = db.collection("users");
   cartSharesCollection = db.collection("cartShares");
   tagsCollection = db.collection("tags");
+  blockedHostsCollection = db.collection("blockedHosts");
   await Promise.all([
     cartSharesCollection.createIndex({ shareToken: 1 }, { unique: true }),
     cartSharesCollection.createIndex({ cartId: 1, ownerSub: 1 }, { unique: true }),
     cartSharesCollection.createIndex({ "collaborators.sub": 1 }),
     usersCollection.createIndex({ "sharedCartIds.cartId": 1 }),
+    blockedHostsCollection.createIndex({ hostname: 1 }, { unique: true }),
+    blockedHostsCollection.createIndex({ blockedAt: 1 }, { expireAfterSeconds: BLOCKED_HOST_TTL_SECONDS }),
   ]);
   httpServer.listen(PORT, () => console.log("API ready on", PORT));
 }
@@ -226,6 +239,12 @@ function extractJsonLdPrice($) {
   return null;
 }
 
+/** Sites like Amazon serve a 200 OK "prove you're not a robot" interstitial instead of the real
+ * page to non-browser traffic — this is a distinct outcome from "no price found", worth telling
+ * the user apart from a generic failure so they know to check the price on the site themselves. */
+const BOT_BLOCK_PATTERN =
+  /captcha|are you a (human|robot)|verify you are a human|unusual traffic|access denied|attention required|cf-browser-verification|just a moment|robot check|automated access to (our|this|amazon)/i;
+
 /** Best-effort, lightweight re-scrape: plain HTTP GET + static HTML parse, no headless browser.
  * Sites that only render price via client JS, or that block non-browser traffic, just fail here
  * silently — the caller still bumps lastScannedAt so we don't hammer the same URL every cart open. */
@@ -237,9 +256,13 @@ async function scrapeProductPrice(url) {
       headers: { "User-Agent": SCRAPE_USER_AGENT, Accept: "text/html" },
       signal: controller.signal,
     });
+
+    // Checked before response.ok — some bot-block systems (Cloudflare) fail the request with a
+    // 403/503 whose body is the block page itself, rather than Amazon's fake-200 interstitial.
+    const html = await response.text();
+    if (BOT_BLOCK_PATTERN.test(html)) return { ok: false, blocked: true };
     if (!response.ok) return { ok: false };
 
-    const html = await response.text();
     const $ = cheerio.load(html);
     const price = extractJsonLdPrice($);
     return price === null ? { ok: false } : { ok: true, price };
@@ -271,6 +294,44 @@ function withScanSlot(fn) {
     if (activeScans < MAX_CONCURRENT_SCANS) run();
     else scanQueue.push(run);
   });
+}
+
+function hostnameFromUrl(url) {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return null;
+  }
+}
+
+async function isHostBlocked(hostname) {
+  if (!hostname) return false;
+  const doc = await blockedHostsCollection.findOne({ hostname });
+  return Boolean(doc);
+}
+
+async function markHostBlocked(hostname) {
+  if (!hostname) return;
+  await blockedHostsCollection.updateOne(
+    { hostname },
+    { $set: { hostname, blockedAt: new Date() } },
+    { upsert: true }
+  );
+}
+
+/** Wraps scrapeProductPrice with the shared concurrency limiter and the blocked-hostname cache:
+ * skips the network call entirely for a hostname we've recently seen bot-block us, and records
+ * one the moment it's discovered, so every caller (manual check, background rescan) benefits. */
+async function scrapeProductPriceGuarded(url) {
+  const hostname = hostnameFromUrl(url);
+  if (await isHostBlocked(hostname)) {
+    return { ok: false, blocked: true };
+  }
+  const result = await withScanSlot(() => scrapeProductPrice(url));
+  if (!result.ok && result.blocked) {
+    await markHostBlocked(hostname);
+  }
+  return result;
 }
 
 // Product ids currently mid-scan, so overlapping rescan requests (two tabs on the same
@@ -869,22 +930,134 @@ app.post("/api/carts/:cartId/products/rescan", verifyToken, async (req, res) => 
 
     staleProducts.forEach((product) => scanningProductIds.add(product.id));
     staleProducts.forEach((product) => {
-      withScanSlot(async () => {
-        const result = await scrapeProductPrice(product.url);
-        await applyRescanResult({
-          ownerSub: access.ownerSub,
-          cartId,
-          productId: product.id,
-          previousPrice: product.price,
-          result,
-        });
-      })
+      scrapeProductPriceGuarded(product.url)
+        .then((result) =>
+          applyRescanResult({
+            ownerSub: access.ownerSub,
+            cartId,
+            productId: product.id,
+            previousPrice: product.price,
+            result,
+          })
+        )
         .catch((e) => console.error("Rescan failed for product", product.id, e))
         .finally(() => scanningProductIds.delete(product.id));
     });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Failed to queue rescan" });
+  }
+});
+
+// User-triggered price check for a single product, re-scraping its source URL on demand.
+// Throttled to once per MANUAL_CHECK_COOLDOWN_MS, armed only on a successful check so a failed
+// scrape (site down, price not found) never blocks the user from retrying right away.
+// Registered after the /rescan route above so that literal path isn't shadowed by :productId.
+app.post("/api/carts/:cartId/products/:productId", verifyToken, async (req, res) => {
+  try {
+    const { cartId, productId } = req.params;
+
+    if (!cartId || !productId) {
+      return res.status(400).json({ error: "Cart ID and Product ID are required" });
+    }
+
+    const access = await resolveCartAccess(req.user.sub, cartId);
+    if (!access.allowed || access.role === "view") {
+      return res.status(403).json({ error: "You do not have permission to edit this cart" });
+    }
+
+    const user = await usersCollection.findOne(
+      { sub: access.ownerSub, "carts.id": cartId },
+      { projection: { _id: 0, "carts.$": 1 } }
+    );
+    const cart = user?.carts?.[0];
+    const product = cart?.products?.find((p) => p.id === productId);
+    if (!product) {
+      return res.status(404).json({ error: "Product not found in cart or cart not found" });
+    }
+    if (!product.url) {
+      return res.status(400).json({ error: "Product has no source URL to check" });
+    }
+
+    const lastCheckMs = product.lastManualPriceCheckAt
+      ? new Date(product.lastManualPriceCheckAt).getTime()
+      : null;
+    if (lastCheckMs && Date.now() - lastCheckMs < MANUAL_CHECK_COOLDOWN_MS) {
+      return res.json({
+        status: "cooldown",
+        price: product.price,
+        previousPrice: product.priceBeforeManualCheck ?? product.price,
+        currency: product.currency,
+        lastManualPriceCheckAt: product.lastManualPriceCheckAt,
+      });
+    }
+
+    if (scanningProductIds.has(productId)) {
+      return res.json({ status: "busy" });
+    }
+    scanningProductIds.add(productId);
+
+    let result;
+    try {
+      result = await scrapeProductPriceGuarded(product.url);
+    } finally {
+      scanningProductIds.delete(productId);
+    }
+
+    if (!result.ok) {
+      return res.json({ status: result.blocked ? "blocked" : "error" });
+    }
+
+    const previousPrice = product.price;
+    const priceChanged =
+      Number.isFinite(result.price) &&
+      (!Number.isFinite(Number(previousPrice)) || Math.abs(result.price - Number(previousPrice)) >= 0.01);
+    const nowIso = new Date().toISOString();
+
+    const $set = {
+      "carts.$[c].products.$[p].lastManualPriceCheckAt": nowIso,
+      "carts.$[c].products.$[p].priceBeforeManualCheck": previousPrice,
+      "carts.$[c].products.$[p].lastScannedAt": nowIso,
+    };
+    if (priceChanged) {
+      $set["carts.$[c].products.$[p].price"] = result.price;
+    }
+
+    await usersCollection.updateOne(
+      { sub: access.ownerSub },
+      { $set },
+      { arrayFilters: [{ "c.id": cartId }, { "p.id": productId }] }
+    );
+
+    if (priceChanged) {
+      const updatedUser = await usersCollection.findOne(
+        { sub: access.ownerSub },
+        { projection: { _id: 0, carts: 1 } }
+      );
+      const updatedProduct = updatedUser?.carts
+        ?.find((c) => c.id === cartId)
+        ?.products?.find((p) => p.id === productId);
+      if (updatedProduct) {
+        io.to(room(access.ownerSub, cartId)).emit("product:rescanned", {
+          cartId,
+          productId,
+          previousPrice,
+          product: updatedProduct,
+        });
+      }
+    }
+
+    res.json({
+      status: "checked",
+      price: priceChanged ? result.price : previousPrice,
+      previousPrice,
+      priceChanged,
+      currency: product.currency,
+      lastManualPriceCheckAt: nowIso,
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Failed to check price" });
   }
 });
 

@@ -1,13 +1,18 @@
-import { Check, CheckCheck, ExternalLink, Trash2 } from "lucide-react";
+import { useRef } from "react";
+import { motion, useAnimation } from "framer-motion";
+import { Check, CheckCheck, ExternalLink, RefreshCw, Trash2 } from "lucide-react";
 import {
   getProductDisplayName,
   getFormattedProductPrice,
   formatProductPrice,
 } from "../../utils/product";
 import { getAffiliateLink } from "../../utils/affiliate";
+import usePriceCheck from "../../hooks/usePriceCheck";
 import ProductImage from "../ProductImage";
 import FavoriteHeartButton from "../FavoriteHeartButton";
 import TagPill from "../tags/TagPill";
+
+const PRICE_CHECK_COLORS = { up: "#dc2626", down: "#16a34a", same: "#2563eb" };
 
 export default function GridProductCard({
   product,
@@ -22,6 +27,8 @@ export default function GridProductCard({
   isDeleting = false,
   priceAlert,
   tagLabelBySlug,
+  cartId,
+  onPriceChecked,
 }) {
   const name = getProductDisplayName(product);
   const price = getFormattedProductPrice(product);
@@ -34,6 +41,31 @@ export default function GridProductCard({
   const priceRose = priceAlert && Number(product.price) > Number(priceAlert.previousPrice);
   const tags = product.tags || [];
   const firstTagLabel = tags.length > 0 ? tagLabelBySlug?.get(tags[0]) || tags[0] : null;
+
+  const { isChecking, checkErrorReason, checkPrice } = usePriceCheck({
+    cartId,
+    product,
+    onUpdated: onPriceChecked,
+  });
+  const priceControls = useAnimation();
+  const priceRef = useRef(null);
+
+  const playPriceCheckAnimation = (direction) => {
+    const baseColor = priceRef.current ? getComputedStyle(priceRef.current).color : undefined;
+    const flash = PRICE_CHECK_COLORS[direction] || PRICE_CHECK_COLORS.same;
+    priceControls.start({
+      scale: [1, 1.18, 0.98, 1.05, 1],
+      y: [0, 0, -8, 2, 0],
+      color: [baseColor, baseColor, flash, flash, baseColor],
+      transition: { duration: 0.7, times: [0, 0.15, 0.4, 0.7, 1], ease: "easeOut" },
+    });
+  };
+
+  const handleRefreshPrice = async (e) => {
+    e.stopPropagation();
+    const result = await checkPrice();
+    if (result) playPriceCheckAnimation(result.direction);
+  };
 
   const handleVisit = (e) => {
     e.stopPropagation();
@@ -114,7 +146,7 @@ export default function GridProductCard({
           </span>
         </div>
 
-        <div className="group/selectall relative">
+        <div className="group/selectall relative hidden sm:block">
           <button
             type="button"
             onClick={handleSelectAllPage}
@@ -156,11 +188,11 @@ export default function GridProductCard({
       )}
 
       <div className="absolute inset-x-0 bottom-0 p-3">
-        <h3 className="line-clamp-2 text-sm font-medium leading-snug text-white">
+        <h3 className="line-clamp-2 text-xs font-medium leading-snug text-white sm:text-sm">
           {name}
         </h3>
         {product.hostname && (
-          <p className="mt-0.5 truncate text-[10px] font-medium uppercase tracking-wide text-white/60">
+          <p className="mt-0.5 hidden truncate text-[10px] font-medium uppercase tracking-wide text-white/60 sm:block">
             {product.hostname}
           </p>
         )}
@@ -179,7 +211,13 @@ export default function GridProductCard({
                 {previousPriceFormatted}
               </span>
             )}
-            <p className="truncate text-sm font-semibold text-white/95">{price}</p>
+            <motion.p
+              ref={priceRef}
+              animate={priceControls}
+              className="inline-block truncate text-sm font-semibold text-white/95"
+            >
+              {price}
+            </motion.p>
             {priceAlert && (
               <span
                 title={priceRose ? "Price increased since last check" : "Price dropped since last check"}
@@ -191,14 +229,37 @@ export default function GridProductCard({
               </span>
             )}
           </div>
-          <button
-            type="button"
-            onClick={handleVisit}
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/90 text-stone-700 transition-colors hover:bg-white"
-            aria-label="Visit product"
-          >
-            <ExternalLink className="h-3.5 w-3.5" strokeWidth={2} />
-          </button>
+          <div className="flex shrink-0 items-center gap-1.5">
+            <button
+              type="button"
+              onClick={handleRefreshPrice}
+              disabled={!product.url || isChecking}
+              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/90 transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-60 ${
+                checkErrorReason ? "text-red-500" : "text-stone-700"
+              }`}
+              aria-label="Refresh price"
+              title={
+                checkErrorReason === "blocked"
+                  ? `${product.hostname || "This site"} blocks automated price checks — update manually`
+                  : checkErrorReason === "error"
+                    ? "Could not check price"
+                    : "Check current price"
+              }
+            >
+              <RefreshCw
+                className={`h-3.5 w-3.5 ${isChecking ? "animate-spin" : ""}`}
+                strokeWidth={2}
+              />
+            </button>
+            <button
+              type="button"
+              onClick={handleVisit}
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/90 text-stone-700 transition-colors hover:bg-white"
+              aria-label="Visit product"
+            >
+              <ExternalLink className="h-3.5 w-3.5" strokeWidth={2} />
+            </button>
+          </div>
         </div>
       </div>
     </article>

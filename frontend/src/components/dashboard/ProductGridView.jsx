@@ -13,6 +13,8 @@ export default function ProductGridView({
   deletingId,
   priceAlerts,
   tagLabelBySlug,
+  cartId,
+  onPriceChecked,
 }) {
   if (products.length === 0) {
     return (
@@ -39,6 +41,8 @@ export default function ProductGridView({
           isDeleting={deletingId === product.id}
           priceAlert={priceAlerts?.get(product.id)}
           tagLabelBySlug={tagLabelBySlug}
+          cartId={cartId}
+          onPriceChecked={onPriceChecked}
         />
       ))}
     </div>

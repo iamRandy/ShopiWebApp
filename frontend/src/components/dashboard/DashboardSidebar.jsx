@@ -136,8 +136,8 @@ export default function DashboardSidebar({
       </div>
 
       <div
-        className={`flex w-full flex-1 flex-col overflow-y-auto ${
-          collapsed ? "items-center pr-0" : "pr-1"
+        className={`flex w-full flex-1 flex-col overflow-y-auto pr-1 ${
+          collapsed ? "items-center" : ""
         }`}
       >
         <nav className={`flex w-full flex-col gap-1 ${collapsed ? "items-center" : ""}`}>
