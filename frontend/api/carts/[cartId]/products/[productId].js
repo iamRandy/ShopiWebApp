@@ -2,6 +2,7 @@ const { connectToDatabase } = require("../../../_lib/db");
 const { verifyToken } = require("../../../_lib/auth");
 const { resolveCartAccess } = require("../../../_lib/cartAccess");
 const { scrapeProductPriceGuarded } = require("../../../_lib/priceScraper");
+const { moveProductsBetweenCarts } = require("../../../_lib/moveProducts");
 
 // A user-triggered manual price check is throttled independently of the background rescan's
 // staleness window, and only armed on success, so a failed scrape never blocks an immediate retry.
@@ -36,10 +37,46 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { usersCollection, cartSharesCollection, blockedHostsCollection } = await connectToDatabase();
+    const { client, usersCollection, cartSharesCollection, blockedHostsCollection } = await connectToDatabase();
     const access = await resolveCartAccess(usersCollection, cartSharesCollection, req.user.sub, cartId);
     if (!access.allowed || access.role === "view") {
       return res.status(403).json({ error: "You do not have permission to edit this cart" });
+    }
+
+    // Moving a product into another cart is folded behind a body.action discriminator on this
+    // same route rather than a dedicated path — mirrors backend/server.js exactly, kept in sync
+    // by hand. The manual price-check below (POST) stays the default behavior since the
+    // "refresh price" button never sends a body.
+    if (req.method === "POST" && req.body?.action === "move") {
+      const { destinationCartId } = req.body;
+      if (!destinationCartId) {
+        return res.status(400).json({ error: "destinationCartId is required" });
+      }
+      if (destinationCartId === cartId) {
+        return res.status(400).json({ error: "Source and destination cart must be different" });
+      }
+
+      const destAccess = await resolveCartAccess(usersCollection, cartSharesCollection, req.user.sub, destinationCartId);
+      if (!destAccess.allowed || destAccess.role === "view") {
+        return res.status(403).json({ error: "You do not have permission to edit the destination cart" });
+      }
+
+      let movedProducts;
+      try {
+        movedProducts = await moveProductsBetweenCarts(
+          client,
+          usersCollection,
+          access,
+          cartId,
+          [productId],
+          destAccess,
+          destinationCartId
+        );
+      } catch (e) {
+        return res.status(e.status || 500).json({ error: e.status ? e.message : "Failed to move product" });
+      }
+
+      return res.json({ success: true, product: movedProducts[0] });
     }
 
     if (req.method === "PATCH") {

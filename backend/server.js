@@ -966,6 +966,42 @@ app.post("/api/carts/:cartId/products/:productId", verifyToken, async (req, res)
       return res.status(403).json({ error: "You do not have permission to edit this cart" });
     }
 
+    // Moving a product into another cart is folded behind a body.action discriminator on
+    // this same route rather than a dedicated path, matching how cart-sharing mutations are
+    // consolidated above — the manual price-check below stays the default (unconditional
+    // bare-POST) behavior since the existing "refresh price" button never sends a body.
+    if (req.body?.action === "move") {
+      const { destinationCartId } = req.body;
+      if (!destinationCartId) {
+        return res.status(400).json({ error: "destinationCartId is required" });
+      }
+      if (destinationCartId === cartId) {
+        return res.status(400).json({ error: "Source and destination cart must be different" });
+      }
+
+      const destAccess = await resolveCartAccess(req.user.sub, destinationCartId);
+      if (!destAccess.allowed || destAccess.role === "view") {
+        return res.status(403).json({ error: "You do not have permission to edit the destination cart" });
+      }
+
+      let movedProducts;
+      try {
+        movedProducts = await moveProductsBetweenCarts(access, cartId, [productId], destAccess, destinationCartId);
+      } catch (e) {
+        return res.status(e.status || 500).json({ error: e.status ? e.message : "Failed to move product" });
+      }
+      const product = movedProducts[0];
+
+      io.to(room(access.ownerSub, cartId)).emit("product:moved", { cartId, productId, destinationCartId });
+      io.to(room(destAccess.ownerSub, destinationCartId)).emit("product:movedIn", {
+        cartId: destinationCartId,
+        product,
+        sourceCartId: cartId,
+      });
+
+      return res.json({ success: true, product });
+    }
+
     const user = await usersCollection.findOne(
       { sub: access.ownerSub, "carts.id": cartId },
       { projection: { _id: 0, "carts.$": 1 } }
@@ -1058,6 +1094,123 @@ app.post("/api/carts/:cartId/products/:productId", verifyToken, async (req, res)
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Failed to check price" });
+  }
+});
+
+// Moves one or more products from `cartId` into `destinationCartId`, which may belong to a
+// different user's document (e.g. moving into/out of a cart shared at "edit" role) — modeled
+// on transferOwnership's session.withTransaction pattern above, since a pull-from-one-doc +
+// push-to-another-doc needs to be atomic. Always runs the transaction, even when both carts
+// happen to be owned by the same user, to keep a single code path. Throws an Error with a
+// `.status` set to the HTTP status the caller should respond with.
+async function moveProductsBetweenCarts(sourceAccess, cartId, productIds, destAccess, destinationCartId) {
+  let movedProducts = [];
+
+  const session = client.startSession();
+  try {
+    await session.withTransaction(async () => {
+      const sourceDoc = await usersCollection.findOne(
+        { sub: sourceAccess.ownerSub, "carts.id": cartId },
+        { session, projection: { "carts.$": 1 } }
+      );
+      const sourceCart = sourceDoc?.carts?.[0];
+      if (!sourceCart) {
+        const err = new Error("Cart not found");
+        err.status = 404;
+        throw err;
+      }
+
+      // Tolerant of ids that are no longer in the source cart (e.g. deleted or already moved
+      // by someone else) — move whichever requested ids are still actually present, matching
+      // the existing bulk-delete route's tolerant $in semantics rather than hard-failing.
+      movedProducts = (sourceCart.products || []).filter((p) => productIds.includes(p.id));
+      if (movedProducts.length === 0) {
+        const err = new Error("Product not found in cart");
+        err.status = 404;
+        throw err;
+      }
+
+      const destDoc = await usersCollection.findOne(
+        { sub: destAccess.ownerSub, "carts.id": destinationCartId },
+        { session, projection: { _id: 1 } }
+      );
+      if (!destDoc) {
+        const err = new Error("Destination cart not found");
+        err.status = 404;
+        throw err;
+      }
+
+      const movedIds = movedProducts.map((p) => p.id);
+      await usersCollection.updateOne(
+        { sub: sourceAccess.ownerSub, "carts.id": cartId },
+        { $pull: { "carts.$.products": { id: { $in: movedIds } } } },
+        { session }
+      );
+      await usersCollection.updateOne(
+        { sub: destAccess.ownerSub, "carts.id": destinationCartId },
+        { $push: { "carts.$.products": { $each: movedProducts } } },
+        { session }
+      );
+    });
+  } finally {
+    await session.endSession();
+  }
+
+  return movedProducts;
+}
+
+// Bulk-move products from this cart into another cart the user can edit (own cart, or a cart
+// shared with them at "edit" role). Folded behind a body.action discriminator on this
+// collection route (mirroring the cart-sharing consolidation above) rather than a dedicated
+// path, leaving room for other bulk actions on this same route later.
+app.post("/api/carts/:cartId/products", verifyToken, async (req, res) => {
+  try {
+    const { cartId } = req.params;
+    const { action, productIds, destinationCartId } = req.body;
+
+    if (action !== "move") {
+      return res.status(400).json({ error: "Unknown or missing action" });
+    }
+    if (!Array.isArray(productIds) || productIds.length === 0) {
+      return res.status(400).json({ error: "productIds must be a non-empty array" });
+    }
+    if (!destinationCartId) {
+      return res.status(400).json({ error: "destinationCartId is required" });
+    }
+    if (destinationCartId === cartId) {
+      return res.status(400).json({ error: "Source and destination cart must be different" });
+    }
+
+    const [access, destAccess] = await Promise.all([
+      resolveCartAccess(req.user.sub, cartId),
+      resolveCartAccess(req.user.sub, destinationCartId),
+    ]);
+    if (!access.allowed || access.role === "view") {
+      return res.status(403).json({ error: "You do not have permission to edit this cart" });
+    }
+    if (!destAccess.allowed || destAccess.role === "view") {
+      return res.status(403).json({ error: "You do not have permission to edit the destination cart" });
+    }
+
+    let movedProducts;
+    try {
+      movedProducts = await moveProductsBetweenCarts(access, cartId, productIds, destAccess, destinationCartId);
+    } catch (e) {
+      return res.status(e.status || 500).json({ error: e.status ? e.message : "Failed to move products" });
+    }
+
+    const movedIds = movedProducts.map((p) => p.id);
+    io.to(room(access.ownerSub, cartId)).emit("products:moved", { cartId, productIds: movedIds, destinationCartId });
+    io.to(room(destAccess.ownerSub, destinationCartId)).emit("products:movedIn", {
+      cartId: destinationCartId,
+      products: movedProducts,
+      sourceCartId: cartId,
+    });
+
+    res.json({ success: true, movedProducts });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Failed to move products" });
   }
 });
 

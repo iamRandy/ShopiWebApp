@@ -1,4 +1,4 @@
-import { CheckCheck, GitCompare, SlidersHorizontal, Trash2, X } from "lucide-react";
+import { ArrowRightLeft, CheckCheck, GitCompare, SlidersHorizontal, Trash2, X } from "lucide-react";
 import TagPill from "../tags/TagPill";
 
 export default function ProductToolbar({
@@ -12,6 +12,8 @@ export default function ProductToolbar({
   onClearCompare,
   onDeleteSelected,
   isDeletingSelected = false,
+  onMoveSelected,
+  isMovingSelected = false,
   onSelectAllPage,
   showingCount = 0,
   totalCount = 0,
@@ -53,6 +55,22 @@ export default function ProductToolbar({
               {isDeletingSelected
                 ? "Deleting…"
                 : `Delete ${compareCount} item${compareCount > 1 ? "s" : ""}`}
+            </span>
+          </button>
+        )}
+
+        {onMoveSelected && compareCount >= 1 && (
+          <button
+            type="button"
+            onClick={onMoveSelected}
+            disabled={isMovingSelected}
+            className="flex h-10 items-center gap-1.5 rounded-xl border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-surface)] px-3 text-sm font-bold text-[var(--color-text-primary)] shadow-[3px_3px_0_var(--color-shadow)] transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <ArrowRightLeft className="h-4 w-4" strokeWidth={2.25} />
+            <span className="hidden sm:inline">
+              {isMovingSelected
+                ? "Moving…"
+                : `Move ${compareCount} item${compareCount > 1 ? "s" : ""}`}
             </span>
           </button>
         )}

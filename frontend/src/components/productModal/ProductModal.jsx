@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useAnimation } from "framer-motion";
-import { Check, Copy, ExternalLink, Pencil, RefreshCw, Trash2, X } from "lucide-react";
+import { ArrowRightLeft, Check, Copy, ExternalLink, Pencil, RefreshCw, Trash2, X } from "lucide-react";
 import { getAffiliateLink } from "../../utils/affiliate";
 import { formatRelativeAdded } from "../../utils/product";
 import { authenticatedFetch } from "../../utils/api";
@@ -39,6 +39,7 @@ const ProductModal = ({
   tagLabelBySlug,
   onDelete,
   onProductUpdated,
+  onMoveRequested,
 }) => {
   const navigate = useNavigate();
   const { isChecking: isCheckingPrice, checkErrorReason: priceCheckErrorReason, checkPrice } = usePriceCheck({
@@ -592,7 +593,7 @@ const ProductModal = ({
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 <button
                   type="button"
                   onClick={handleRefreshPrice}
@@ -604,8 +605,23 @@ const ProductModal = ({
                     className={`h-4 w-4 ${isCheckingPrice ? "animate-spin" : ""}`}
                     strokeWidth={2}
                   />
-                  {isCheckingPrice ? "Checking…" : "Refresh price"}
+                  <span className="hidden sm:inline">
+                    {isCheckingPrice ? "Checking…" : "Refresh price"}
+                  </span>
                 </button>
+
+                {onMoveRequested && (
+                  <button
+                    type="button"
+                    onClick={onMoveRequested}
+                    disabled={busy}
+                    title="Move to another cart"
+                    className="flex items-center justify-center gap-1.5 rounded-xl border border-stone-200 px-3 py-2.5 text-sm font-medium text-stone-600 transition-colors hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-stone-700 dark:text-stone-300 dark:hover:bg-white/5"
+                  >
+                    <ArrowRightLeft className="h-4 w-4" strokeWidth={2} />
+                    <span className="hidden sm:inline">Move</span>
+                  </button>
+                )}
 
                 <button
                   type="button"
@@ -614,7 +630,7 @@ const ProductModal = ({
                   className="flex items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 dark:hover:bg-red-950/30"
                 >
                   <Trash2 className="h-4 w-4" />
-                  {isDeleting ? "Deleting…" : "Delete"}
+                  <span className="hidden sm:inline">{isDeleting ? "Deleting…" : "Delete"}</span>
                 </button>
               </div>
             </div>

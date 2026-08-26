@@ -19,8 +19,10 @@ import ProductListView from "./dashboard/ProductListView";
 import FilterModal from "./dashboard/FilterModal";
 import Pagination from "./dashboard/Pagination";
 import ShareCartModal from "./dashboard/ShareCartModal";
+import MoveToCartModal from "./dashboard/MoveToCartModal";
 import useCartRoom from "../hooks/useCartRoom";
 import useSharedCartEvents from "../hooks/useSharedCartEvents";
+import { useToast } from "../context/ToastContext";
 import {
   useProductFilters,
   countActiveFilters,
@@ -51,6 +53,7 @@ function getInitialViewMode() {
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const toast = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const [carts, setCarts] = useState([]);
   const [sharedCarts, setSharedCarts] = useState([]);
@@ -74,6 +77,9 @@ const Dashboard = () => {
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
   const [quickDeleteTarget, setQuickDeleteTarget] = useState(null);
   const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false);
+  const [moveModalOpen, setMoveModalOpen] = useState(false);
+  const [moveSingleProductId, setMoveSingleProductId] = useState(null);
+  const [isMoving, setIsMoving] = useState(false);
 
   // Session-only flags for products whose price changed after a background rescan —
   // never persisted, cleared on cart switch or reload. productId -> { previousPrice }
@@ -309,6 +315,86 @@ const Dashboard = () => {
     }
   };
 
+  // Product(s) leaving the currently-open cart via a move look identical to a delete from
+  // this cart's point of view, so this just delegates to the existing helper.
+  const handleMoveOut = (cartId, ids) => {
+    removeProductsFromState(cartId, ids);
+  };
+
+  // Unlike removeProductsFromState, this always patches the matching `carts` entry (so
+  // sidebar item-counts stay accurate for carts that aren't currently open) and only
+  // additionally splices into the live view when the destination happens to be open.
+  const handleMoveIn = (destinationCartId, products) => {
+    setCarts((prev) =>
+      prev.map((cart) =>
+        cart.id === destinationCartId
+          ? { ...cart, products: [...(cart.products || []), ...products] }
+          : cart
+      )
+    );
+    if (destinationCartId === selectedCartRef.current) {
+      setSelectedCartProducts((prev) => [...prev, ...products]);
+      setSelectedCartObj((prev) =>
+        prev ? { ...prev, products: [...(prev.products || []), ...products] } : prev
+      );
+    }
+  };
+
+  const openMoveModal = (productId = null) => {
+    setMoveSingleProductId(productId);
+    setMoveModalOpen(true);
+  };
+
+  const confirmMove = async (destinationCartId) => {
+    const ids = moveSingleProductId ? [moveSingleProductId] : [...compareIds];
+    if (ids.length === 0 || !selectedCart) return;
+
+    setIsMoving(true);
+    try {
+      const isSingle = Boolean(moveSingleProductId);
+      const url = isSingle
+        ? `${API_URL}/api/carts/${selectedCart}/products/${ids[0]}`
+        : `${API_URL}/api/carts/${selectedCart}/products`;
+      const body = isSingle
+        ? { action: "move", destinationCartId }
+        : { action: "move", productIds: ids, destinationCartId };
+
+      const response = await authenticatedFetch(url, {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to move item(s)");
+      }
+      const data = await response.json();
+      const movedProducts = isSingle ? [data.product] : data.movedProducts || [];
+      const movedIds = movedProducts.map((p) => p.id);
+
+      handleMoveOut(selectedCart, movedIds);
+      handleMoveIn(destinationCartId, movedProducts);
+      toast.push(`Moved ${movedIds.length} item${movedIds.length > 1 ? "s" : ""}.`, "success");
+
+      if (isSingle) {
+        setIsModalOpen(false);
+        setSelectedProduct(null);
+      }
+    } catch (error) {
+      console.error("Error moving product(s):", error);
+      if (
+        error.message === "No authentication token found" ||
+        error.message === "Authentication failed"
+      ) {
+        navigate("/login");
+        return;
+      }
+      toast.push(error.message || "Failed to move item(s). Please try again.", "error");
+      throw error;
+    } finally {
+      setIsMoving(false);
+    }
+  };
+
   const cartSelected = async (cartId) => {
     if (cartId === selectedCartRef.current) return;
 
@@ -519,6 +605,18 @@ const Dashboard = () => {
     "products:deleted": ({ cartId, productIds }) => {
       removeProductsFromState(cartId, productIds || []);
     },
+    "product:moved": ({ cartId, productId }) => {
+      removeProductsFromState(cartId, [productId]);
+    },
+    "products:moved": ({ cartId, productIds }) => {
+      removeProductsFromState(cartId, productIds || []);
+    },
+    "product:movedIn": ({ cartId, product }) => {
+      handleMoveIn(cartId, [product]);
+    },
+    "products:movedIn": ({ cartId, products }) => {
+      handleMoveIn(cartId, products || []);
+    },
     "cart:renamed": ({ cartId, name, icon, color, bannerType, bannerGradient }) => {
       const patch = (cart) =>
         cart.id === cartId ? { ...cart, name, icon, color, bannerType, bannerGradient } : cart;
@@ -689,6 +787,8 @@ const Dashboard = () => {
                 onClearCompare={clearCompareSelection}
                 onDeleteSelected={canEditCart ? handleDeleteSelected : undefined}
                 isDeletingSelected={isBulkDeleting}
+                onMoveSelected={canEditCart ? () => openMoveModal(null) : undefined}
+                isMovingSelected={isMoving}
                 onSelectAllPage={() => selectAllOnPage(pageItems.map((p) => p.id))}
                 showingCount={pageItems.length}
                 totalCount={sortedProducts.length}
@@ -801,6 +901,9 @@ const Dashboard = () => {
           tagLabelBySlug={tagLabelBySlug}
           onDelete={handleProductDelete}
           onProductUpdated={handleModalProductUpdated}
+          onMoveRequested={
+            canEditCart ? () => openMoveModal(selectedProduct?.productId) : undefined
+          }
         />
 
         <ConfirmModal
@@ -835,6 +938,19 @@ const Dashboard = () => {
           isOpen={shareModalOpen}
           onClose={handleCloseShareModal}
           cart={activeCart}
+        />
+
+        <MoveToCartModal
+          isOpen={moveModalOpen}
+          onClose={() => {
+            setMoveModalOpen(false);
+            setMoveSingleProductId(null);
+          }}
+          carts={carts}
+          sharedCarts={sharedCarts}
+          sourceCartId={selectedCart}
+          productCount={moveSingleProductId ? 1 : compareIds.size}
+          onConfirm={confirmMove}
         />
       </div>
     </AppShell>
