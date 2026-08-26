@@ -1,3 +1,4 @@
+import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
 import GridProductCard from "./GridProductCard";
 
 export default function ProductGridView({
@@ -15,6 +16,7 @@ export default function ProductGridView({
   tagLabelBySlug,
   cartId,
   onPriceChecked,
+  dragEnabled = false,
 }) {
   if (products.length === 0) {
     return (
@@ -25,26 +27,29 @@ export default function ProductGridView({
   }
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
-      {products.map((product) => (
-        <GridProductCard
-          key={product.id}
-          product={product}
-          onFavoriteToggle={onFavoriteToggle}
-          onOpen={onOpen}
-          isFavoriteLoading={favoriteLoadingId === product.id}
-          isSelected={selectedIds?.has(product.id)}
-          onToggleSelect={onToggleSelect}
-          onSelectAllPage={onSelectAllPage}
-          selectDisabled={selectLimitReached}
-          onQuickDelete={onQuickDelete}
-          isDeleting={deletingId === product.id}
-          priceAlert={priceAlerts?.get(product.id)}
-          tagLabelBySlug={tagLabelBySlug}
-          cartId={cartId}
-          onPriceChecked={onPriceChecked}
-        />
-      ))}
-    </div>
+    <SortableContext items={products.map((p) => p.id)} strategy={rectSortingStrategy}>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+        {products.map((product) => (
+          <GridProductCard
+            key={product.id}
+            product={product}
+            onFavoriteToggle={onFavoriteToggle}
+            onOpen={onOpen}
+            isFavoriteLoading={favoriteLoadingId === product.id}
+            isSelected={selectedIds?.has(product.id)}
+            onToggleSelect={onToggleSelect}
+            onSelectAllPage={onSelectAllPage}
+            selectDisabled={selectLimitReached}
+            onQuickDelete={onQuickDelete}
+            isDeleting={deletingId === product.id}
+            priceAlert={priceAlerts?.get(product.id)}
+            tagLabelBySlug={tagLabelBySlug}
+            cartId={cartId}
+            onPriceChecked={onPriceChecked}
+            dragEnabled={dragEnabled}
+          />
+        ))}
+      </div>
+    </SortableContext>
   );
 }

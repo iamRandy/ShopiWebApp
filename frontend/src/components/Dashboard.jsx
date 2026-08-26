@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { arrayMove } from "@dnd-kit/sortable";
 import { authenticatedFetch } from "../utils/api";
 import {
   getProductDisplayName,
@@ -7,6 +8,7 @@ import {
   getProductNumericPrice,
   formatProductPrice,
   sortProducts,
+  applyCustomOrder,
 } from "../utils/product";
 import AveeLoader from "./AveeLoader";
 import ConfirmModal from "./ConfirmModal";
@@ -20,6 +22,7 @@ import FilterModal from "./dashboard/FilterModal";
 import Pagination from "./dashboard/Pagination";
 import ShareCartModal from "./dashboard/ShareCartModal";
 import MoveToCartModal from "./dashboard/MoveToCartModal";
+import PageDropIndicator from "./dashboard/PageDropIndicator";
 import useCartRoom from "../hooks/useCartRoom";
 import useSharedCartEvents from "../hooks/useSharedCartEvents";
 import { useToast } from "../context/ToastContext";
@@ -40,6 +43,31 @@ import {
 } from "./dashboard/constants";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
+// How close (in px) a dragged card's edge needs to get to the product area's own edge
+// before the "move to next/previous page" indicator arms.
+const EDGE_THRESHOLD_PX = 48;
+
+// Lightweight preview rendered under the cursor/finger while a product card is being
+// dragged (DragOverlay content). Deliberately not the real GridProductCard/ListProductRow —
+// those already register their own useSortable(product.id) for the card underneath, and
+// rendering the same component a second time here would double-register that id.
+function DragPreviewCard({ product }) {
+  const name = getProductDisplayName(product);
+  const price = getFormattedProductPrice(product);
+  const image = product.image || "https://via.placeholder.com/80x80?text=No+Image";
+  return (
+    <div className="flex w-56 items-center gap-2.5 rounded-xl border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-surface)] p-2 shadow-[4px_4px_0_var(--color-shadow)]">
+      <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-stone-100 dark:bg-stone-800">
+        <img src={image} alt="" className="h-full w-full object-cover" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-xs font-medium text-stone-800 dark:text-stone-100">{name}</p>
+        <p className="text-xs text-stone-500 dark:text-stone-400">{price}</p>
+      </div>
+    </div>
+  );
+}
 
 function getInitialViewMode() {
   try {
@@ -80,6 +108,19 @@ const Dashboard = () => {
   const [moveModalOpen, setMoveModalOpen] = useState(false);
   const [moveSingleProductId, setMoveSingleProductId] = useState(null);
   const [isMoving, setIsMoving] = useState(false);
+
+  const [activeDragProduct, setActiveDragProduct] = useState(null);
+  const [nearRightEdge, setNearRightEdge] = useState(false);
+  const [nearLeftEdge, setNearLeftEdge] = useState(false);
+  const nearRightEdgeRef = useRef(false);
+  const nearLeftEdgeRef = useRef(false);
+  // The content wrapper to the right of the sidebar — its left edge IS the sidebar
+  // boundary, which is what the "move to previous page" gesture is measured against.
+  const contentAreaRef = useRef(null);
+  // Cached once per drag (onDragStart) rather than read on every onDragMove — getBoundingClientRect()
+  // forces a layout reflow, and drag-move fires on every pointer move, so recomputing it that often
+  // is a real source of jank, especially on mobile.
+  const contentAreaRectRef = useRef(null);
 
   // Session-only flags for products whose price changed after a background rescan —
   // never persisted, cleared on cart switch or reload. productId -> { previousPrice }
@@ -340,18 +381,27 @@ const Dashboard = () => {
     }
   };
 
+  // Optimistically applies (or rolls back) a new custom product order for a cart, both in
+  // the `carts` list (sidebar counts etc.) and, if it's the currently open cart, `selectedCartObj`.
+  const patchCartProductOrder = (cartId, productOrder) => {
+    setCarts((prev) => prev.map((c) => (c.id === cartId ? { ...c, productOrder } : c)));
+    setSelectedCartObj((prev) => (prev?.id === cartId ? { ...prev, productOrder } : prev));
+  };
+
   const openMoveModal = (productId = null) => {
     setMoveSingleProductId(productId);
     setMoveModalOpen(true);
   };
 
-  const confirmMove = async (destinationCartId) => {
-    const ids = moveSingleProductId ? [moveSingleProductId] : [...compareIds];
-    if (ids.length === 0 || !selectedCart) return;
+  // Shared by the "Move to..." modal's confirm button and dragging a product onto a
+  // sidebar cart — both just need to fire the request and patch local state, they differ
+  // only in what happens around the call (modal close vs. nothing).
+  const moveProducts = async (ids, destinationCartId) => {
+    if (ids.length === 0 || !selectedCart) return undefined;
 
     setIsMoving(true);
     try {
-      const isSingle = Boolean(moveSingleProductId);
+      const isSingle = ids.length === 1;
       const url = isSingle
         ? `${API_URL}/api/carts/${selectedCart}/products/${ids[0]}`
         : `${API_URL}/api/carts/${selectedCart}/products`;
@@ -374,11 +424,7 @@ const Dashboard = () => {
       handleMoveOut(selectedCart, movedIds);
       handleMoveIn(destinationCartId, movedProducts);
       toast.push(`Moved ${movedIds.length} item${movedIds.length > 1 ? "s" : ""}.`, "success");
-
-      if (isSingle) {
-        setIsModalOpen(false);
-        setSelectedProduct(null);
-      }
+      return movedProducts;
     } catch (error) {
       console.error("Error moving product(s):", error);
       if (
@@ -386,12 +432,22 @@ const Dashboard = () => {
         error.message === "Authentication failed"
       ) {
         navigate("/login");
-        return;
+        return undefined;
       }
       toast.push(error.message || "Failed to move item(s). Please try again.", "error");
       throw error;
     } finally {
       setIsMoving(false);
+    }
+  };
+
+  const confirmMove = async (destinationCartId) => {
+    const ids = moveSingleProductId ? [moveSingleProductId] : [...compareIds];
+    const isSingle = Boolean(moveSingleProductId);
+    const movedProducts = await moveProducts(ids, destinationCartId);
+    if (isSingle && movedProducts) {
+      setIsModalOpen(false);
+      setSelectedProduct(null);
     }
   };
 
@@ -628,6 +684,9 @@ const Dashboard = () => {
         prev.map((c) => (c.cartId === cartId ? { ...c, cartName: name, cartIcon: icon, cartColor: color } : c))
       );
     },
+    "cart:productsReordered": ({ cartId, productOrder }) => {
+      patchCartProductOrder(cartId, productOrder);
+    },
     "cart:deleted": ({ cartId }) => {
       setCarts((prev) => prev.filter((c) => c.id !== cartId));
       setSharedCarts((prev) => prev.filter((c) => c.cartId !== cartId));
@@ -667,21 +726,166 @@ const Dashboard = () => {
   // explicitly turns the page (resortNonce, bumped from the Pagination handler below) or
   // switches carts (which is itself always a set change, already covered). Product DATA
   // stays live either way — only the position is frozen.
+  const productOrderKey = useMemo(
+    () => (activeCart?.productOrder || []).join("|"),
+    [activeCart?.productOrder]
+  );
   const sortedProductIds = useMemo(
-    () => sortProducts(filteredProducts).map((p) => p.id),
+    () =>
+      (activeCart?.productOrder?.length
+        ? applyCustomOrder(filteredProducts, activeCart.productOrder)
+        : sortProducts(filteredProducts)
+      ).map((p) => p.id),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [filteredProductIdsKey, resortNonce]
+    [filteredProductIdsKey, resortNonce, productOrderKey]
   );
   const sortedProducts = useMemo(() => {
     const byId = new Map(filteredProducts.map((p) => [p.id, p]));
     return sortedProductIds.map((id) => byId.get(id)).filter(Boolean);
   }, [sortedProductIds, filteredProducts]);
 
+  const cartTotal = useMemo(
+    () =>
+      rawProducts.reduce((sum, p) => {
+        const value = getProductNumericPrice(p);
+        return value !== null ? sum + value : sum;
+      }, 0),
+    [rawProducts]
+  );
+  const selectedTotal = useMemo(() => {
+    if (compareIds.size === 0) return null;
+    return rawProducts.reduce((sum, p) => {
+      if (!compareIds.has(p.id)) return sum;
+      const value = getProductNumericPrice(p);
+      return value !== null ? sum + value : sum;
+    }, 0);
+  }, [rawProducts, compareIds]);
+
   const { page, setPage, totalPages, pageItems, hasNext, hasPrev } =
     usePagination(sortedProducts, pageSize);
   const handlePageChange = (newPage) => {
     setPage(newPage);
     setResortNonce((n) => n + 1);
+  };
+
+  const handleProductDragStart = (event) => {
+    const product = pageItems.find((p) => p.id === event.active.id);
+    setActiveDragProduct(product || null);
+    // Read once per drag rather than on every move — see the ref's declaration comment.
+    contentAreaRectRef.current = contentAreaRef.current?.getBoundingClientRect() || null;
+  };
+
+  const handleProductDragMove = (event) => {
+    const containerRect = contentAreaRectRef.current;
+    const draggedRect = event.active?.rect?.current?.translated;
+    const hasRects = Boolean(containerRect && draggedRect);
+
+    const isNearRight =
+      hasNext && hasRects && draggedRect.right > containerRect.right - EDGE_THRESHOLD_PX;
+    if (isNearRight !== nearRightEdgeRef.current) {
+      nearRightEdgeRef.current = isNearRight;
+      setNearRightEdge(isNearRight);
+    }
+
+    // Arms only once the dragged card actually crosses the sidebar boundary (the content
+    // area's left edge), not a threshold inside the content — per design, the previous-page
+    // gesture is "drag it over to the sidebar".
+    const isNearLeft = hasPrev && hasRects && draggedRect.left < containerRect.left;
+    if (isNearLeft !== nearLeftEdgeRef.current) {
+      nearLeftEdgeRef.current = isNearLeft;
+      setNearLeftEdge(isNearLeft);
+    }
+  };
+
+  const handleProductDragEnd = ({ active, over }) => {
+    const draggedId = active.id;
+    const wasNearRightEdge = nearRightEdgeRef.current;
+    const wasNearLeftEdge = nearLeftEdgeRef.current;
+    setActiveDragProduct(null);
+    nearRightEdgeRef.current = false;
+    nearLeftEdgeRef.current = false;
+    setNearRightEdge(false);
+    setNearLeftEdge(false);
+    if (!canEditCart) return;
+
+    // Dropped on a cart in the sidebar — move it there instead of reordering.
+    if (over?.data?.current?.type === "cart") {
+      const destinationCartId = over.data.current.cartId;
+      if (destinationCartId && destinationCartId !== selectedCart) {
+        moveProducts([draggedId], destinationCartId);
+      }
+      return;
+    }
+
+    // A same-page reorder needs a real drop target, but a paging drag doesn't — the user
+    // may well release past the last card, over the (pointer-events-none) page indicator
+    // itself, or anywhere else with nothing directly underneath.
+    if (!over && !wasNearRightEdge && !wasNearLeftEdge) return;
+
+    // "Reorder within the page", "drag to next page", and "drag to previous page" all
+    // reduce to the same operation: insert the dragged id at a computed index in the full
+    // (unpaginated) order array.
+    const fullOrder = activeCart?.productOrder?.length
+      ? [...activeCart.productOrder]
+      : sortProducts(rawProducts).map((p) => p.id);
+
+    // For the paging cases, the insertion side must account for the dragged item's own
+    // removal shifting its neighbor: dragging FORWARD (dragged sits before the next page's
+    // current first item, so removing it shifts that neighbor up into this page) means
+    // inserting AFTER the neighbor to land as the next page's new first item; dragging
+    // BACKWARD (no shift — dragged sits after the previous page's last item) means
+    // inserting BEFORE the neighbor to take over its last-of-previous-page slot.
+    let neighborId;
+    let placeBefore;
+    if (wasNearRightEdge && hasNext) {
+      neighborId = sortedProducts[page * pageSize]?.id;
+      placeBefore = false;
+    } else if (wasNearLeftEdge && hasPrev) {
+      neighborId = sortedProducts[(page - 1) * pageSize - 1]?.id;
+      placeBefore = true;
+    } else {
+      if (!over) return;
+      const visibleIds = pageItems.map((p) => p.id);
+      const oldIndex = visibleIds.indexOf(draggedId);
+      const newIndex = visibleIds.indexOf(over.id);
+      if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return;
+      const newVisibleOrder = arrayMove(visibleIds, oldIndex, newIndex);
+      const pos = newVisibleOrder.indexOf(draggedId);
+      if (pos > 0) {
+        neighborId = newVisibleOrder[pos - 1];
+        placeBefore = false;
+      } else {
+        neighborId = newVisibleOrder[pos + 1];
+        placeBefore = true;
+      }
+    }
+    if (!neighborId) return;
+
+    const withoutDragged = fullOrder.filter((id) => id !== draggedId);
+    const neighborIndex = withoutDragged.indexOf(neighborId);
+    const insertAt =
+      neighborIndex === -1 ? withoutDragged.length : placeBefore ? neighborIndex : neighborIndex + 1;
+    withoutDragged.splice(insertAt, 0, draggedId);
+
+    patchCartProductOrder(selectedCart, withoutDragged);
+    authenticatedFetch(`${API_URL}/api/carts/${selectedCart}/order`, {
+      method: "PATCH",
+      body: JSON.stringify({ productOrder: withoutDragged }),
+    })
+      .then((response) => {
+        if (!response.ok) throw new Error();
+      })
+      .catch(() => {
+        patchCartProductOrder(selectedCart, fullOrder);
+        toast.push("Failed to save new order. Please try again.", "error");
+      });
+  };
+
+  const dnd = {
+    onDragStart: handleProductDragStart,
+    onDragMove: handleProductDragMove,
+    onDragEnd: handleProductDragEnd,
+    dragOverlayContent: activeDragProduct ? <DragPreviewCard product={activeDragProduct} /> : null,
   };
 
   // Silently ask the backend to refresh prices for whatever's actually on screen right
@@ -756,11 +960,14 @@ const Dashboard = () => {
     sharedCarts,
     onSharedCartSelect: handleSharedCartSelect,
     onLeaveSharedCart: handleLeaveSharedCart,
+    dragSourceCartId: selectedCart,
   };
 
   return (
-    <AppShell sidebarProps={sidebarProps}>
-      <div className="relative flex min-h-0 flex-1 flex-col">
+    <AppShell sidebarProps={sidebarProps} dnd={dnd}>
+      <div className="relative flex min-h-0 flex-1 flex-col" ref={contentAreaRef}>
+        <PageDropIndicator side="left" label="Move to previous page?" visible={nearLeftEdge && hasPrev} />
+        <PageDropIndicator side="right" label="Move to next page?" visible={nearRightEdge && hasNext} />
         {loading ? (
           <div className="flex flex-1 items-center justify-center px-4 py-6 sm:px-6 lg:px-8">
             <AveeLoader message="Loading cart…" />
@@ -792,6 +999,8 @@ const Dashboard = () => {
                 onSelectAllPage={() => selectAllOnPage(pageItems.map((p) => p.id))}
                 showingCount={pageItems.length}
                 totalCount={sortedProducts.length}
+                cartTotal={cartTotal}
+                selectedTotal={selectedTotal}
               />
 
               {accessRevoked && (
@@ -831,6 +1040,7 @@ const Dashboard = () => {
                     tagLabelBySlug={tagLabelBySlug}
                     cartId={selectedCart}
                     onPriceChecked={handleProductUpdated}
+                    dragEnabled={canEditCart}
                   />
                 ) : (
                   <ProductListView
@@ -846,6 +1056,7 @@ const Dashboard = () => {
                     onQuickDelete={canEditCart ? handleQuickDelete : undefined}
                     deletingId={deletingId}
                     priceAlerts={priceAlerts}
+                    dragEnabled={canEditCart}
                     tagLabelBySlug={tagLabelBySlug}
                   />
                 )}

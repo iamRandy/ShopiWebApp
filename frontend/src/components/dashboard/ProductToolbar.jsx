@@ -1,5 +1,6 @@
 import { ArrowRightLeft, CheckCheck, GitCompare, SlidersHorizontal, Trash2, X } from "lucide-react";
 import TagPill from "../tags/TagPill";
+import { formatProductPrice } from "../../utils/product";
 
 export default function ProductToolbar({
   onFilterOpen,
@@ -17,7 +18,12 @@ export default function ProductToolbar({
   onSelectAllPage,
   showingCount = 0,
   totalCount = 0,
+  cartTotal = 0,
+  selectedTotal = null,
 }) {
+  const hasSelection = compareCount >= 1 && selectedTotal !== null;
+  const totalLabel = hasSelection ? "Selected total" : "Cart total";
+  const totalDisplay = formatProductPrice(hasSelection ? selectedTotal : cartTotal, "$");
   return (
     <div className="mb-6 flex flex-wrap items-center justify-between gap-2">
       <div className="flex flex-wrap items-center gap-2">
@@ -118,8 +124,20 @@ export default function ProductToolbar({
         )}
       </div>
 
-      <p className="text-sm font-medium text-stone-500 dark:text-stone-400">
-        Showing {showingCount} of {totalCount} item{totalCount === 1 ? "" : "s"}
+      <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm font-medium text-stone-500 dark:text-stone-400">
+        <span>
+          Showing {showingCount} of {totalCount} item{totalCount === 1 ? "" : "s"}
+        </span>
+        {totalCount > 0 && totalDisplay !== null && (
+          <>
+            <span className="text-stone-300 dark:text-stone-600" aria-hidden="true">
+              •
+            </span>
+            <span className="font-semibold text-[var(--color-text-primary)]">
+              {totalLabel}: {totalDisplay}
+            </span>
+          </>
+        )}
       </p>
     </div>
   );

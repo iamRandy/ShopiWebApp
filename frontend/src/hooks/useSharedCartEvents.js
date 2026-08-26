@@ -11,6 +11,7 @@ const EVENTS = [
   "product:movedIn",
   "products:movedIn",
   "cart:renamed",
+  "cart:productsReordered",
   "cart:deleted",
   "cart:ownershipTransferred",
   "collaborator:added",

@@ -651,6 +651,38 @@ app.put("/api/carts/:cartId", verifyToken, async (req, res) => {
   }
 });
 
+// Persist a custom drag-and-drop product order for a cart.
+app.patch("/api/carts/:cartId/order", verifyToken, async (req, res) => {
+  try {
+    const { cartId } = req.params;
+    const { productOrder } = req.body;
+
+    if (!Array.isArray(productOrder) || productOrder.some((id) => typeof id !== "string")) {
+      return res.status(400).json({ error: "productOrder must be an array of product ids" });
+    }
+
+    const access = await resolveCartAccess(req.user.sub, cartId);
+    if (!access.allowed || access.role === "view") {
+      return res.status(403).json({ error: "You do not have permission to edit this cart" });
+    }
+
+    const result = await usersCollection.updateOne(
+      { sub: access.ownerSub, "carts.id": cartId },
+      { $set: { "carts.$.productOrder": productOrder } }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: "Cart not found" });
+    }
+
+    io.to(room(access.ownerSub, cartId)).emit("cart:productsReordered", { cartId, productOrder });
+    res.json({ success: true, productOrder });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Failed to save product order" });
+  }
+});
+
 // Delete a specific cart (owner only)
 app.delete("/api/carts/:cartId", verifyToken, async (req, res) => {
   try {

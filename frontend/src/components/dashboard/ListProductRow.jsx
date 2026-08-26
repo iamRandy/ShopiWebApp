@@ -1,4 +1,6 @@
-import { Check, CheckCheck, MoreHorizontal, Trash2 } from "lucide-react";
+import { Check, CheckCheck, GripVertical, MoreHorizontal, Trash2 } from "lucide-react";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
   getProductDisplayName,
   getFormattedProductPrice,
@@ -24,7 +26,12 @@ export default function ListProductRow({
   isDeleting = false,
   priceAlert,
   tagLabelBySlug,
+  dragEnabled = false,
 }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: product.id,
+    disabled: !dragEnabled,
+  });
   const name = getProductDisplayName(product);
   const price = getFormattedProductPrice(product);
   const displayDescription = getProductDisplayDescription(product);
@@ -85,6 +92,29 @@ export default function ListProductRow({
     </div>
   );
 
+  // Always rendered (even when disabled) so this stays a real grid item — the sm+ layout
+  // below is a CSS Grid with a fixed column template, and a conditionally-omitted child
+  // (`false`) drops out of the DOM entirely rather than leaving an empty cell, which shifts
+  // every column after it one slot to the left and misaligns against the header row.
+  const dragHandle = (
+    <button
+      type="button"
+      {...(dragEnabled ? attributes : {})}
+      {...(dragEnabled ? listeners : {})}
+      onClick={(e) => e.stopPropagation()}
+      aria-label="Drag to reorder"
+      aria-hidden={!dragEnabled}
+      tabIndex={dragEnabled ? 0 : -1}
+      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-stone-400 transition-colors dark:text-stone-500 ${
+        dragEnabled
+          ? "touch-none cursor-grab hover:bg-stone-100 hover:text-stone-700 active:cursor-grabbing dark:hover:bg-white/5 dark:hover:text-stone-300"
+          : "invisible"
+      }`}
+    >
+      <GripVertical className="h-4 w-4" strokeWidth={2} />
+    </button>
+  );
+
   const favoriteButton = (buttonClassName) => (
     <FavoriteHeartButton
       isFavorite={isFavorite}
@@ -103,6 +133,12 @@ export default function ListProductRow({
 
   return (
     <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.4 : 1,
+      }}
       className="group/row cursor-pointer transition-colors hover:bg-stone-50/80 dark:hover:bg-white/5"
       onClick={() => onOpen(product)}
       role="button"
@@ -116,6 +152,7 @@ export default function ListProductRow({
     >
       {/* Mobile layout: stacked info instead of squeezing every grid column into a narrow screen */}
       <div className="flex items-center gap-2.5 px-3 py-3 sm:hidden">
+        {dragHandle}
         {selectButton({ alwaysVisible: true })}
 
         <div className="relative aspect-square h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-stone-100 dark:bg-stone-800">
@@ -174,7 +211,8 @@ export default function ListProductRow({
       </div>
 
       {/* sm+ layout: full column grid */}
-      <div className="hidden grid-cols-[4rem_minmax(0,2fr)_minmax(4rem,1fr)_minmax(5rem,1fr)_minmax(4rem,1fr)_auto] items-center gap-3 px-4 py-3 sm:grid">
+      <div className="hidden grid-cols-[2rem_4rem_minmax(0,2fr)_minmax(4rem,1fr)_minmax(5rem,1fr)_minmax(4rem,1fr)_auto] items-center gap-3 px-4 py-3 sm:grid">
+        {dragHandle}
         <div className="flex items-center gap-1.5">
           {selectButton()}
 

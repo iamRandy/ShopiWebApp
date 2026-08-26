@@ -18,6 +18,7 @@ export default function DashboardSidebar({
   onToggleCollapse,
   isMobileDrawer = false,
   onMobileClose,
+  dragSourceCartId,
 }) {
   const navigate = useNavigate();
   const [isCartModalOpen, setIsCartModalOpen] = useState(false);
@@ -149,6 +150,7 @@ export default function DashboardSidebar({
               onSelect={onCartSelect}
               onEdit={handleEditCart}
               collapsed={collapsed}
+              dropDisabled={cart.id === dragSourceCartId}
             />
           ))}
         </nav>
@@ -159,6 +161,7 @@ export default function DashboardSidebar({
           onCartSelect={onSharedCartSelect}
           onLeaveCart={onLeaveSharedCart}
           collapsed={collapsed}
+          dragSourceCartId={dragSourceCartId}
         />
       </div>
 

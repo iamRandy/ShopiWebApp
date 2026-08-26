@@ -130,6 +130,31 @@ export function sortProducts(products = []) {
   });
 }
 
+/**
+ * Projects `products` into `productOrder`'s sequence, appending any product not present
+ * in productOrder (never dragged, or added after the last reorder) at the end using the
+ * existing algorithmic sort. `productOrder` may be a superset of `products` (a filter is
+ * active, or some ids belong to other pages) — ids not present in `products` are silently
+ * skipped, which is exactly what pins hidden items at their existing relative slots in the
+ * full order without any extra bookkeeping.
+ */
+export function applyCustomOrder(products, productOrder) {
+  if (!productOrder || productOrder.length === 0) return sortProducts(products);
+
+  const byId = new Map(products.map((p) => [p.id, p]));
+  const ordered = [];
+  const seen = new Set();
+  for (const id of productOrder) {
+    const p = byId.get(id);
+    if (p) {
+      ordered.push(p);
+      seen.add(id);
+    }
+  }
+  const remaining = products.filter((p) => !seen.has(p.id));
+  return [...ordered, ...sortProducts(remaining)];
+}
+
 export function formatItemCount(count) {
   if (count === 0) return "0 Items";
   if (count === 1) return "1 Item";

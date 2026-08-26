@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { MoreHorizontal, X } from "lucide-react";
 import { ShoppingCart } from "lucide-react";
+import { useDroppable } from "@dnd-kit/core";
 import { getCartIcon } from "../../utils/cartIcons";
 import { getCartBannerBackground, getCartBannerTone } from "../../utils/cartBanners";
 import ConfirmModal from "../ConfirmModal";
@@ -13,11 +14,19 @@ export default function CartSidebarItem({
   onLeave,
   variant = "owned",
   collapsed = false,
+  dropDisabled = false,
 }) {
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const count = cart.products?.length ?? 0;
   const cartName = cart.name || "Unnamed Cart";
   const isShared = variant === "shared";
+
+  const { setNodeRef, isOver } = useDroppable({
+    id: `cart-${cart.id}`,
+    data: { type: "cart", cartId: cart.id },
+    disabled: dropDisabled,
+  });
+  const showDropHighlight = isOver && !dropDisabled;
 
   // Selected state borrows the cart's own banner (color or gradient) so the sidebar
   // highlight matches the banner shown once that cart is open, instead of a fixed brand color.
@@ -60,7 +69,7 @@ export default function CartSidebarItem({
 
   if (collapsed) {
     return (
-      <div className="group relative w-full">
+      <div ref={setNodeRef} className="group relative w-full">
         <button
           type="button"
           onClick={() => onSelect(cart.id)}
@@ -68,9 +77,11 @@ export default function CartSidebarItem({
           aria-label={`${cartName}, ${count} items`}
           style={selected ? { background: bannerBackground } : undefined}
           className={`relative flex w-full items-center justify-center overflow-hidden rounded-xl border-2 p-2.5 transition-all ${
-            selected
-              ? "border-[var(--color-border-strong)] shadow-[3px_3px_0_var(--color-shadow)]"
-              : "border-transparent bg-transparent hover:border-[var(--color-border-subtle)] hover:bg-[var(--color-bg-surface)]/80"
+            showDropHighlight
+              ? "border-dashed border-[#FFBC42] bg-[#FFBC42]/10"
+              : selected
+                ? "border-[var(--color-border-strong)] shadow-[3px_3px_0_var(--color-shadow)]"
+                : "border-transparent bg-transparent hover:border-[var(--color-border-subtle)] hover:bg-[var(--color-bg-surface)]/80"
           }`}
         >
           {selected && bannerTone === "light" && (
@@ -99,11 +110,14 @@ export default function CartSidebarItem({
   return (
     <>
     <div
+      ref={setNodeRef}
       style={selected ? { background: bannerBackground } : undefined}
       className={`group relative flex cursor-pointer items-center gap-2 overflow-hidden rounded-xl border-2 px-3 py-2.5 transition-all ${
-        selected
-          ? "border-[var(--color-border-strong)] shadow-[3px_3px_0_var(--color-shadow)]"
-          : "border-transparent bg-transparent hover:border-[var(--color-border-subtle)] hover:bg-[var(--color-bg-surface)]/80"
+        showDropHighlight
+          ? "border-dashed border-[#FFBC42] bg-[#FFBC42]/10"
+          : selected
+            ? "border-[var(--color-border-strong)] shadow-[3px_3px_0_var(--color-shadow)]"
+            : "border-transparent bg-transparent hover:border-[var(--color-border-subtle)] hover:bg-[var(--color-bg-surface)]/80"
       }`}
       onClick={() => onSelect(cart.id)}
       role="button"

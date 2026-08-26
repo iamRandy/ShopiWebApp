@@ -1,6 +1,8 @@
 import { useRef } from "react";
 import { motion, useAnimation } from "framer-motion";
-import { Check, CheckCheck, ExternalLink, RefreshCw, Trash2 } from "lucide-react";
+import { Check, CheckCheck, ExternalLink, GripVertical, RefreshCw, Trash2 } from "lucide-react";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
   getProductDisplayName,
   getFormattedProductPrice,
@@ -29,7 +31,12 @@ export default function GridProductCard({
   tagLabelBySlug,
   cartId,
   onPriceChecked,
+  dragEnabled = false,
 }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: product.id,
+    disabled: !dragEnabled,
+  });
   const name = getProductDisplayName(product);
   const price = getFormattedProductPrice(product);
   const image =
@@ -98,6 +105,12 @@ export default function GridProductCard({
 
   return (
     <article
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.4 : 1,
+      }}
       className="group/card relative aspect-square cursor-pointer overflow-hidden rounded-xl bg-stone-100 transition-shadow hover:shadow-md dark:bg-stone-800"
       onClick={() => onOpen(product)}
       role="button"
@@ -117,6 +130,19 @@ export default function GridProductCard({
       />
 
       <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-black/5 transition-opacity duration-300 group-hover/card:opacity-60" />
+
+      {dragEnabled && (
+        <button
+          type="button"
+          {...attributes}
+          {...listeners}
+          onClick={(e) => e.stopPropagation()}
+          aria-label="Drag to reorder"
+          className="absolute left-1/2 top-2 z-10 flex h-6 w-6 -translate-x-1/2 touch-none cursor-grab items-center justify-center rounded-md border-2 border-white/80 bg-black/25 text-white opacity-100 backdrop-blur-sm transition-all hover:bg-black/40 active:cursor-grabbing sm:opacity-0 sm:group-hover/card:opacity-100"
+        >
+          <GripVertical className="h-3.5 w-3.5" strokeWidth={2.25} />
+        </button>
+      )}
 
       <div className="absolute left-2.5 top-2.5 flex gap-1.5">
         <div className="group/select relative">

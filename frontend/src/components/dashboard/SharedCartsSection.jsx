@@ -18,6 +18,7 @@ export default function SharedCartsSection({
   onCartSelect,
   onLeaveCart,
   collapsed = false,
+  dragSourceCartId,
 }) {
   const [sectionCollapsed, setSectionCollapsed] = useState(getInitialSectionCollapsed);
 
@@ -90,6 +91,7 @@ export default function SharedCartsSection({
                   onSelect={() => onCartSelect(shared)}
                   onLeave={onLeaveCart}
                   collapsed={collapsed}
+                  dropDisabled={shared.cartId === dragSourceCartId || shared.role !== "edit"}
                 />
               ))}
             </div>

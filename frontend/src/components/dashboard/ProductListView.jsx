@@ -1,3 +1,4 @@
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import ListProductRow from "./ListProductRow";
 
 export default function ProductListView({
@@ -14,6 +15,7 @@ export default function ProductListView({
   deletingId,
   priceAlerts,
   tagLabelBySlug,
+  dragEnabled = false,
 }) {
   if (products.length === 0) {
     return (
@@ -25,33 +27,46 @@ export default function ProductListView({
 
   return (
     <div className="overflow-hidden rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]">
-      <div className="hidden grid-cols-[4rem_minmax(0,2fr)_minmax(4rem,1fr)_minmax(5rem,1fr)_minmax(4rem,1fr)_auto] gap-3 border-b border-stone-100 px-4 py-2.5 text-xs font-medium text-stone-400 sm:grid dark:border-stone-800 dark:text-stone-500">
-        <span className="sr-only">Select</span>
+      {/* The unlabeled cells must be real (in-flow) elements: an `sr-only` span is
+          position:absolute, which CSS Grid skips when assigning cells, shifting every
+          later header label one column left of the rows below. */}
+      <div className="hidden grid-cols-[2rem_4rem_minmax(0,2fr)_minmax(4rem,1fr)_minmax(5rem,1fr)_minmax(4rem,1fr)_auto] items-center gap-3 border-b border-stone-100 px-4 py-2.5 text-xs font-medium text-stone-400 sm:grid dark:border-stone-800 dark:text-stone-500">
+        <span>
+          <span className="sr-only">Reorder</span>
+        </span>
+        <span>
+          <span className="sr-only">Select</span>
+        </span>
         <span>Product</span>
         <span>Price</span>
         <span>Store</span>
         <span>Added</span>
-        <span className="sr-only">Actions</span>
+        <span>
+          <span className="sr-only">Actions</span>
+        </span>
       </div>
       <div className="divide-y divide-stone-100 dark:divide-stone-800">
-        {products.map((product) => (
-          <ListProductRow
-            key={product.id}
-            product={product}
-            onFavoriteToggle={onFavoriteToggle}
-            onOpen={onOpen}
-            onMenu={onMenu}
-            isFavoriteLoading={favoriteLoadingId === product.id}
-            isSelected={selectedIds?.has(product.id)}
-            onToggleSelect={onToggleSelect}
-            onSelectAllPage={onSelectAllPage}
-            selectDisabled={selectLimitReached}
-            onQuickDelete={onQuickDelete}
-            isDeleting={deletingId === product.id}
-            priceAlert={priceAlerts?.get(product.id)}
-            tagLabelBySlug={tagLabelBySlug}
-          />
-        ))}
+        <SortableContext items={products.map((p) => p.id)} strategy={verticalListSortingStrategy}>
+          {products.map((product) => (
+            <ListProductRow
+              key={product.id}
+              product={product}
+              onFavoriteToggle={onFavoriteToggle}
+              onOpen={onOpen}
+              onMenu={onMenu}
+              isFavoriteLoading={favoriteLoadingId === product.id}
+              isSelected={selectedIds?.has(product.id)}
+              onToggleSelect={onToggleSelect}
+              onSelectAllPage={onSelectAllPage}
+              selectDisabled={selectLimitReached}
+              onQuickDelete={onQuickDelete}
+              isDeleting={deletingId === product.id}
+              priceAlert={priceAlerts?.get(product.id)}
+              tagLabelBySlug={tagLabelBySlug}
+              dragEnabled={dragEnabled}
+            />
+          ))}
+        </SortableContext>
       </div>
     </div>
   );
