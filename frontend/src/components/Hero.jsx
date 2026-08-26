@@ -432,10 +432,10 @@ export default function Hero() {
           }}
           className="flex w-full flex-col items-center text-center"
         >
-          <span className="mb-5 inline-flex w-fit items-center gap-2 rounded-full border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-surface)] px-4 py-1.5 text-sm font-semibold shadow-[3px_3px_0_#FFBC42]">
+          {/* <span className="mb-5 inline-flex w-fit items-center gap-2 rounded-full border-2 border-[var(--color-border-strong)] bg-[var(--color-bg-surface)] px-4 py-1.5 text-sm font-semibold shadow-[3px_3px_0_#FFBC42]">
             <Sparkles className="h-4 w-4 text-[#b45309]" strokeWidth={2.25} />
             Chrome extension turned buddy
-          </span>
+          </span> */}
 
           <h1 className="text-3xl font-bold leading-[1.1] tracking-tight text-[var(--color-text-primary)] sm:text-4xl md:text-5xl lg:text-[3.4rem]">
             Meet{" "}
