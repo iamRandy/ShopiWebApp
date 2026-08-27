@@ -651,8 +651,11 @@ app.put("/api/carts/:cartId", verifyToken, async (req, res) => {
   }
 });
 
-// Persist a custom drag-and-drop product order for a cart.
-app.patch("/api/carts/:cartId/order", verifyToken, async (req, res) => {
+// Persist a custom drag-and-drop product order for a cart. Kept as PATCH /api/carts/:cartId
+// (distinct from the PUT above, which is a full name/icon/color edit) rather than a separate
+// /order path, so the Vercel mirror can fold this into the existing carts/[cartId].js function
+// instead of adding a 13th serverless function past the Hobby plan's 12-function cap.
+app.patch("/api/carts/:cartId", verifyToken, async (req, res) => {
   try {
     const { cartId } = req.params;
     const { productOrder } = req.body;

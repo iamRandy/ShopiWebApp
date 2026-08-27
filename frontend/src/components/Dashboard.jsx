@@ -868,7 +868,7 @@ const Dashboard = () => {
     withoutDragged.splice(insertAt, 0, draggedId);
 
     patchCartProductOrder(selectedCart, withoutDragged);
-    authenticatedFetch(`${API_URL}/api/carts/${selectedCart}/order`, {
+    authenticatedFetch(`${API_URL}/api/carts/${selectedCart}`, {
       method: "PATCH",
       body: JSON.stringify({ productOrder: withoutDragged }),
     })
