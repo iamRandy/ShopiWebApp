@@ -1,5 +1,6 @@
 const { connectToDatabase } = require("./_lib/db");
 const { generateTokens, REFRESH_TOKEN_SECRET } = require("./_lib/auth");
+const { consumeRefreshToken, saveRefreshToken } = require("./_lib/accounts");
 const jwt = require("jsonwebtoken");
 
 module.exports = async function handler(req, res) {
@@ -29,24 +30,20 @@ module.exports = async function handler(req, res) {
     // Connect to database
     const { usersCollection } = await connectToDatabase();
 
-    // Check if user and refresh token exist in database
-    const user = await usersCollection.findOne({
-      sub: decoded.sub,
-      refreshToken: refreshToken,
-    });
+    // Each refresh token works once (rotation); other devices' sessions are untouched.
+    const consumed = await consumeRefreshToken(usersCollection, decoded.sub, refreshToken);
+    if (!consumed) {
+      return res.status(401).json({ error: "Invalid refresh token" });
+    }
 
+    const user = await usersCollection.findOne({ sub: decoded.sub });
     if (!user) {
       return res.status(401).json({ error: "Invalid refresh token" });
     }
 
     // Generate new tokens
     const { accessToken, refreshToken: newRefreshToken } = generateTokens(user);
-
-    // Update refresh token in database (token rotation for security)
-    await usersCollection.updateOne(
-      { sub: decoded.sub },
-      { $set: { refreshToken: newRefreshToken } }
-    );
+    await saveRefreshToken(usersCollection, user.sub, newRefreshToken);
 
     res.json({
       accessToken,

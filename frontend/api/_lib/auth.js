@@ -1,8 +1,14 @@
+const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const { OAuth2Client } = require("google-auth-library");
 
 const client_id = process.env.VITE_CLIENT_ID;
 const oauth_client = new OAuth2Client(client_id);
+
+// ID tokens are accepted from the web client and, optionally, the iOS client.
+// (The iOS app sets the web client as its server client ID, so its tokens
+// normally carry the web client ID as audience too.)
+const googleAudiences = [client_id, process.env.GOOGLE_IOS_CLIENT_ID].filter(Boolean);
 
 // JWT secrets
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -24,8 +30,10 @@ const generateTokens = (user) => {
   const accessToken = jwt.sign(payload, JWT_SECRET, {
     expiresIn: ACCESS_TOKEN_EXPIRY,
   });
+  // jwtid keeps every refresh token unique, even when issued in the same second.
   const refreshToken = jwt.sign({ sub: user.sub }, REFRESH_TOKEN_SECRET, {
     expiresIn: REFRESH_TOKEN_EXPIRY,
+    jwtid: crypto.randomUUID(),
   });
 
   return { accessToken, refreshToken };
@@ -58,6 +66,7 @@ const verifyToken = (req, res, next) => {
 module.exports = {
   oauth_client,
   client_id,
+  googleAudiences,
   generateTokens,
   verifyToken,
   JWT_SECRET,

@@ -1,6 +1,6 @@
 const { connectToDatabase } = require("../_lib/db");
-const { oauth_client, client_id, generateTokens } = require("../_lib/auth");
-const crypto = require("crypto");
+const { oauth_client, googleAudiences, generateTokens } = require("../_lib/auth");
+const { upsertGoogleUser, saveRefreshToken } = require("../_lib/accounts");
 
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
@@ -23,7 +23,7 @@ module.exports = async function handler(req, res) {
     // Verify the Google ID token first
     const ticket = await oauth_client.verifyIdToken({
       idToken: token,
-      audience: client_id,
+      audience: googleAudiences,
     });
 
     const payload = ticket.getPayload();
@@ -35,27 +35,12 @@ module.exports = async function handler(req, res) {
     // Connect to database
     const { usersCollection } = await connectToDatabase();
 
-    // Generate refresh token for this user
-    const refreshTokenValue = crypto.randomBytes(64).toString("hex");
+    // Save or update the user (links to an Apple-created account by verified email)
+    const user = await upsertGoogleUser(usersCollection, payload);
 
-    // Save or update user in MongoDB with refresh token
-    const filter = { sub: payload.sub }; // Google's unique user ID
-    const update = {
-      $set: {
-        email: payload.email,
-        name: payload.name,
-        picture: payload.picture,
-        sub: payload.sub,
-        lastLogin: new Date(),
-        refreshToken: refreshTokenValue,
-      },
-      $setOnInsert: { products: [] },
-    };
-    const options = { upsert: true };
-    await usersCollection.updateOne(filter, update, options);
-
-    // Generate our own JWT tokens
-    const { accessToken, refreshToken } = generateTokens(payload);
+    // Generate our own JWT tokens and remember this session's refresh token
+    const { accessToken, refreshToken } = generateTokens(user);
+    await saveRefreshToken(usersCollection, user.sub, refreshToken);
 
     res.status(200).json({
       message: "Login successful",

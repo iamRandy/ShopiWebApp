@@ -170,12 +170,15 @@ export const authenticatedFetch = async (url, options = {}) => {
 // Logout function that also calls the backend to invalidate refresh token
 export const logout = async () => {
   try {
+    // Sending this browser's refresh token ends only this session, so the
+    // iOS app (or another browser) stays signed in.
     await fetch(`${API_URL}/api/logout`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${localStorage.getItem("authToken")}`,
       },
+      body: JSON.stringify({ refreshToken: localStorage.getItem("refreshToken") }),
     });
   } catch (error) {
     console.error("Error during logout:", error);
