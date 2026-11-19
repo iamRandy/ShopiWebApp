@@ -1,6 +1,7 @@
 const { connectToDatabase } = require("./_lib/db");
 const { verifyToken } = require("./_lib/auth");
 const { isAppleRevocationConfigured, revokeAppleToken } = require("./_lib/apple");
+const { storedImagesInCarts, deleteStoredImages } = require("./_lib/images");
 
 // DELETE /api/account — permanently deletes the signed-in user and their carts.
 // Required by App Store Review for apps that let people create accounts.
@@ -34,7 +35,7 @@ module.exports = async function handler(req, res) {
     const { usersCollection } = await connectToDatabase();
     const user = await usersCollection.findOne(
       { sub: req.user.sub },
-      { projection: { appleRefreshToken: 1 } }
+      { projection: { appleRefreshToken: 1, "carts.products.image": 1 } }
     );
     if (!user) {
       return res.status(404).json({ error: "Account not found" });
@@ -49,6 +50,8 @@ module.exports = async function handler(req, res) {
     }
 
     await usersCollection.deleteOne({ sub: req.user.sub });
+    // Their saved photos go too.
+    await deleteStoredImages(storedImagesInCarts(user.carts));
     res.json({ success: true, message: "Account deleted" });
   } catch (err) {
     console.error("Delete account error:", err);

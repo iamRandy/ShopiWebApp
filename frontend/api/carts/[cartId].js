@@ -1,5 +1,6 @@
 const { connectToDatabase } = require("../_lib/db");
 const { verifyToken } = require("../_lib/auth");
+const { storedImagesInCarts, deleteUnusedImages } = require("../_lib/images");
 
 module.exports = async function handler(req, res) {
   // Enable CORS
@@ -69,6 +70,12 @@ module.exports = async function handler(req, res) {
         return res.status(400).json({ error: "Cart ID is required" });
       }
 
+      // Read first, so saved photos can be deleted along with the cart.
+      const owner = await usersCollection.findOne(
+        { sub: req.user.sub, "carts.id": cartId },
+        { projection: { _id: 0, "carts.$": 1 } }
+      );
+
       // Remove the cart from the user's carts array
       const result = await usersCollection.updateOne(
         { sub: req.user.sub },
@@ -76,6 +83,7 @@ module.exports = async function handler(req, res) {
       );
 
       if (result.modifiedCount > 0) {
+        await deleteUnusedImages(usersCollection, req.user.sub, storedImagesInCarts(owner?.carts));
         res.json({ success: true, message: "Cart deleted successfully" });
       } else {
         res.status(404).json({ error: "Cart not found or already deleted" });

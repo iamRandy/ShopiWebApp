@@ -1,5 +1,6 @@
 const { connectToDatabase } = require("../../../_lib/db");
 const { verifyToken } = require("../../../_lib/auth");
+const { storedImagesOf, deleteUnusedImages } = require("../../../_lib/images");
 
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -80,12 +81,20 @@ module.exports = async function handler(req, res) {
     }
 
     if (req.method === "DELETE") {
+      // Read first, so a saved photo can be deleted along with its product.
+      const owner = await usersCollection.findOne(
+        { sub: req.user.sub, "carts.id": cartId },
+        { projection: { _id: 0, "carts.$": 1 } }
+      );
+      const removed = (owner?.carts?.[0]?.products || []).filter((p) => p?.id === productId);
+
       const result = await usersCollection.updateOne(
         { sub: req.user.sub, "carts.id": cartId },
         { $pull: { "carts.$.products": { id: productId } } }
       );
 
       if (result.modifiedCount > 0) {
+        await deleteUnusedImages(usersCollection, req.user.sub, storedImagesOf(removed));
         return res.json({ success: true, message: "Product deleted successfully" });
       }
       return res
