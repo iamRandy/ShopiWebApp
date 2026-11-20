@@ -4,6 +4,7 @@ import {
   Blocks,
   BadgeQuestionMark,
   Shield,
+  LifeBuoy,
   ExternalLink,
 } from "lucide-react";
 
@@ -14,6 +15,7 @@ const EXPLORE_LINKS = [
   { label: "Save", href: "/#features", icon: HeartPlus },
   { label: "Organize", href: "/#how-it-works", icon: Blocks },
   { label: "Privacy", to: "/privacy", icon: Shield },
+  { label: "Support", to: "/support", icon: LifeBuoy },
 ];
 
 const CTA_LINKS = [
