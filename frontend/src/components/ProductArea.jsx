@@ -27,6 +27,7 @@ const ProductArea = ({ products = [], cartId, hideSidebar, onProductUpdated, rea
       productPrice: getFormattedProductPrice(product),
       productId: product.id,
       productUrl: product.url,
+      productSource: product.source,
       productDescription: getProductDescription(product),
       productNickname: product.nickname,
       originalTitle: stripHtml(product.title) || "Unknown Product",
@@ -117,6 +118,7 @@ const ProductArea = ({ products = [], cartId, hideSidebar, onProductUpdated, rea
         productPrice={selectedProduct?.productPrice}
         productId={selectedProduct?.productId}
         productUrl={selectedProduct?.productUrl}
+        productSource={selectedProduct?.productSource}
         productDescription={selectedProduct?.productDescription}
         productNickname={selectedProduct?.productNickname}
         originalTitle={selectedProduct?.originalTitle}

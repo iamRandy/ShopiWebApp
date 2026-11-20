@@ -19,7 +19,7 @@ function isShareId(value) {
 
 // What a viewer gets: what the cart shows, never scraper details, timestamps
 // or the cart's internal id.
-const PRODUCT_FIELDS = ["id", "url", "hostname", "title", "nickname", "description", "image", "price", "currency"];
+const PRODUCT_FIELDS = ["id", "url", "hostname", "title", "nickname", "description", "image", "price", "currency", "source"];
 
 function publicProduct(product) {
   const shown = {};

@@ -12,6 +12,8 @@ const ProductModal = ({
   productPrice,
   productId,
   productUrl,
+  // "ios-share" when saved from another app on the iPhone: it can be any page.
+  productSource,
   productDescription,
   productNickname,
   originalTitle,
@@ -248,7 +250,7 @@ const ProductModal = ({
               {!isEditing && (
                 <div className="mt-6">
                   <button onClick={handleVisitProduct} className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-xl font-semibold">
-                    Visit Product
+                    {productSource === "ios-share" ? "Visit" : "Visit Product"}
                   </button>
                 </div>
               )}
