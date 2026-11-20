@@ -1,6 +1,7 @@
 const { connectToDatabase } = require("./_lib/db");
 const { generateTokens, REFRESH_TOKEN_SECRET } = require("./_lib/auth");
 const { consumeRefreshToken, saveRefreshToken } = require("./_lib/accounts");
+const { recordVisit } = require("./_lib/activity");
 const jwt = require("jsonwebtoken");
 
 module.exports = async function handler(req, res) {
@@ -28,7 +29,7 @@ module.exports = async function handler(req, res) {
     const decoded = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET);
 
     // Connect to database
-    const { usersCollection } = await connectToDatabase();
+    const { db, usersCollection } = await connectToDatabase();
 
     // Each refresh token works once (rotation); other devices' sessions are untouched.
     const consumed = await consumeRefreshToken(usersCollection, decoded.sub, refreshToken);
@@ -43,7 +44,10 @@ module.exports = async function handler(req, res) {
 
     // Generate new tokens
     const { accessToken, refreshToken: newRefreshToken } = generateTokens(user);
-    await saveRefreshToken(usersCollection, user.sub, newRefreshToken);
+    await Promise.all([
+      saveRefreshToken(usersCollection, user.sub, newRefreshToken),
+      recordVisit(db, user.sub, req),
+    ]);
 
     res.json({
       accessToken,

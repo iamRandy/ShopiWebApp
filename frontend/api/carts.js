@@ -1,5 +1,6 @@
 const { connectToDatabase } = require("./_lib/db");
 const { verifyToken } = require("./_lib/auth");
+const { recordVisit } = require("./_lib/activity");
 const crypto = require("crypto");
 
 module.exports = async function handler(req, res) {
@@ -26,14 +27,16 @@ module.exports = async function handler(req, res) {
     return; // verifyToken already sent response
   }
 
-  const { usersCollection } = await connectToDatabase();
+  const { db, usersCollection } = await connectToDatabase();
 
   if (req.method === "GET") {
     try {
-      const doc = await usersCollection.findOne(
-        { sub: req.user.sub },
-        { projection: { _id: 0, carts: 1 } }
-      );
+      // Loading carts is what every launch of the app and the website does,
+      // so it's where a visit is noted; alongside the read, not after it.
+      const [doc] = await Promise.all([
+        usersCollection.findOne({ sub: req.user.sub }, { projection: { _id: 0, carts: 1 } }),
+        recordVisit(db, req.user.sub, req),
+      ]);
       res.json(doc?.carts || []);
     } catch (e) {
       console.error(e);

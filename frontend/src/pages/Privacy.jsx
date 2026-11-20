@@ -70,15 +70,23 @@ export default function Privacy() {
               the iPhone app (in its secure Keychain) store sign-in tokens so
               you stay logged in. Signing out removes them.
             </p>
+            <p>
+              <strong>Usage.</strong> When you open the iPhone app or the web
+              app while signed in, we note which one it was and the day, once
+              per day. We use it to see how much each part of Chaos gets used.
+              We don’t record what you look at or tap, and we don’t use
+              third-party analytics.
+            </p>
           </Section>
 
           <Section id="use" title="How we use it">
             <p>
               We use this data to sign you in, save and display your products,
               show carts you share to the people you share them with, keep the
-              web app, extension and iPhone app in sync, and improve site
-              compatibility. We do not use it for advertising, profiling, or
-              training machine-learning models.
+              web app, extension and iPhone app in sync, improve site
+              compatibility, and understand how much each part of Chaos is
+              used. We do not use it for advertising, profiling, or training
+              machine-learning models.
             </p>
           </Section>
 
@@ -108,7 +116,8 @@ export default function Privacy() {
               You can sign out at any time, delete saved products and carts,
               and stop sharing a cart. In the iPhone app, Account, then Delete
               Account, permanently deletes your account, carts, saved
-              products, photos and share links straight away. You can also
+              products, photos, share links and usage records straight
+              away. You can also
               request full account and data deletion by emailing{" "}
               <a href={`mailto:${CONTACT_EMAIL}`} className="special_links">
                 {CONTACT_EMAIL}

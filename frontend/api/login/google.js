@@ -1,6 +1,7 @@
 const { connectToDatabase } = require("../_lib/db");
 const { oauth_client, googleAudiences, generateTokens } = require("../_lib/auth");
 const { upsertGoogleUser, saveRefreshToken } = require("../_lib/accounts");
+const { recordVisit } = require("../_lib/activity");
 
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
@@ -33,14 +34,17 @@ module.exports = async function handler(req, res) {
     }
 
     // Connect to database
-    const { usersCollection } = await connectToDatabase();
+    const { db, usersCollection } = await connectToDatabase();
 
     // Save or update the user (links to an Apple-created account by verified email)
     const user = await upsertGoogleUser(usersCollection, payload);
 
     // Generate our own JWT tokens and remember this session's refresh token
     const { accessToken, refreshToken } = generateTokens(user);
-    await saveRefreshToken(usersCollection, user.sub, refreshToken);
+    await Promise.all([
+      saveRefreshToken(usersCollection, user.sub, refreshToken),
+      recordVisit(db, user.sub, req),
+    ]);
 
     res.status(200).json({
       message: "Login successful",

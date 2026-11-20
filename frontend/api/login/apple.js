@@ -6,6 +6,7 @@ const {
   exchangeAppleAuthorizationCode,
 } = require("../_lib/apple");
 const { upsertAppleUser, saveRefreshToken } = require("../_lib/accounts");
+const { recordVisit } = require("../_lib/activity");
 
 // POST /api/login/apple
 // Body: { identityToken, rawNonce, authorizationCode?, fullName?: { givenName, familyName } }
@@ -36,7 +37,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { usersCollection } = await connectToDatabase();
+    const { db, usersCollection } = await connectToDatabase();
     const user = await upsertAppleUser(usersCollection, claims, fullName);
 
     // Keep an Apple refresh token so it can be revoked if the account is deleted.
@@ -52,7 +53,10 @@ module.exports = async function handler(req, res) {
     }
 
     const { accessToken, refreshToken } = generateTokens(user);
-    await saveRefreshToken(usersCollection, user.sub, refreshToken);
+    await Promise.all([
+      saveRefreshToken(usersCollection, user.sub, refreshToken),
+      recordVisit(db, user.sub, req),
+    ]);
 
     res.status(200).json({
       message: "Login successful",

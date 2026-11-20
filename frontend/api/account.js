@@ -32,7 +32,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { usersCollection } = await connectToDatabase();
+    const { db, usersCollection } = await connectToDatabase();
     const user = await usersCollection.findOne(
       { sub: req.user.sub },
       { projection: { appleRefreshToken: 1, "carts.products.image": 1 } }
@@ -50,7 +50,9 @@ module.exports = async function handler(req, res) {
     }
 
     await usersCollection.deleteOne({ sub: req.user.sub });
-    // Their saved photos go too.
+    // So do the notes of which days they used Chaos (_lib/activity.js)...
+    await db.collection("activity").deleteMany({ sub: req.user.sub });
+    // ...and their saved photos.
     await deleteStoredImages(storedImagesInCarts(user.carts));
     res.json({ success: true, message: "Account deleted" });
   } catch (err) {
