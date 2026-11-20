@@ -7,6 +7,7 @@ import Login from "./pages/Login";
 import Home from "./pages/Home";
 import Landing from "./pages/Landing";
 import Privacy from "./pages/Privacy";
+import SharedCart from "./pages/SharedCart";
 
 /**
  * SPA navigations keep window scrollY. Reset to top on each location update.
@@ -30,6 +31,8 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/home" element={<Home />} />
         <Route path="/privacy" element={<Privacy />} />
+        {/* A cart someone shared by link. Opens in the iOS app when it's installed. */}
+        <Route path="/shared/:shareId" element={<SharedCart />} />
       </Routes>
     </BrowserRouter>
   );

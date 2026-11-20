@@ -18,6 +18,8 @@ const ProductModal = ({
   cartId,
   onDelete,
   onProductUpdated,
+  // Someone else's shared cart: no editing or deleting.
+  readOnly = false,
 }) => {
   const navigate = useNavigate();
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
@@ -146,6 +148,7 @@ const ProductModal = ({
           >
             <X className="w-[28px] h-[28px]" />
           </button>
+          {!readOnly && (
           <div className="absolute top-3 right-3 flex gap-2">
             {!isEditing && (
               <button
@@ -164,6 +167,7 @@ const ProductModal = ({
               Delete
             </button>
           </div>
+          )}
         </div>
         <div className="p-6">
           <div className="flex flex-col md:flex-row gap-4">

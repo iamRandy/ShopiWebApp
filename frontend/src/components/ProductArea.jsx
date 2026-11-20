@@ -11,7 +11,7 @@ import {
 
 const PLACEHOLDER_IMAGE = "https://via.placeholder.com/300x300?text=No+Image";
 
-const ProductArea = ({ products = [], cartId, hideSidebar, onProductUpdated }) => {
+const ProductArea = ({ products = [], cartId, hideSidebar, onProductUpdated, readOnly = false }) => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -51,6 +51,14 @@ const ProductArea = ({ products = [], cartId, hideSidebar, onProductUpdated }) =
     setIsModalOpen(false);
     setSelectedProduct(null);
   };
+
+  if (products.length === 0 && readOnly) {
+    return (
+      <div className="relative p-3 sm:p-4 flex justify-center items-center min-h-[12rem] text-gray-500">
+        Nothing in this cart yet.
+      </div>
+    );
+  }
 
   if (products.length === 0) {
     return (
@@ -115,6 +123,7 @@ const ProductArea = ({ products = [], cartId, hideSidebar, onProductUpdated }) =
         cartId={cartId}
         onDelete={handleProductDelete}
         onProductUpdated={handleProductUpdated}
+        readOnly={readOnly}
       />
     </>
   );

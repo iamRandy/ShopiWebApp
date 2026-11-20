@@ -1,0 +1,12 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["DUXN239A3S.com.dhruvchowdhary.Chaos"],
+        "components": [
+          { "/": "/shared/*", "comment": "A cart someone shared: opens in the Chaos iOS app" }
+        ]
+      }
+    ]
+  }
+}
